@@ -1,20 +1,8 @@
-# CW-Storage-Plus: Enhanced storage engines for CosmWasm
-
-After building `cosmwasm-storage`, we realized many of the design decisions were
-limiting us and producing a lot of needless boilerplate. The decision was made to leave
-those APIs stable for anyone wanting a very basic abstraction on the KV-store and to
-build a much more powerful and complex ORM layer that can provide powerful accessors
-using complex key types, which are transparently turned into bytes.
-
-This led to a number of breaking API changes in this package of the course of several
-releases as we updated this with lots of experience, user feedback, and deep dives to harness
-the full power of generics.
+# `cw-storage-plus`: Storage abstractions for CosmWasm
 
 **Status: beta**
 
 As of `cw-storage-plus` `v0.12` the API should be quite stable.
-There are no major API breaking issues pending, and all API changes will be documented
-in [`MIGRATING.md`](../../MIGRATING.md).
 
 This has been heavily used in many production-quality contracts.
 The code has demonstrated itself to be stable and powerful.
@@ -632,10 +620,10 @@ the index key (the part that corresponds to the primary key, that is).
 So, to correctly use type-safe bounds over multi-indexes ranges, it is fundamental for this `PK` type
 to be correctly defined, so that it matches the primary key type, or its (typically owned) deserialization variant.
 
-## VecDeque
+## Deque
 
-The usage of a [`VecDeque`](./src/deque.rs) is pretty straight-forward.
-Conceptually it works like a storage-backed version of Rust std's `VecDeque` and can be used as a queue or stack.
+The usage of a [`Deque`](./src/deque.rs) is pretty straight-forward.
+Conceptually it works like a storage-backed version of Rust std's `Deque` and can be used as a queue or stack.
 It allows you to push and pop elements on both ends and also read the first or last element without mutating the deque.
 You can also read a specific index directly.
 
