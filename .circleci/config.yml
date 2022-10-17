@@ -23,7 +23,7 @@ workflows:
 jobs:
   build_and_test:
     docker:
-      - image: rust:1.58.1
+      - image: rust:1.64.0
     working_directory: ~/project/
     steps:
       - checkout:
@@ -36,8 +36,8 @@ jobs:
           command: cargo update
       - restore_cache:
           keys:
-            - cargocache-v2-storage-plus:1.58.1-{{ checksum "~/project/Cargo.lock" }}
-            - cargocache-v2-storage-plus:1.58.1-
+            - cargocache-v2-storage-plus:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-v2-storage-plus:1.64.0-
       - run:
           name: Build library for native target (no iterator)
           command: cargo build --locked --no-default-features
@@ -54,11 +54,11 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-v2-storage-plus:1.58.1-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-v2-storage-plus:1.64.0-{{ checksum "~/project/Cargo.lock" }}
 
   lint:
     docker:
-      - image: rust:1.58.1
+      - image: rust:1.64.0
     steps:
       - checkout
       - run:
@@ -69,8 +69,8 @@ jobs:
           command: cargo update
       - restore_cache:
           keys:
-            - cargocache-v2-lint-rust:1.58.1-{{ checksum "Cargo.lock" }}
-            - cargocache-v2-lint-rust:1.58.1-
+            - cargocache-v2-lint-rust:1.64.0-{{ checksum "Cargo.lock" }}
+            - cargocache-v2-lint-rust:1.64.0-
       - run:
           name: Add rustfmt component
           command: rustup component add rustfmt
@@ -89,11 +89,11 @@ jobs:
             - target/debug/.fingerprint
             - target/debug/build
             - target/debug/deps
-          key: cargocache-v2-lint-rust:1.58.1-{{ checksum "Cargo.lock" }}
+          key: cargocache-v2-lint-rust:1.64.0-{{ checksum "Cargo.lock" }}
 
   benchmarking:
     docker:
-      - image: rust:1.58.1
+      - image: rust:1.64.0
     environment:
       RUST_BACKTRACE: 1
     steps:
@@ -107,8 +107,8 @@ jobs:
           command: cargo update
       - restore_cache:
           keys:
-            - cargocache-v2-benchmarking-rust:1.58.1-{{ checksum "~/project/Cargo.lock" }}
-            - cargocache-v2-benchmarking-rust:1.58.1-
+            - cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-v2-benchmarking-rust:1.64.0-
       - run:
           name: Run storage-plus benchmarks
           working_directory: ~/project
@@ -117,7 +117,7 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-v2-benchmarking-rust:1.58.1-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "~/project/Cargo.lock" }}
 
   coverage:
     # https://circleci.com/developer/images?imageType=machine
