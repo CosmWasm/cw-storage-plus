@@ -19,23 +19,9 @@ workflows:
                 - main
                 # 👇Add your branch here if benchmarking matters to your work
       - coverage
-  deploy:
-    jobs:
-      - build_and_upload_contracts:
-          filters:
-           tags:
-             only: /^v[0-9]+\.[0-9]+\.[0-9]+.*/
-           branches:
-             ignore: /.*/
-      - build_and_upload_schemas:
-          filters:
-           tags:
-             only: /^v[0-9]+\.[0-9]+\.[0-9]+.*/
-           branches:
-             ignore: /.*/
 
-build_and_test:
-  test:
+jobs:
+  build_and_test:
     docker:
       - image: rust:1.58.1
     working_directory: ~/project/
