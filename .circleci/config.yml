@@ -67,14 +67,11 @@ jobs:
 
   build_minimal:
     docker:
-      - image: rust:1.64.0
+      - image: rustlang/rust:nightly
     working_directory: ~/project/
     steps:
       - checkout:
           path: ~/project
-      - run:
-          name: Switch to the nightly toolchain
-          command: rustup default nightly
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
