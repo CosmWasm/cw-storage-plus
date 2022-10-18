@@ -61,9 +61,6 @@ jobs:
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
-      - run:
-          name: Generate a lockfile
-          command: cargo update
       - restore_cache:
           keys:
             - cargocache-v2-lint-rust:1.64.0-{{ checksum "Cargo.lock" }}
@@ -99,9 +96,6 @@ jobs:
       - run:
           name: Version information (default; stable)
           command: rustc --version && cargo --version
-      - run:
-          name: Generate a lockfile
-          command: cargo update
       - restore_cache:
           keys:
             - cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "~/project/Cargo.lock" }}
