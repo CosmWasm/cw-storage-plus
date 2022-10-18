@@ -34,7 +34,6 @@ jobs:
       - restore_cache:
           keys:
             - cargocache-v2-storage-plus:1.64.0-{{ checksum "~/project/Cargo.lock" }}
-            - cargocache-v2-storage-plus:1.64.0-
       - run:
           name: Build library for native target (no iterator)
           command: cargo build --locked --no-default-features
@@ -64,7 +63,6 @@ jobs:
       - restore_cache:
           keys:
             - cargocache-v2-lint-rust:1.64.0-{{ checksum "Cargo.lock" }}
-            - cargocache-v2-lint-rust:1.64.0-
       - run:
           name: Add rustfmt component
           command: rustup component add rustfmt
@@ -99,7 +97,6 @@ jobs:
       - restore_cache:
           keys:
             - cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "~/project/Cargo.lock" }}
-            - cargocache-v2-benchmarking-rust:1.64.0-
       - run:
           name: Run storage-plus benchmarks
           working_directory: ~/project
