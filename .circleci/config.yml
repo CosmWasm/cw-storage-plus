@@ -9,7 +9,6 @@ workflows:
     jobs:
       - build_and_test
       - build_minimal
-      - build_maximal
       - lint
       - benchmarking:
           requires:
@@ -21,6 +20,18 @@ workflows:
                 - main
                 # 👇Add your branch here if benchmarking matters to your work
       - coverage
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - main
+                - beta
+    jobs:
+      - build_minimal
+      - build_maximal
 
 jobs:
   build_and_test:
@@ -61,6 +72,9 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - run:
+          name: Switch to the nightly toolchain
+          command: rustup default nightly
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
