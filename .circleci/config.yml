@@ -8,7 +8,6 @@ workflows:
   test:
     jobs:
       - build_and_test
-      - build_minimal
       - lint
       - benchmarking:
           requires:
@@ -23,14 +22,16 @@ workflows:
   nightly:
     triggers:
       - schedule:
-          cron: "0 0 * * *"
+          # Built every weekday night
+          cron: "0 0 * * 1-5"
           filters:
             branches:
               only:
                 - main
-                - beta
     jobs:
-      - build_minimal
+      # Build with minimal versions of dependencies (turned off until we get it to work)
+      # - build_minimal
+      # Build with maximal versions of dependencies
       - build_maximal
 
 jobs:
