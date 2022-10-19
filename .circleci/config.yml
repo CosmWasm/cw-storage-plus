@@ -8,6 +8,8 @@ workflows:
   test:
     jobs:
       - build_and_test
+      - build_minimal
+      - build_maximal
       - lint
       - benchmarking:
           requires:
@@ -19,6 +21,20 @@ workflows:
                 - main
                 # 👇Add your branch here if benchmarking matters to your work
       - coverage
+  nightly:
+    triggers:
+      - schedule:
+          # Built every weekday night
+          cron: "0 0 * * 1-5"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      # Build with minimal versions of dependencies
+      - build_minimal
+      # Build with maximal versions of dependencies
+      - build_maximal
 
 jobs:
   build_and_test:
@@ -26,18 +42,13 @@ jobs:
       - image: rust:1.64.0
     working_directory: ~/project/
     steps:
-      - checkout:
-          path: ~/project
+      - checkout
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
-      - run:
-          name: Generate a lockfile
-          command: cargo update
       - restore_cache:
           keys:
-            - cargocache-v2-storage-plus:1.64.0-{{ checksum "~/project/Cargo.lock" }}
-            - cargocache-v2-storage-plus:1.64.0-
+            - cargocache-v2-storage-plus:1.64.0-{{ checksum "Cargo.lock" }}
       - run:
           name: Build library for native target (no iterator)
           command: cargo build --locked --no-default-features
@@ -54,7 +65,61 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-v2-storage-plus:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-v2-storage-plus:1.64.0-{{ checksum "Cargo.lock" }}
+
+  build_minimal:
+    docker:
+      - image: rustlang/rust:nightly
+    working_directory: ~/project/
+    steps:
+      - checkout
+      - run:
+          name: Version information
+          command: rustc --version; cargo --version; rustup --version; rustup target list --installed
+      - run:
+          name: Remove Cargo.lock
+          command: rm Cargo.lock
+      - restore_cache:
+          keys:
+            - cargocache-v2-storage-plus:1.64.0-minimal-{{ checksum "~/project/Cargo.toml" }}
+      - run:
+          name: Build library for native target (with iterator and macro)
+          command: cargo build -Zminimal-versions --all-features
+      - run:
+          name: Run unit tests (with iterator and macro)
+          command: cargo test --workspace -Zminimal-versions --all-features
+      - save_cache:
+          paths:
+            - /usr/local/cargo/registry
+            - target
+          key: cargocache-v2-storage-plus:1.64.0-minimal-{{ checksum "~/project/Cargo.toml" }}
+
+  build_maximal:
+    docker:
+      - image: rust:1.64.0
+    working_directory: ~/project/
+    steps:
+      - checkout
+      - run:
+          name: Version information
+          command: rustc --version; cargo --version; rustup --version; rustup target list --installed
+      - run:
+          name: Update Cargo.lock
+          command: cargo update
+      - restore_cache:
+          keys:
+            - cargocache-v2-storage-plus:1.64.0-{{ checksum "Cargo.lock" }}
+      - run:
+          name: Build library for native target (with iterator and macro)
+          command: cargo build --locked --all-features
+      - run:
+          name: Run unit tests (with iterator and macro)
+          command: cargo test --workspace --locked --all-features
+      - save_cache:
+          paths:
+            - /usr/local/cargo/registry
+            - target
+          key: cargocache-v2-storage-plus:1.64.0-{{ checksum "Cargo.lock" }}
 
   lint:
     docker:
@@ -64,13 +129,9 @@ jobs:
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
-      - run:
-          name: Generate a lockfile
-          command: cargo update
       - restore_cache:
           keys:
             - cargocache-v2-lint-rust:1.64.0-{{ checksum "Cargo.lock" }}
-            - cargocache-v2-lint-rust:1.64.0-
       - run:
           name: Add rustfmt component
           command: rustup component add rustfmt
@@ -97,18 +158,13 @@ jobs:
     environment:
       RUST_BACKTRACE: 1
     steps:
-      - checkout:
-          path: ~/project
+      - checkout
       - run:
           name: Version information (default; stable)
           command: rustc --version && cargo --version
-      - run:
-          name: Generate a lockfile
-          command: cargo update
       - restore_cache:
           keys:
-            - cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "~/project/Cargo.lock" }}
-            - cargocache-v2-benchmarking-rust:1.64.0-
+            - cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "Cargo.lock" }}
       - run:
           name: Run storage-plus benchmarks
           working_directory: ~/project
@@ -117,7 +173,7 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "Cargo.lock" }}
 
   coverage:
     # https://circleci.com/developer/images?imageType=machine
