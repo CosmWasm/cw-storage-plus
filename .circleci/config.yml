@@ -40,14 +40,13 @@ jobs:
       - image: rust:1.64.0
     working_directory: ~/project/
     steps:
-      - checkout:
-          path: ~/project
+      - checkout
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
       - restore_cache:
           keys:
-            - cargocache-v2-storage-plus:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-v2-storage-plus:1.64.0-{{ checksum "Cargo.lock" }}
       - run:
           name: Build library for native target (no iterator)
           command: cargo build --locked --no-default-features
@@ -64,15 +63,14 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-v2-storage-plus:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-v2-storage-plus:1.64.0-{{ checksum "Cargo.lock" }}
 
   build_minimal:
     docker:
       - image: rustlang/rust:nightly
     working_directory: ~/project/
     steps:
-      - checkout:
-          path: ~/project
+      - checkout
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
@@ -99,8 +97,7 @@ jobs:
       - image: rust:1.64.0
     working_directory: ~/project/
     steps:
-      - checkout:
-          path: ~/project
+      - checkout
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
@@ -109,7 +106,7 @@ jobs:
           command: cargo update
       - restore_cache:
           keys:
-            - cargocache-v2-storage-plus:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-v2-storage-plus:1.64.0-{{ checksum "Cargo.lock" }}
       - run:
           name: Build library for native target (with iterator and macro)
           command: cargo build --locked --all-features
@@ -120,7 +117,7 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-v2-storage-plus:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-v2-storage-plus:1.64.0-{{ checksum "Cargo.lock" }}
 
   lint:
     docker:
@@ -159,14 +156,13 @@ jobs:
     environment:
       RUST_BACKTRACE: 1
     steps:
-      - checkout:
-          path: ~/project
+      - checkout
       - run:
           name: Version information (default; stable)
           command: rustc --version && cargo --version
       - restore_cache:
           keys:
-            - cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+            - cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "Cargo.lock" }}
       - run:
           name: Run storage-plus benchmarks
           working_directory: ~/project
@@ -175,7 +171,7 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "~/project/Cargo.lock" }}
+          key: cargocache-v2-benchmarking-rust:1.64.0-{{ checksum "Cargo.lock" }}
 
   coverage:
     # https://circleci.com/developer/images?imageType=machine
