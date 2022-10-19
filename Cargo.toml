@@ -7,7 +7,7 @@ authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
 edition = "2018"
 description = "Enhanced storage engines"
 license = "Apache-2.0"
-repository = "https://github.com/CosmWasm/cw-plus"
+repository = "https://github.com/CosmWasm/cw-storage-plus"
 homepage = "https://cosmwasm.com"
 
 [package.metadata.docs.rs]
