@@ -8,6 +8,8 @@ workflows:
   test:
     jobs:
       - build_and_test
+      - build_minimal
+      - build_maximal
       - lint
       - benchmarking:
           requires:
