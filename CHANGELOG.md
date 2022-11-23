@@ -1,5 +1,19 @@
 # Changelog
 
+## [v1.0.0](https://github.com/CosmWasm/cw-storage-plus/tree/v1.0.0) (2022-11-23)
+
+[Full Changelog](https://github.com/CosmWasm/cw-storage-plus/compare/v0.16.0...v1.0.0)
+
+**Closed issues:**
+
+- Implement missing PrimaryKey trait for CanonicalAddr [\#6](https://github.com/CosmWasm/cw-storage-plus/issues/6)
+
+**Merged pull requests:**
+
+- Update repo location in `Cargo.toml` [\#16](https://github.com/CosmWasm/cw-storage-plus/pull/16) ([uint](https://github.com/uint))
+- Relax version requirements for dependencies [\#13](https://github.com/CosmWasm/cw-storage-plus/pull/13) ([uint](https://github.com/uint))
+- README update [\#12](https://github.com/CosmWasm/cw-storage-plus/pull/12) ([uint](https://github.com/uint))
+
 # Old changelog
 
 Until `v0.16.0`, this project lived in a different repo with other projects. The below

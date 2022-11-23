@@ -308,14 +308,14 @@ dependencies = [
 
 [[package]]
 name = "cw-storage-macro"
-version = "0.16.0"
+version = "1.0.0"
 dependencies = [
  "syn",
 ]
 
 [[package]]
 name = "cw-storage-plus"
-version = "0.16.0"
+version = "1.0.0"
 dependencies = [
  "cosmwasm-std",
  "criterion",
