@@ -36,7 +36,10 @@ thiserror = "1.0.13"
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }
-rand = "0.8"
+# Deactivate default features in order to be able to use this on systems without
+# access to an entropy souce via getrandom such as wasm32-unknown-unknown
+rand = { version = "0.8", default-features = false }
+rand_xoshiro = { version = "0.6.0", default-features = false }
 
 # We don't use the following dependencies directly. They're dependencies of our dependencies.
 # We specify them to tighten their version requirements so that builds with `-Zminimal-versions` work.

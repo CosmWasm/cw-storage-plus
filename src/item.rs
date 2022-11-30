@@ -215,7 +215,7 @@ mod test {
         };
         CONFIG.save(&mut store, &cfg).unwrap();
 
-        let output = CONFIG.update(&mut store, &|_c| {
+        let output = CONFIG.update(&mut store, |_c| {
             Err(StdError::overflow(OverflowError::new(
                 OverflowOperation::Sub,
                 4,
