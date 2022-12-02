@@ -46,6 +46,9 @@ jobs:
       - run:
           name: Version information
           command: rustc --version; cargo --version; rustup --version; rustup target list --installed
+      - run:
+          name: Add wasm32 target
+          command: rustup target add wasm32-unknown-unknown && rustup target list --installed
       - restore_cache:
           keys:
             - cargocache-v2-storage-plus:1.64.0-{{ checksum "Cargo.lock" }}
@@ -58,6 +61,12 @@ jobs:
       - run:
           name: Build library for native target (with iterator and macro)
           command: cargo build --locked --all-features
+      - run:
+          name: Build library for Wasm target (default features)
+          command: cargo build --target wasm32-unknown-unknown --locked
+      - run:
+          name: Build library for Wasm target (all features)
+          command: cargo build --target wasm32-unknown-unknown --locked --all-features
       - run:
           name: Run unit tests (with iterator and macro)
           command: cargo test --workspace --locked --all-features
