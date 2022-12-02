@@ -28,7 +28,7 @@ where
     pk_namespace: &'a [u8],
     primary: Map<'a, K, T>,
     /// This is meant to be read directly to get the proper types, like:
-    /// DATA.idx.owner.items(...)
+    /// map.idx.owner.items(...)
     pub idx: I,
 }
 
