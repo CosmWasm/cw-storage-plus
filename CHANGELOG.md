@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased](https://github.com/CosmWasm/cw-storage-plus/compare/v1.0.0...HEAD)
+
+### Added
+
+- Make the following constructor functions constant: `IndexedMap::new`, `MultiIndex::new`, `UniqueIndex::new` [\#22](https://github.com/CosmWasm/cw-storage-plus/pull/22)
+
 ## [v1.0.0](https://github.com/CosmWasm/cw-storage-plus/tree/v1.0.0) (2022-11-23)
 
 [Full Changelog](https://github.com/CosmWasm/cw-storage-plus/compare/v0.16.0...v1.0.0)
