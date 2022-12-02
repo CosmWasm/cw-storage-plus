@@ -34,7 +34,6 @@ pub struct UniqueIndex<'a, IK, T, PK = ()> {
 }
 
 impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK> {
-    // TODO: make this a const fn
     /// Create a new UniqueIndex
     ///
     /// idx_fn - lambda creating index key from index value
@@ -52,7 +51,7 @@ impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK> {
     ///
     /// UniqueIndex::<_, _, ()>::new(|d: &Data| d.age, "data__age");
     /// ```
-    pub fn new(idx_fn: fn(&T) -> IK, idx_namespace: &'a str) -> Self {
+    pub const fn new(idx_fn: fn(&T) -> IK, idx_namespace: &'a str) -> Self {
         UniqueIndex {
             index: idx_fn,
             idx_map: Map::new(idx_namespace),

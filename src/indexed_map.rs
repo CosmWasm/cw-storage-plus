@@ -18,7 +18,6 @@ pub trait IndexList<T> {
     fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<T>> + '_>;
 }
 
-// TODO: remove traits here and make this const fn new
 /// `IndexedMap` works like a `Map` but has a secondary index
 pub struct IndexedMap<'a, K, T, I>
 where
@@ -29,7 +28,7 @@ where
     pk_namespace: &'a [u8],
     primary: Map<'a, K, T>,
     /// This is meant to be read directly to get the proper types, like:
-    /// map.idx.owner.items(...)
+    /// DATA.idx.owner.items(...)
     pub idx: I,
 }
 
@@ -39,8 +38,7 @@ where
     T: Serialize + DeserializeOwned + Clone,
     I: IndexList<T>,
 {
-    // TODO: remove traits here and make this const fn new
-    pub fn new(pk_namespace: &'a str, indexes: I) -> Self {
+    pub const fn new(pk_namespace: &'a str, indexes: I) -> Self {
         IndexedMap {
             pk_namespace: pk_namespace.as_bytes(),
             primary: Map::new(pk_namespace),
@@ -347,23 +345,19 @@ mod test {
         }
     }
 
-    // Can we make it easier to define this? (less wordy generic)
-    fn build_map<'a>() -> IndexedMap<'a, &'a str, Data, DataIndexes<'a>> {
-        let indexes = DataIndexes {
+    const DATA: IndexedMap<&str, Data, DataIndexes> = IndexedMap::new(
+        "data",
+        DataIndexes {
             name: MultiIndex::new(|_pk, d| d.name.clone(), "data", "data__name"),
             age: UniqueIndex::new(|d| d.age, "data__age"),
             name_lastname: UniqueIndex::new(
                 |d| index_string_tuple(&d.name, &d.last_name),
                 "data__name_lastname",
             ),
-        };
-        IndexedMap::new("data", indexes)
-    }
+        },
+    );
 
-    fn save_data<'a>(
-        store: &mut MockStorage,
-        map: &IndexedMap<'a, &'a str, Data, DataIndexes<'a>>,
-    ) -> (Vec<&'a str>, Vec<Data>) {
+    fn save_data<'a>(store: &mut MockStorage) -> (Vec<&'a str>, Vec<Data>) {
         let mut pks = vec![];
         let mut datas = vec![];
         let data = Data {
@@ -372,7 +366,7 @@ mod test {
             age: 42,
         };
         let pk = "1";
-        map.save(store, pk, &data).unwrap();
+        DATA.save(store, pk, &data).unwrap();
         pks.push(pk);
         datas.push(data);
 
@@ -383,7 +377,7 @@ mod test {
             age: 23,
         };
         let pk = "2";
-        map.save(store, pk, &data).unwrap();
+        DATA.save(store, pk, &data).unwrap();
         pks.push(pk);
         datas.push(data);
 
@@ -394,7 +388,7 @@ mod test {
             age: 32,
         };
         let pk = "3";
-        map.save(store, pk, &data).unwrap();
+        DATA.save(store, pk, &data).unwrap();
         pks.push(pk);
         datas.push(data);
 
@@ -404,7 +398,7 @@ mod test {
             age: 12,
         };
         let pk = "4";
-        map.save(store, pk, &data).unwrap();
+        DATA.save(store, pk, &data).unwrap();
         pks.push(pk);
         datas.push(data);
 
@@ -414,7 +408,7 @@ mod test {
             age: 90,
         };
         let pk = "5";
-        map.save(store, pk, &data).unwrap();
+        DATA.save(store, pk, &data).unwrap();
         pks.push(pk);
         datas.push(data);
 
@@ -424,18 +418,17 @@ mod test {
     #[test]
     fn store_and_load_by_index() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
         // save data
-        let (pks, datas) = save_data(&mut store, &map);
+        let (pks, datas) = save_data(&mut store);
         let pk = pks[0];
         let data = &datas[0];
 
         // load it properly
-        let loaded = map.load(&store, pk).unwrap();
+        let loaded = DATA.load(&store, pk).unwrap();
         assert_eq!(*data, loaded);
 
-        let count = map
+        let count = DATA
             .idx
             .name
             .prefix("Maria".to_string())
@@ -444,7 +437,7 @@ mod test {
         assert_eq!(2, count);
 
         // load it by secondary index
-        let marias: Vec<_> = map
+        let marias: Vec<_> = DATA
             .idx
             .name
             .prefix("Maria".to_string())
@@ -457,7 +450,7 @@ mod test {
         assert_eq!(data, v);
 
         // other index doesn't match (1 byte after)
-        let count = map
+        let count = DATA
             .idx
             .name
             .prefix("Marib".to_string())
@@ -466,7 +459,7 @@ mod test {
         assert_eq!(0, count);
 
         // other index doesn't match (1 byte before)
-        let count = map
+        let count = DATA
             .idx
             .name
             .prefix("Mari`".to_string())
@@ -475,7 +468,7 @@ mod test {
         assert_eq!(0, count);
 
         // other index doesn't match (longer)
-        let count = map
+        let count = DATA
             .idx
             .name
             .prefix("Maria5".to_string())
@@ -487,7 +480,7 @@ mod test {
         // Primary key may be empty (so that to iterate over all elements that match just the index)
         let key = ("Maria".to_string(), "".to_string());
         // Iterate using an inclusive bound over the key
-        let marias = map
+        let marias = DATA
             .idx
             .name
             .range_raw(&store, Some(Bound::inclusive(key)), None, Order::Ascending)
@@ -498,7 +491,7 @@ mod test {
 
         // This is equivalent to using prefix_range
         let key = "Maria".to_string();
-        let marias2 = map
+        let marias2 = DATA
             .idx
             .name
             .prefix_range_raw(
@@ -516,7 +509,7 @@ mod test {
         let key = ("Maria".to_string(), "1".to_string());
         // Iterate using a (exclusive) bound over the key.
         // (Useful for pagination / continuation contexts).
-        let count = map
+        let count = DATA
             .idx
             .name
             .range_raw(&store, Some(Bound::exclusive(key)), None, Order::Ascending)
@@ -527,7 +520,7 @@ mod test {
         // index_key() over UniqueIndex works.
         let age_key = 23u32;
         // Iterate using a (inclusive) bound over the key.
-        let count = map
+        let count = DATA
             .idx
             .age
             .range_raw(
@@ -542,30 +535,28 @@ mod test {
 
         // match on proper age
         let proper = 42u32;
-        let aged = map.idx.age.item(&store, proper).unwrap().unwrap();
+        let aged = DATA.idx.age.item(&store, proper).unwrap().unwrap();
         assert_eq!(pk, String::from_vec(aged.0).unwrap());
         assert_eq!(*data, aged.1);
 
         // no match on wrong age
         let too_old = 43u32;
-        let aged = map.idx.age.item(&store, too_old).unwrap();
+        let aged = DATA.idx.age.item(&store, too_old).unwrap();
         assert_eq!(None, aged);
     }
 
     #[test]
     fn existence() {
         let mut store = MockStorage::new();
-        let map = build_map();
-        let (pks, _) = save_data(&mut store, &map);
+        let (pks, _) = save_data(&mut store);
 
-        assert!(map.has(&store, pks[0]));
-        assert!(!map.has(&store, "6"));
+        assert!(DATA.has(&store, pks[0]));
+        assert!(!DATA.has(&store, "6"));
     }
 
     #[test]
     fn range_raw_simple_key_by_multi_index() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
         // save data
         let data1 = Data {
@@ -574,7 +565,7 @@ mod test {
             age: 42,
         };
         let pk = "5627";
-        map.save(&mut store, pk, &data1).unwrap();
+        DATA.save(&mut store, pk, &data1).unwrap();
 
         let data2 = Data {
             name: "Juan".to_string(),
@@ -582,7 +573,7 @@ mod test {
             age: 13,
         };
         let pk = "5628";
-        map.save(&mut store, pk, &data2).unwrap();
+        DATA.save(&mut store, pk, &data2).unwrap();
 
         let data3 = Data {
             name: "Maria".to_string(),
@@ -590,7 +581,7 @@ mod test {
             age: 24,
         };
         let pk = "5629";
-        map.save(&mut store, pk, &data3).unwrap();
+        DATA.save(&mut store, pk, &data3).unwrap();
 
         let data4 = Data {
             name: "Maria Luisa".to_string(),
@@ -598,9 +589,9 @@ mod test {
             age: 12,
         };
         let pk = "5630";
-        map.save(&mut store, pk, &data4).unwrap();
+        DATA.save(&mut store, pk, &data4).unwrap();
 
-        let marias: Vec<_> = map
+        let marias: Vec<_> = DATA
             .idx
             .name
             .prefix("Maria".to_string())
@@ -621,7 +612,6 @@ mod test {
     #[test]
     fn range_simple_key_by_multi_index() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
         // save data
         let data1 = Data {
@@ -630,7 +620,7 @@ mod test {
             age: 42,
         };
         let pk = "5627";
-        map.save(&mut store, pk, &data1).unwrap();
+        DATA.save(&mut store, pk, &data1).unwrap();
 
         let data2 = Data {
             name: "Juan".to_string(),
@@ -638,7 +628,7 @@ mod test {
             age: 13,
         };
         let pk = "5628";
-        map.save(&mut store, pk, &data2).unwrap();
+        DATA.save(&mut store, pk, &data2).unwrap();
 
         let data3 = Data {
             name: "Maria".to_string(),
@@ -646,7 +636,7 @@ mod test {
             age: 24,
         };
         let pk = "5629";
-        map.save(&mut store, pk, &data3).unwrap();
+        DATA.save(&mut store, pk, &data3).unwrap();
 
         let data4 = Data {
             name: "Maria Luisa".to_string(),
@@ -654,9 +644,9 @@ mod test {
             age: 12,
         };
         let pk = "5630";
-        map.save(&mut store, pk, &data4).unwrap();
+        DATA.save(&mut store, pk, &data4).unwrap();
 
-        let marias: Vec<_> = map
+        let marias: Vec<_> = DATA
             .idx
             .name
             .prefix("Maria".to_string())
@@ -807,10 +797,9 @@ mod test {
     #[test]
     fn unique_index_enforced() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
         // save data
-        let (pks, datas) = save_data(&mut store, &map);
+        let (pks, datas) = save_data(&mut store);
 
         // different name, different last name, same age => error
         let data5 = Data {
@@ -821,28 +810,28 @@ mod test {
         let pk5 = "4";
 
         // enforce this returns some error
-        map.save(&mut store, pk5, &data5).unwrap_err();
+        DATA.save(&mut store, pk5, &data5).unwrap_err();
 
         // query by unique key
         // match on proper age
         let age42 = 42u32;
-        let (k, v) = map.idx.age.item(&store, age42).unwrap().unwrap();
+        let (k, v) = DATA.idx.age.item(&store, age42).unwrap().unwrap();
         assert_eq!(String::from_vec(k).unwrap(), pks[0]);
         assert_eq!(v.name, datas[0].name);
         assert_eq!(v.age, datas[0].age);
 
         // match on other age
         let age23 = 23u32;
-        let (k, v) = map.idx.age.item(&store, age23).unwrap().unwrap();
+        let (k, v) = DATA.idx.age.item(&store, age23).unwrap().unwrap();
         assert_eq!(String::from_vec(k).unwrap(), pks[1]);
         assert_eq!(v.name, datas[1].name);
         assert_eq!(v.age, datas[1].age);
 
         // if we delete the first one, we can add the blocked one
-        map.remove(&mut store, pks[0]).unwrap();
-        map.save(&mut store, pk5, &data5).unwrap();
+        DATA.remove(&mut store, pks[0]).unwrap();
+        DATA.save(&mut store, pk5, &data5).unwrap();
         // now 42 is the new owner
-        let (k, v) = map.idx.age.item(&store, age42).unwrap().unwrap();
+        let (k, v) = DATA.idx.age.item(&store, age42).unwrap().unwrap();
         assert_eq!(String::from_vec(k).unwrap(), pk5);
         assert_eq!(v.name, data5.name);
         assert_eq!(v.age, data5.age);
@@ -851,10 +840,9 @@ mod test {
     #[test]
     fn unique_index_enforced_composite_key() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
         // save data
-        save_data(&mut store, &map);
+        save_data(&mut store);
 
         // same name, same lastname => error
         let data5 = Data {
@@ -864,19 +852,15 @@ mod test {
         };
         let pk5 = "5";
         // enforce this returns some error
-        map.save(&mut store, pk5, &data5).unwrap_err();
+        DATA.save(&mut store, pk5, &data5).unwrap_err();
     }
 
     #[test]
     fn remove_and_update_reflected_on_indexes() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
-        let name_count = |map: &IndexedMap<&str, Data, DataIndexes>,
-                          store: &MemoryStorage,
-                          name: &str|
-         -> usize {
-            map.idx
+        let name_count = |store: &MemoryStorage, name: &str| -> usize {
+            DATA.idx
                 .name
                 .prefix(name.to_string())
                 .keys_raw(store, None, None, Order::Ascending)
@@ -884,19 +868,19 @@ mod test {
         };
 
         // save data
-        let (pks, _) = save_data(&mut store, &map);
+        let (pks, _) = save_data(&mut store);
 
         // find 2 Marias, 1 John, and no Mary
-        assert_eq!(name_count(&map, &store, "Maria"), 2);
-        assert_eq!(name_count(&map, &store, "John"), 1);
-        assert_eq!(name_count(&map, &store, "Maria Luisa"), 1);
-        assert_eq!(name_count(&map, &store, "Mary"), 0);
+        assert_eq!(name_count(&store, "Maria"), 2);
+        assert_eq!(name_count(&store, "John"), 1);
+        assert_eq!(name_count(&store, "Maria Luisa"), 1);
+        assert_eq!(name_count(&store, "Mary"), 0);
 
         // remove maria 2
-        map.remove(&mut store, pks[1]).unwrap();
+        DATA.remove(&mut store, pks[1]).unwrap();
 
         // change john to mary
-        map.update(&mut store, pks[2], |d| -> StdResult<_> {
+        DATA.update(&mut store, pks[2], |d| -> StdResult<_> {
             let mut x = d.unwrap();
             assert_eq!(&x.name, "John");
             x.name = "Mary".to_string();
@@ -905,21 +889,20 @@ mod test {
         .unwrap();
 
         // find 1 maria, 1 maria luisa, no john, and 1 mary
-        assert_eq!(name_count(&map, &store, "Maria"), 1);
-        assert_eq!(name_count(&map, &store, "Maria Luisa"), 1);
-        assert_eq!(name_count(&map, &store, "John"), 0);
-        assert_eq!(name_count(&map, &store, "Mary"), 1);
+        assert_eq!(name_count(&store, "Maria"), 1);
+        assert_eq!(name_count(&store, "Maria Luisa"), 1);
+        assert_eq!(name_count(&store, "John"), 0);
+        assert_eq!(name_count(&store, "Mary"), 1);
     }
 
     #[test]
     fn range_raw_simple_key_by_unique_index() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
         // save data
-        let (pks, datas) = save_data(&mut store, &map);
+        let (pks, datas) = save_data(&mut store);
 
-        let res: StdResult<Vec<_>> = map
+        let res: StdResult<Vec<_>> = DATA
             .idx
             .age
             .range_raw(&store, None, None, Order::Ascending)
@@ -947,12 +930,11 @@ mod test {
     #[test]
     fn range_simple_key_by_unique_index() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
         // save data
-        let (pks, datas) = save_data(&mut store, &map);
+        let (pks, datas) = save_data(&mut store);
 
-        let res: StdResult<Vec<_>> = map
+        let res: StdResult<Vec<_>> = DATA
             .idx
             .age
             .range(&store, None, None, Order::Ascending)
@@ -980,12 +962,11 @@ mod test {
     #[test]
     fn range_raw_composite_key_by_unique_index() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
         // save data
-        let (pks, datas) = save_data(&mut store, &map);
+        let (pks, datas) = save_data(&mut store);
 
-        let res: StdResult<Vec<_>> = map
+        let res: StdResult<Vec<_>> = DATA
             .idx
             .name_lastname
             .prefix(b"Maria".to_vec())
@@ -1009,12 +990,11 @@ mod test {
     #[test]
     fn range_composite_key_by_unique_index() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
         // save data
-        let (pks, datas) = save_data(&mut store, &map);
+        let (pks, datas) = save_data(&mut store);
 
-        let res: StdResult<Vec<_>> = map
+        let res: StdResult<Vec<_>> = DATA
             .idx
             .name_lastname
             .prefix(b"Maria".to_vec())
@@ -1039,13 +1019,12 @@ mod test {
     #[cfg(feature = "iterator")]
     fn range_simple_string_key() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
         // save data
-        let (pks, datas) = save_data(&mut store, &map);
+        let (pks, datas) = save_data(&mut store);
 
         // let's try to iterate!
-        let all: StdResult<Vec<_>> = map.range(&store, None, None, Order::Ascending).collect();
+        let all: StdResult<Vec<_>> = DATA.range(&store, None, None, Order::Ascending).collect();
         let all = all.unwrap();
         assert_eq!(
             all,
@@ -1057,7 +1036,7 @@ mod test {
         );
 
         // let's try to iterate over a range
-        let all: StdResult<Vec<_>> = map
+        let all: StdResult<Vec<_>> = DATA
             .range(&store, Some(Bound::inclusive("3")), None, Order::Ascending)
             .collect();
         let all = all.unwrap();
@@ -1077,15 +1056,14 @@ mod test {
     #[cfg(feature = "iterator")]
     fn prefix_simple_string_key() {
         let mut store = MockStorage::new();
-        let map = build_map();
 
         // save data
-        let (pks, datas) = save_data(&mut store, &map);
+        let (pks, datas) = save_data(&mut store);
 
         // Let's prefix and iterate.
         // This is similar to calling range() directly, but added here for completeness / prefix
         // type checks
-        let all: StdResult<Vec<_>> = map
+        let all: StdResult<Vec<_>> = DATA
             .prefix(())
             .range(&store, None, None, Order::Ascending)
             .collect();
@@ -1711,25 +1689,23 @@ mod test {
     #[test]
     fn clear_works() {
         let mut storage = MockStorage::new();
-        let map = build_map();
-        let (pks, _) = save_data(&mut storage, &map);
+        let (pks, _) = save_data(&mut storage);
 
-        map.clear(&mut storage);
+        DATA.clear(&mut storage);
 
         for key in pks {
-            assert!(!map.has(&storage, key));
+            assert!(!DATA.has(&storage, key));
         }
     }
 
     #[test]
     fn is_empty_works() {
         let mut storage = MockStorage::new();
-        let map = build_map();
 
-        assert!(map.is_empty(&storage));
+        assert!(DATA.is_empty(&storage));
 
-        save_data(&mut storage, &map);
+        save_data(&mut storage);
 
-        assert!(!map.is_empty(&storage));
+        assert!(!DATA.is_empty(&storage));
     }
 }
