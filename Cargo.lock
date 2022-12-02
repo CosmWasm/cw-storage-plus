@@ -320,13 +320,11 @@ dependencies = [
  "cosmwasm-std",
  "criterion",
  "cw-storage-macro",
- "k256",
  "rand",
  "rand_xoshiro",
  "schemars",
  "serde",
  "serde_json",
- "thiserror",
 ]
 
 [[package]]

@@ -28,12 +28,6 @@ schemars = "0.8.3"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 cw-storage-macro = { version = "1.0.0", optional = true, path = "macros" }
 
-# We don't use the following dependencies directly. They're dependencies of our dependencies.
-# We specify them to tighten their version requirements so that builds with `-Zminimal-versions` work.
-# Once we bump `cosmwasm-*` deps to a version after `1.1.5`, we can remove these.
-k256 = { version = "0.11.1", features = ["ecdsa"] }
-thiserror = "1.0.13"
-
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }
 # Deactivate default features in order to be able to use this on systems without
