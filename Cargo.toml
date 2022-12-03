@@ -37,8 +37,8 @@ rand_xoshiro = { version = "0.6.0", default-features = false }
 
 # We don't use the following dependencies directly. They're dependencies of our dependencies.
 # We specify them to tighten their version requirements so that builds with `-Zminimal-versions` work.
-# Once we bump `cosmwasm-*` deps to a version after `1.1.5`, we can remove these.
-serde_json = "1.0.40"
+# https://github.com/GREsau/schemars/pull/192 is merged, we can update schemars and release this.
+serde_json = "1.0.29"
 
 [[bench]]
 name = "main"
