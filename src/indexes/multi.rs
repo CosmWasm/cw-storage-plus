@@ -40,7 +40,6 @@ impl<'a, IK, T, PK> MultiIndex<'a, IK, T, PK>
 where
     T: Serialize + DeserializeOwned + Clone,
 {
-    // TODO: make this a const fn
     /// Create a new MultiIndex
     ///
     /// idx_fn - lambda creating index key from value
@@ -65,7 +64,11 @@ where
     ///     "age__owner",
     /// );
     /// ```
-    pub fn new(idx_fn: fn(&[u8], &T) -> IK, pk_namespace: &'a str, idx_namespace: &'a str) -> Self {
+    pub const fn new(
+        idx_fn: fn(&[u8], &T) -> IK,
+        pk_namespace: &'a str,
+        idx_namespace: &'a str,
+    ) -> Self {
         MultiIndex {
             index: idx_fn,
             idx_namespace: idx_namespace.as_bytes(),

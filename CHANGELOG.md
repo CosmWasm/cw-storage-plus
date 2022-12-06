@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased](https://github.com/CosmWasm/cw-storage-plus/compare/v1.0.1...HEAD)
+
+**Merged pull requests:**
+
+- Make the following constructor functions constant: `IndexedMap::new`, `MultiIndex::new`, `UniqueIndex::new` [\#22](https://github.com/CosmWasm/cw-storage-plus/pull/22)
+
 ## [v1.0.1](https://github.com/CosmWasm/cw-storage-plus/tree/v1.0.1) (2022-12-05)
 
 [Full Changelog](https://github.com/CosmWasm/cw-storage-plus/compare/v1.0.0...v1.0.1)
