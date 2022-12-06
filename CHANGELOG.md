@@ -1,5 +1,21 @@
 # Changelog
 
+## [v1.0.1](https://github.com/CosmWasm/cw-storage-plus/tree/v1.0.1) (2022-12-05)
+
+[Full Changelog](https://github.com/CosmWasm/cw-storage-plus/compare/v1.0.0...v1.0.1)
+
+**Closed issues:**
+
+- bug: Wasm32 compilation issues on 1.0.0 [\#21](https://github.com/CosmWasm/cw-storage-plus/issues/21)
+- Error compiling to wasm target. Inclusion of getrandom is causing issues. [\#19](https://github.com/CosmWasm/cw-storage-plus/issues/19)
+- Bump cosmwasm-std to ^1.1.8 [\#18](https://github.com/CosmWasm/cw-storage-plus/issues/18)
+
+**Merged pull requests:**
+
+- Add Wasm builds to CI, bump cosmwasm-std and remove explicit dependencies [\#23](https://github.com/CosmWasm/cw-storage-plus/pull/23) ([webmaster128](https://github.com/webmaster128))
+- Remove getrandom dependency being pulled [\#20](https://github.com/CosmWasm/cw-storage-plus/pull/20) ([ueco-jb](https://github.com/ueco-jb))
+- Release 1.0.0 [\#17](https://github.com/CosmWasm/cw-storage-plus/pull/17) ([uint](https://github.com/uint))
+
 ## [v1.0.0](https://github.com/CosmWasm/cw-storage-plus/tree/v1.0.0) (2022-11-23)
 
 [Full Changelog](https://github.com/CosmWasm/cw-storage-plus/compare/v0.16.0...v1.0.0)
