@@ -4,21 +4,21 @@
 //! Everything in this file is only responsible for building such keys
 //! and is in no way specific to any kind of storage.
 
-use serde::de::DeserializeOwned;
 use std::any::type_name;
 
 use crate::keys::Key;
+use crate::serde::from_slice;
 
 use cosmwasm_std::{
-    from_slice, to_vec, Addr, Binary, ContractResult, CustomQuery, QuerierWrapper, QueryRequest,
-    StdError, StdResult, SystemResult, WasmQuery,
+    Addr, Binary, ContractResult, CustomQuery, QuerierWrapper, QueryRequest, StdError, StdResult,
+    SystemResult, WasmQuery,
 };
 
 /// may_deserialize parses json bytes from storage (Option), returning Ok(None) if no data present
 ///
 /// value is an odd type, but this is meant to be easy to use with output from storage.get (Option<Vec<u8>>)
 /// and value.map(|s| s.as_slice()) seems trickier than &value
-pub(crate) fn may_deserialize<T: DeserializeOwned>(
+pub(crate) fn may_deserialize<T: prost::Message + Default>(
     value: &Option<Vec<u8>>,
 ) -> StdResult<Option<T>> {
     match value {
@@ -28,7 +28,9 @@ pub(crate) fn may_deserialize<T: DeserializeOwned>(
 }
 
 /// must_deserialize parses json bytes from storage (Option), returning NotFound error if no data present
-pub(crate) fn must_deserialize<T: DeserializeOwned>(value: &Option<Vec<u8>>) -> StdResult<T> {
+pub(crate) fn must_deserialize<T: prost::Message + Default>(
+    value: &Option<Vec<u8>>,
+) -> StdResult<T> {
     match value {
         Some(vec) => from_slice(vec),
         None => Err(StdError::not_found(type_name::<T>())),
@@ -104,7 +106,7 @@ pub(crate) fn query_raw<Q: CustomQuery>(
     }
     .into();
 
-    let raw = to_vec(&request).map_err(|serialize_err| {
+    let raw = cosmwasm_std::to_vec(&request).map_err(|serialize_err| {
         StdError::generic_err(format!("Serializing QueryRequest: {}", serialize_err))
     })?;
     match querier.raw_query(&raw) {
@@ -123,12 +125,14 @@ pub(crate) fn query_raw<Q: CustomQuery>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use cosmwasm_std::{to_vec, StdError};
-    use serde::{Deserialize, Serialize};
+    use crate::serde::to_vec;
+    use cosmwasm_std::StdError;
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    #[derive(prost::Message, PartialEq)]
     struct Person {
+        #[prost(string, tag = "1")]
         pub name: String,
+        #[prost(int32, tag = "2")]
         pub age: i32,
     }
 
@@ -186,7 +190,7 @@ mod test {
         let parsed = must_deserialize::<Person>(&None);
         match parsed.unwrap_err() {
             StdError::NotFound { kind, .. } => {
-                assert_eq!(kind, "cw_storage_plus::helpers::test::Person")
+                assert_eq!(kind, "cw_storage_proto::helpers::test::Person")
             }
             e => panic!("Unexpected error {}", e),
         }

@@ -1,10 +1,6 @@
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::marker::PhantomData;
 
-use cosmwasm_std::{
-    to_vec, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage, WasmQuery,
-};
+use cosmwasm_std::{Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage};
 
 use crate::helpers::{may_deserialize, must_deserialize};
 
@@ -29,7 +25,7 @@ impl<'a, T> Item<'a, T> {
 
 impl<'a, T> Item<'a, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     // this gets the path of the data to use elsewhere
     pub fn as_slice(&self) -> &[u8] {
@@ -38,7 +34,7 @@ where
 
     /// save will serialize the model and store, returns an error on serialization issues
     pub fn save(&self, store: &mut dyn Storage, data: &T) -> StdResult<()> {
-        store.set(self.storage_key, &to_vec(data)?);
+        store.set(self.storage_key, &data.encode_to_vec());
         Ok(())
     }
 
@@ -81,28 +77,31 @@ where
     /// Note that we expect an Item to be set, and error if there is no data there
     pub fn query<Q: CustomQuery>(
         &self,
-        querier: &QuerierWrapper<Q>,
-        remote_contract: Addr,
+        _querier: &QuerierWrapper<Q>,
+        _remote_contract: Addr,
     ) -> StdResult<T> {
-        let request = WasmQuery::Raw {
-            contract_addr: remote_contract.into(),
-            key: self.storage_key.into(),
-        };
-        querier.query(&request.into())
+        // let request = WasmQuery::Raw {
+        //     contract_addr: remote_contract.into(),
+        //     key: self.storage_key.into(),
+        // };
+        // querier.query(&request.into())
+        unimplemented!();
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use cosmwasm_std::testing::MockStorage;
-    use serde::{Deserialize, Serialize};
+    use crate::serde::to_vec;
 
+    use cosmwasm_std::testing::MockStorage;
     use cosmwasm_std::{OverflowError, OverflowOperation, StdError};
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    #[derive(prost::Message, PartialEq)]
     struct Config {
+        #[prost(string, tag = "1")]
         pub owner: String,
+        #[prost(int32, tag = "2")]
         pub max_tokens: i32,
     }
 

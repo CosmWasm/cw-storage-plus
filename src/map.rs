@@ -1,5 +1,3 @@
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::marker::PhantomData;
 
 #[cfg(feature = "iterator")]
@@ -15,7 +13,8 @@ use crate::keys::{Key, PrimaryKey};
 use crate::path::Path;
 #[cfg(feature = "iterator")]
 use crate::prefix::{namespaced_prefix_range, Prefix};
-use cosmwasm_std::{from_slice, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage};
+use crate::serde::from_slice;
+use cosmwasm_std::{Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage};
 
 #[derive(Debug, Clone)]
 pub struct Map<'a, K, T> {
@@ -41,7 +40,7 @@ impl<'a, K, T> Map<'a, K, T> {
 
 impl<'a, K, T> Map<'a, K, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
     K: PrimaryKey<'a>,
 {
     pub fn key(&self, k: K) -> Path<T> {
@@ -144,7 +143,7 @@ where
 #[cfg(feature = "iterator")]
 impl<'a, K, T> Map<'a, K, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
     K: PrimaryKey<'a>,
 {
     pub fn sub_prefix(&self, p: K::SubPrefix) -> Prefix<K::SuperSuffix, T, K::SuperSuffix> {
@@ -160,7 +159,7 @@ where
 #[cfg(feature = "iterator")]
 impl<'a, K, T> Map<'a, K, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
     // TODO: this should only be when K::Prefix == ()
     // Other cases need to call prefix() first
     K: PrimaryKey<'a>,
@@ -190,7 +189,7 @@ where
 #[cfg(feature = "iterator")]
 impl<'a, K, T> Map<'a, K, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
     K: PrimaryKey<'a> + KeyDeserialize,
 {
     /// While `range` over a `prefix` fixes the prefix to one element and iterates over the
@@ -225,7 +224,7 @@ where
 #[cfg(feature = "iterator")]
 impl<'a, K, T> Map<'a, K, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
     K: PrimaryKey<'a>,
 {
     pub fn range_raw<'c>(
@@ -258,7 +257,7 @@ where
 #[cfg(feature = "iterator")]
 impl<'a, K, T> Map<'a, K, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
     K: PrimaryKey<'a> + KeyDeserialize,
 {
     pub fn range<'c>(
@@ -293,23 +292,23 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use serde::{Deserialize, Serialize};
     use std::ops::Deref;
 
     use cosmwasm_std::testing::MockStorage;
-    use cosmwasm_std::to_binary;
     use cosmwasm_std::StdError::InvalidUtf8;
     #[cfg(feature = "iterator")]
     use cosmwasm_std::{Order, StdResult};
 
     #[cfg(feature = "iterator")]
     use crate::bound::Bounder;
-
     use crate::int_key::IntKey;
+    use crate::serde::to_binary;
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+    #[derive(prost::Message, PartialEq, Clone)]
     struct Data {
+        #[prost(string, tag = "1")]
         pub name: String,
+        #[prost(int32, tag = "2")]
         pub age: i32,
     }
 
@@ -1556,7 +1555,6 @@ mod test {
 
         TEST_MAP.clear(&mut storage);
 
-        assert!(!TEST_MAP.has(&storage, "key0"));
         assert!(!TEST_MAP.has(&storage, "key1"));
         assert!(!TEST_MAP.has(&storage, "key2"));
         assert!(!TEST_MAP.has(&storage, "key3"));

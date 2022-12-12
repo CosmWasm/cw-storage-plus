@@ -3,8 +3,6 @@
 
 use crate::PrefixBound;
 use cosmwasm_std::{StdError, StdResult, Storage};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 
 use crate::de::KeyDeserialize;
 use crate::indexes::Index;
@@ -22,7 +20,7 @@ pub trait IndexList<T> {
 pub struct IndexedMap<'a, K, T, I>
 where
     K: PrimaryKey<'a>,
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     I: IndexList<T>,
 {
     pk_namespace: &'a [u8],
@@ -35,7 +33,7 @@ where
 impl<'a, K, T, I> IndexedMap<'a, K, T, I>
 where
     K: PrimaryKey<'a>,
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     I: IndexList<T>,
 {
     pub const fn new(pk_namespace: &'a str, indexes: I) -> Self {
@@ -54,7 +52,7 @@ where
 impl<'a, K, T, I> IndexedMap<'a, K, T, I>
 where
     K: PrimaryKey<'a>,
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     I: IndexList<T>,
 {
     /// save will serialize the model and store, returns an error on serialization issues.
@@ -171,7 +169,7 @@ where
 impl<'a, K, T, I> IndexedMap<'a, K, T, I>
 where
     K: PrimaryKey<'a>,
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     I: IndexList<T>,
 {
     /// While `range_raw` over a `prefix` fixes the prefix to one element and iterates over the
@@ -199,7 +197,7 @@ where
 #[cfg(feature = "iterator")]
 impl<'a, K, T, I> IndexedMap<'a, K, T, I>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     K: PrimaryKey<'a>,
     I: IndexList<T>,
 {
@@ -215,7 +213,7 @@ where
 #[cfg(feature = "iterator")]
 impl<'a, K, T, I> IndexedMap<'a, K, T, I>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     K: PrimaryKey<'a> + KeyDeserialize,
     I: IndexList<T>,
 {
@@ -307,12 +305,14 @@ mod test {
     use crate::{MultiIndex, UniqueIndex};
     use cosmwasm_std::testing::MockStorage;
     use cosmwasm_std::{MemoryStorage, Order};
-    use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+    #[derive(prost::Message, PartialEq, Clone)]
     struct Data {
+        #[prost(string, tag = "1")]
         pub name: String,
+        #[prost(string, tag = "2")]
         pub last_name: String,
+        #[prost(uint32, tag = "3")]
         pub age: u32,
     }
 
@@ -1566,16 +1566,16 @@ mod test {
 
     mod pk_multi_index {
         use super::*;
-        use cosmwasm_std::{Addr, Uint128};
+        use cosmwasm_std::Addr;
 
         struct Indexes<'a> {
             // The last type param must match the `IndexedMap` primary key type below
-            spender: MultiIndex<'a, Addr, Uint128, (Addr, Addr)>,
+            spender: MultiIndex<'a, Addr, u64, (Addr, Addr)>,
         }
 
-        impl<'a> IndexList<Uint128> for Indexes<'a> {
-            fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Uint128>> + '_> {
-                let v: Vec<&dyn Index<Uint128>> = vec![&self.spender];
+        impl<'a> IndexList<u64> for Indexes<'a> {
+            fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<u64>> + '_> {
+                let v: Vec<&dyn Index<u64>> = vec![&self.spender];
                 Box::new(v.into_iter())
             }
         }
@@ -1595,25 +1595,25 @@ mod test {
                     "allowances__spender",
                 ),
             };
-            let map = IndexedMap::<(&Addr, &Addr), Uint128, Indexes>::new("allowances", indexes);
+            let map = IndexedMap::<(&Addr, &Addr), u64, Indexes>::new("allowances", indexes);
             let mut store = MockStorage::new();
 
             map.save(
                 &mut store,
                 (&Addr::unchecked("owner1"), &Addr::unchecked("spender1")),
-                &Uint128::new(11),
+                &11,
             )
             .unwrap();
             map.save(
                 &mut store,
                 (&Addr::unchecked("owner1"), &Addr::unchecked("spender2")),
-                &Uint128::new(12),
+                &12,
             )
             .unwrap();
             map.save(
                 &mut store,
                 (&Addr::unchecked("owner2"), &Addr::unchecked("spender1")),
-                &Uint128::new(21),
+                &21,
             )
             .unwrap();
 
@@ -1624,7 +1624,7 @@ mod test {
                 .unwrap();
 
             // Strip the index from values (for simpler comparison)
-            let items: Vec<_> = items.into_iter().map(|(_, v)| v.u128()).collect();
+            let items: Vec<_> = items.into_iter().map(|(_, v)| v).collect();
 
             assert_eq!(items, vec![11, 12, 21]);
 
@@ -1637,7 +1637,7 @@ mod test {
                 .unwrap();
 
             // Strip the index from values (for simpler comparison)
-            let items: Vec<_> = items.into_iter().map(|(_, v)| v.u128()).collect();
+            let items: Vec<_> = items.into_iter().map(|(_, v)| v).collect();
 
             assert_eq!(items, vec![11, 21, 12]);
 
@@ -1649,7 +1649,7 @@ mod test {
                 .unwrap();
 
             // Strip the index from values (for simpler comparison)
-            let items: Vec<_> = items.into_iter().map(|(_, v)| v.u128()).collect();
+            let items: Vec<_> = items.into_iter().map(|(_, v)| v).collect();
 
             assert_eq!(items, vec![11, 12]);
 
@@ -1663,7 +1663,7 @@ mod test {
                 .unwrap();
 
             // Strip the index from values (for simpler comparison)
-            let items: Vec<_> = items.into_iter().map(|(_, v)| v.u128()).collect();
+            let items: Vec<_> = items.into_iter().map(|(_, v)| v).collect();
 
             assert_eq!(items, vec![11, 21]);
 
@@ -1678,10 +1678,7 @@ mod test {
 
             assert_eq!(
                 items,
-                vec![(
-                    (Addr::unchecked("owner1"), Addr::unchecked("spender2")),
-                    Uint128::new(12)
-                )]
+                vec![((Addr::unchecked("owner1"), Addr::unchecked("spender2")), 12)]
             );
         }
     }

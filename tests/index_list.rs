@@ -1,23 +1,25 @@
 #[cfg(all(test, feature = "iterator", feature = "macro"))]
 mod test {
-    use cosmwasm_std::{testing::MockStorage, Addr};
+    use cosmwasm_std::testing::MockStorage;
     use cw_storage_macro::index_list;
-    use cw_storage_plus::{IndexedMap, MultiIndex, UniqueIndex};
-    use serde::{Deserialize, Serialize};
+    use cw_storage_proto::{IndexedMap, MultiIndex, UniqueIndex};
 
     #[test]
     fn index_list_compiles() {
-        #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+        #[derive(prost::Message, Clone, PartialEq)]
         struct TestStruct {
+            #[prost(uint64, tag = "1")]
             id: u64,
+            #[prost(uint32, tag = "2")]
             id2: u32,
-            addr: Addr,
+            #[prost(string, tag = "3")]
+            addr: String,
         }
 
         #[index_list(TestStruct)]
         struct TestIndexes<'a> {
             id: MultiIndex<'a, u32, TestStruct, u64>,
-            addr: UniqueIndex<'a, Addr, TestStruct>,
+            addr: UniqueIndex<'a, String, TestStruct>,
         }
 
         let _: IndexedMap<u64, TestStruct, TestIndexes> = IndexedMap::new(
@@ -31,17 +33,20 @@ mod test {
 
     #[test]
     fn index_list_works() {
-        #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+        #[derive(prost::Message, Clone, PartialEq)]
         struct TestStruct {
+            #[prost(uint64, tag = "1")]
             id: u64,
+            #[prost(uint32, tag = "2")]
             id2: u32,
-            addr: Addr,
+            #[prost(string, tag = "3")]
+            addr: String,
         }
 
         #[index_list(TestStruct)]
         struct TestIndexes<'a> {
             id: MultiIndex<'a, u32, TestStruct, u64>,
-            addr: UniqueIndex<'a, Addr, TestStruct>,
+            addr: UniqueIndex<'a, String, TestStruct>,
         }
 
         let mut storage = MockStorage::new();
@@ -59,7 +64,7 @@ mod test {
             &TestStruct {
                 id: 0,
                 id2: 100,
-                addr: Addr::unchecked("1"),
+                addr: "1".into(),
             },
         )
         .unwrap();
@@ -69,7 +74,7 @@ mod test {
             TestStruct {
                 id: 0,
                 id2: 100,
-                addr: Addr::unchecked("1"),
+                addr: "1".into(),
             }
         );
     }

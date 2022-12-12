@@ -1,6 +1,3 @@
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-
 use cosmwasm_std::{StdError, StdResult, Storage};
 
 use crate::snapshot::{ChangeSet, Snapshot};
@@ -9,17 +6,23 @@ use crate::{Item, Map, Strategy};
 /// Item that maintains a snapshot of one or more checkpoints.
 /// We can query historical data as well as current state.
 /// What data is snapshotted depends on the Strategy.
-pub struct SnapshotItem<'a, T> {
+pub struct SnapshotItem<'a, T>
+where
+    T: prost::Message + Default,
+{
     primary: Item<'a, T>,
     changelog_namespace: &'a str,
     snapshots: Snapshot<'a, (), T>,
 }
 
-impl<'a, T> SnapshotItem<'a, T> {
+impl<'a, T> SnapshotItem<'a, T>
+where
+    T: prost::Message + Default,
+{
     /// Example:
     ///
     /// ```rust
-    /// use cw_storage_plus::{SnapshotItem, Strategy};
+    /// use cw_storage_proto::{SnapshotItem, Strategy};
     ///
     /// SnapshotItem::<'static, u64>::new(
     ///     "every",
@@ -56,7 +59,7 @@ impl<'a, T> SnapshotItem<'a, T> {
 
 impl<'a, T> SnapshotItem<'a, T>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
 {
     /// load old value and store changelog
     fn write_change(&self, store: &mut dyn Storage, height: u64) -> StdResult<()> {

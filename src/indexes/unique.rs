@@ -3,24 +3,24 @@
 
 use std::marker::PhantomData;
 
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-
-use cosmwasm_std::{from_slice, Binary, Order, Record, StdError, StdResult, Storage};
+use cosmwasm_std::{Order, Record, StdError, StdResult, Storage};
 
 use crate::bound::PrefixBound;
 use crate::de::KeyDeserialize;
 use crate::iter_helpers::deserialize_kv;
 use crate::map::Map;
 use crate::prefix::namespaced_prefix_range;
+use crate::serde::{from_slice, to_vec};
 use crate::{Bound, Index, Prefix, Prefixer, PrimaryKey};
 
 /// UniqueRef stores Binary(Vec[u8]) representation of private key and index value
-#[derive(Deserialize, Serialize)]
-pub(crate) struct UniqueRef<T> {
+#[derive(prost::Message)]
+pub(crate) struct UniqueRef {
     // note, we collapse the pk - combining everything under the namespace - even if it is composite
-    pk: Binary,
-    value: T,
+    #[prost(bytes, tag = "1")]
+    pk: Vec<u8>,
+    #[prost(bytes, tag = "2")]
+    value: Vec<u8>,
 }
 
 /// UniqueIndex stores (namespace, index_name, idx_value) -> {key, value}
@@ -28,9 +28,10 @@ pub(crate) struct UniqueRef<T> {
 /// The optional PK type defines the type of Primary Key deserialization.
 pub struct UniqueIndex<'a, IK, T, PK = ()> {
     index: fn(&T) -> IK,
-    idx_map: Map<'a, IK, UniqueRef<T>>,
+    idx_map: Map<'a, IK, UniqueRef>,
     idx_namespace: &'a [u8],
-    phantom: PhantomData<PK>,
+    pk_type: PhantomData<PK>,
+    data_type: PhantomData<T>,
 }
 
 impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK> {
@@ -42,7 +43,7 @@ impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK> {
     /// ## Example:
     ///
     /// ```rust
-    /// use cw_storage_plus::UniqueIndex;
+    /// use cw_storage_proto::UniqueIndex;
     ///
     /// struct Data {
     ///     pub name: String,
@@ -56,14 +57,15 @@ impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK> {
             index: idx_fn,
             idx_map: Map::new(idx_namespace),
             idx_namespace: idx_namespace.as_bytes(),
-            phantom: PhantomData,
+            pk_type: PhantomData,
+            data_type: PhantomData,
         }
     }
 }
 
 impl<'a, IK, T, PK> Index<T> for UniqueIndex<'a, IK, T, PK>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     IK: PrimaryKey<'a>,
 {
     fn save(&self, store: &mut dyn Storage, pk: &[u8], data: &T) -> StdResult<()> {
@@ -73,9 +75,9 @@ where
             .update(store, idx, |existing| -> StdResult<_> {
                 match existing {
                     Some(_) => Err(StdError::generic_err("Violates unique constraint on index")),
-                    None => Ok(UniqueRef::<T> {
+                    None => Ok(UniqueRef {
                         pk: pk.into(),
-                        value: data.clone(),
+                        value: to_vec(data)?,
                     }),
                 }
             })?;
@@ -89,23 +91,23 @@ where
     }
 }
 
-fn deserialize_unique_v<T: DeserializeOwned>(kv: Record) -> StdResult<Record<T>> {
+fn deserialize_unique_v<T: prost::Message + Default>(kv: Record) -> StdResult<Record<T>> {
     let (_, v) = kv;
-    let t = from_slice::<UniqueRef<T>>(&v)?;
-    Ok((t.pk.0, t.value))
+    let t = from_slice::<UniqueRef>(&v)?;
+    Ok((t.pk, from_slice(&t.value)?))
 }
 
-fn deserialize_unique_kv<K: KeyDeserialize, T: DeserializeOwned>(
+fn deserialize_unique_kv<K: KeyDeserialize, T: prost::Message + Default>(
     kv: Record,
 ) -> StdResult<(K::Output, T)> {
     let (_, v) = kv;
-    let t = from_slice::<UniqueRef<T>>(&v)?;
-    Ok((K::from_vec(t.pk.0)?, t.value))
+    let t = from_slice::<UniqueRef>(&v)?;
+    Ok((K::from_vec(t.pk)?, from_slice(&t.value)?))
 }
 
 impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     IK: PrimaryKey<'a>,
 {
     pub fn index_key(&self, k: IK) -> Vec<u8> {
@@ -124,18 +126,17 @@ where
 
     /// returns all items that match this secondary index, always by pk Ascending
     pub fn item(&self, store: &dyn Storage, idx: IK) -> StdResult<Option<Record<T>>> {
-        let data = self
-            .idx_map
+        self.idx_map
             .may_load(store, idx)?
-            .map(|i| (i.pk.into(), i.value));
-        Ok(data)
+            .map(|i| Ok((i.pk, from_slice(&i.value)?)))
+            .transpose()
     }
 }
 
 // short-cut for simple keys, rather than .prefix(()).range_raw(...)
 impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     IK: PrimaryKey<'a>,
 {
     // I would prefer not to copy code from Prefix, but no other way
@@ -168,7 +169,7 @@ where
 impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK>
 where
     PK: PrimaryKey<'a> + KeyDeserialize,
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     IK: PrimaryKey<'a>,
 {
     /// While `range` over a `prefix` fixes the prefix to one element and iterates over the

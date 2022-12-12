@@ -1,6 +1,3 @@
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-
 use cosmwasm_std::{StdError, StdResult, Storage};
 
 use crate::bound::PrefixBound;
@@ -16,18 +13,24 @@ use crate::{Bound, Prefixer, Strategy};
 /// Map that maintains a snapshots of one or more checkpoints.
 /// We can query historical data as well as current state.
 /// What data is snapshotted depends on the Strategy.
-pub struct SnapshotMap<'a, K, T> {
+pub struct SnapshotMap<'a, K, T>
+where
+    T: prost::Message + Default,
+{
     primary: Map<'a, K, T>,
     snapshots: Snapshot<'a, K, T>,
 }
 
-impl<'a, K, T> SnapshotMap<'a, K, T> {
+impl<'a, K, T> SnapshotMap<'a, K, T>
+where
+    T: prost::Message + Default,
+{
     /// Example:
     ///
     /// ```rust
-    /// use cw_storage_plus::{SnapshotMap, Strategy};
+    /// use cw_storage_proto::{SnapshotMap, Strategy};
     ///
-    /// SnapshotMap::<&[u8], &str>::new(
+    /// SnapshotMap::<&[u8], String>::new(
     ///     "never",
     ///     "never__check",
     ///     "never__change",
@@ -53,7 +56,7 @@ impl<'a, K, T> SnapshotMap<'a, K, T> {
 
 impl<'a, K, T> SnapshotMap<'a, K, T>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     K: PrimaryKey<'a> + Prefixer<'a>,
 {
     pub fn add_checkpoint(&self, store: &mut dyn Storage, height: u64) -> StdResult<()> {
@@ -67,7 +70,7 @@ where
 
 impl<'a, K, T> SnapshotMap<'a, K, T>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
 {
     pub fn key(&self, k: K) -> Path<T> {
@@ -164,7 +167,7 @@ where
 // short-cut for simple keys, rather than .prefix(()).range_raw(...)
 impl<'a, K, T> SnapshotMap<'a, K, T>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
 {
     // I would prefer not to copy code from Prefix, but no other way
@@ -199,7 +202,7 @@ where
 #[cfg(feature = "iterator")]
 impl<'a, K, T> SnapshotMap<'a, K, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
     K: PrimaryKey<'a> + KeyDeserialize,
 {
     /// While `range` over a `prefix` fixes the prefix to one element and iterates over the

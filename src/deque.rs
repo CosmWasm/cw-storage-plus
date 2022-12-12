@@ -1,9 +1,9 @@
 use std::{any::type_name, convert::TryInto, marker::PhantomData};
 
-use cosmwasm_std::{to_vec, StdError, StdResult, Storage};
-use serde::{de::DeserializeOwned, Serialize};
+use cosmwasm_std::{StdError, StdResult, Storage};
 
 use crate::helpers::{may_deserialize, namespaces_with_key};
+use crate::serde::to_vec;
 
 // metadata keys need to have different length than the position type (4 bytes) to prevent collisions
 const TAIL_KEY: &[u8] = b"t";
@@ -30,7 +30,7 @@ impl<'a, T> Deque<'a, T> {
     }
 }
 
-impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
+impl<'a, T: prost::Message + Default> Deque<'a, T> {
     /// Adds the given value to the end of the deque
     pub fn push_back(&self, storage: &mut dyn Storage, value: &T) -> StdResult<()> {
         // save value
@@ -196,7 +196,7 @@ fn calc_len(head: u32, tail: u32) -> u32 {
     tail.wrapping_sub(head)
 }
 
-impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
+impl<'a, T: prost::Message + Default> Deque<'a, T> {
     pub fn iter(&self, storage: &'a dyn Storage) -> StdResult<DequeIter<T>> {
         Ok(DequeIter {
             deque: self,
@@ -209,7 +209,7 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
 
 pub struct DequeIter<'a, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     deque: &'a Deque<'a, T>,
     storage: &'a dyn Storage,
@@ -219,7 +219,7 @@ where
 
 impl<'a, T> Iterator for DequeIter<'a, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     type Item = StdResult<T>;
 
@@ -260,7 +260,7 @@ where
 
 impl<'a, T> DoubleEndedIterator for DequeIter<'a, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
@@ -294,7 +294,6 @@ mod tests {
 
     use cosmwasm_std::testing::MockStorage;
     use cosmwasm_std::{StdError, StdResult};
-    use serde::{Deserialize, Serialize};
 
     #[test]
     fn push_and_pop() {
@@ -496,9 +495,11 @@ mod tests {
         assert_eq!(deque.front(&store).unwrap(), Some(3));
     }
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+    #[derive(prost::Message, PartialEq, Clone)]
     struct Data {
+        #[prost(string, tag = "1")]
         pub name: String,
+        #[prost(int32, tag = "2")]
         pub age: i32,
     }
 

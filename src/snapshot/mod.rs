@@ -9,15 +9,16 @@ use crate::bound::Bound;
 use crate::de::KeyDeserialize;
 use crate::{Map, Prefixer, PrimaryKey};
 use cosmwasm_std::{Order, StdError, StdResult, Storage};
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
 
 /// Structure holding a map of checkpoints composited from
 /// height (as u64) and counter of how many times it has
 /// been checkpointed (as u32).
 /// Stores all changes in changelog.
 #[derive(Debug, Clone)]
-pub(crate) struct Snapshot<'a, K, T> {
+pub(crate) struct Snapshot<'a, K, T>
+where
+    T: prost::Message + Default,
+{
     checkpoints: Map<'a, u64, u32>,
 
     // this stores all changes (key, height). Must differentiate between no data written,
@@ -28,7 +29,10 @@ pub(crate) struct Snapshot<'a, K, T> {
     strategy: Strategy,
 }
 
-impl<'a, K, T> Snapshot<'a, K, T> {
+impl<'a, K, T> Snapshot<'a, K, T>
+where
+    T: prost::Message + Default,
+{
     pub const fn new(
         checkpoints: &'a str,
         changelog: &'a str,
@@ -63,7 +67,7 @@ impl<'a, K, T> Snapshot<'a, K, T> {
 
 impl<'a, K, T> Snapshot<'a, K, T>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Default + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
 {
     /// should_checkpoint looks at the strategy and determines if we want to checkpoint
@@ -160,7 +164,7 @@ where
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Strategy {
     EveryBlock,
     Never,
@@ -172,8 +176,9 @@ pub enum Strategy {
     Selected,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub struct ChangeSet<T> {
+#[derive(Clone, Copy, PartialEq, Eq, prost::Message)]
+pub struct ChangeSet<T: prost::Message + Default> {
+    #[prost(message, optional, tag = "1")]
     pub old: Option<T>,
 }
 

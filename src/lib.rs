@@ -28,8 +28,10 @@ mod keys;
 mod map;
 mod path;
 mod prefix;
+mod serde;
 mod snapshot;
 
+pub use crate::serde::{from_slice, to_binary, to_vec};
 #[cfg(feature = "iterator")]
 pub use bound::{Bound, Bounder, PrefixBound, RawBound};
 pub use de::KeyDeserialize;
@@ -66,21 +68,22 @@ extern crate cw_storage_macro;
 /// # Example
 ///
 /// ```rust
-/// use cosmwasm_std::Addr;
-/// use cw_storage_plus::{MultiIndex, UniqueIndex, index_list};
-/// use serde::{Serialize, Deserialize};
+/// use cw_storage_proto::{MultiIndex, UniqueIndex, index_list};
 ///
-/// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+/// #[derive(prost::Message, Clone, PartialEq)]
 /// struct TestStruct {
+///     #[prost(uint64, tag = "1")]
 ///     id: u64,
+///     #[prost(uint32, tag = "2")]
 ///     id2: u32,
-///     addr: Addr,
+///     #[prost(string, tag = "3")]
+///     addr: String,
 /// }
 ///
 /// #[index_list(TestStruct)] // <- Add this line right here.
 /// struct TestIndexes<'a> {
 ///     id: MultiIndex<'a, u32, TestStruct, u64>,
-///     addr: UniqueIndex<'a, Addr, TestStruct>,
+///     addr: UniqueIndex<'a, String, TestStruct>,
 /// }
 /// ```
 ///

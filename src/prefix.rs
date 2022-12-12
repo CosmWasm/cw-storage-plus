@@ -1,6 +1,3 @@
-#![cfg(feature = "iterator")]
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::marker::PhantomData;
 
 use cosmwasm_std::{Order, Record, StdResult, Storage};
@@ -18,7 +15,7 @@ type DeserializeVFn<T> = fn(&dyn Storage, &[u8], Record) -> StdResult<Record<T>>
 type DeserializeKvFn<K, T> =
     fn(&dyn Storage, &[u8], Record) -> StdResult<(<K as KeyDeserialize>::Output, T)>;
 
-pub fn default_deserializer_v<T: DeserializeOwned>(
+pub fn default_deserializer_v<T: prost::Message + Default>(
     _: &dyn Storage,
     _: &[u8],
     raw: Record,
@@ -26,7 +23,7 @@ pub fn default_deserializer_v<T: DeserializeOwned>(
     deserialize_v(raw)
 }
 
-pub fn default_deserializer_kv<K: KeyDeserialize, T: DeserializeOwned>(
+pub fn default_deserializer_kv<K: KeyDeserialize, T: prost::Message + Default>(
     _: &dyn Storage,
     _: &[u8],
     raw: Record,
@@ -38,7 +35,7 @@ pub fn default_deserializer_kv<K: KeyDeserialize, T: DeserializeOwned>(
 pub struct Prefix<K, T, B = Vec<u8>>
 where
     K: KeyDeserialize,
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     /// all namespaces prefixes and concatenated with the key
     storage_prefix: Vec<u8>,
@@ -52,7 +49,7 @@ where
 impl<K, T> Deref for Prefix<K, T>
 where
     K: KeyDeserialize,
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     type Target = [u8];
 
@@ -64,7 +61,7 @@ where
 impl<K, T, B> Prefix<K, T, B>
 where
     K: KeyDeserialize,
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     pub fn new(top_name: &[u8], sub_names: &[Key]) -> Self {
         Prefix::with_deserialization_functions(
@@ -98,7 +95,7 @@ impl<'b, K, T, B> Prefix<K, T, B>
 where
     B: PrimaryKey<'b>,
     K: KeyDeserialize,
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     pub fn range_raw<'a>(
         &self,
@@ -297,6 +294,7 @@ fn increment_last_byte(input: &[u8]) -> Vec<u8> {
 mod test {
     use super::*;
     use cosmwasm_std::testing::MockStorage;
+    use prost::Message;
 
     #[test]
     fn ensure_proper_range_bounds() {
@@ -311,12 +309,12 @@ mod test {
         };
 
         // set some data, we care about "foo" prefix
-        store.set(b"foobar", b"1");
-        store.set(b"foora", b"2");
-        store.set(b"foozi", b"3");
+        store.set(b"foobar", &1u64.encode_to_vec());
+        store.set(b"foora", &2u64.encode_to_vec());
+        store.set(b"foozi", &3u64.encode_to_vec());
         // these shouldn't match
-        store.set(b"foply", b"100");
-        store.set(b"font", b"200");
+        store.set(b"foply", &100u64.encode_to_vec());
+        store.set(b"font", &200u64.encode_to_vec());
 
         let expected = vec![
             (b"bar".to_vec(), 1u64),
