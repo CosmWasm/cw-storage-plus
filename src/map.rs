@@ -1,6 +1,7 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use std::marker::PhantomData;
+use crate::cw_std::marker::PhantomData;
+use crate::cw_std::{vec::Vec, string::String};
 
 #[cfg(feature = "iterator")]
 use crate::bound::{Bound, PrefixBound};
@@ -294,7 +295,7 @@ where
 mod test {
     use super::*;
     use serde::{Deserialize, Serialize};
-    use std::ops::Deref;
+    use crate::cw_std::ops::Deref;
 
     use cosmwasm_std::testing::MockStorage;
     use cosmwasm_std::to_binary;
