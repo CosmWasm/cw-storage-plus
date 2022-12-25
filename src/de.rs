@@ -1,6 +1,6 @@
-use std::array::TryFromSliceError;
-use std::convert::TryInto;
-
+use crate::cw_std::array::TryFromSliceError;
+use crate::cw_std::convert::TryInto;
+use crate::cw_std::prelude::*;
 use cosmwasm_std::{Addr, StdError, StdResult};
 
 use crate::int_key::IntKey;
@@ -200,6 +200,7 @@ impl<T: KeyDeserialize, U: KeyDeserialize, V: KeyDeserialize> KeyDeserialize for
 mod test {
     use super::*;
     use crate::PrimaryKey;
+    use crate::cw_std::prelude::*;
 
     const BYTES: &[u8] = b"Hello";
     const STRING: &str = "Hello";

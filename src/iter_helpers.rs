@@ -1,4 +1,5 @@
 #![cfg(feature = "iterator")]
+use crate::cw_std::vec;
 
 use serde::de::DeserializeOwned;
 
