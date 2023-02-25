@@ -1,6 +1,8 @@
 #![cfg(feature = "iterator")]
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use core::fmt;
+use std::fmt::Debug;
 use std::marker::PhantomData;
 
 use cosmwasm_std::{Order, Record, StdResult, Storage};
@@ -47,6 +49,20 @@ where
     pk_name: Vec<u8>,
     de_fn_kv: DeserializeKvFn<K, T>,
     de_fn_v: DeserializeVFn<T>,
+}
+
+impl<K, T> Debug for Prefix<K, T> 
+where
+    K: KeyDeserialize,
+    T: Serialize + DeserializeOwned,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Prefix")
+         .field("storage_prefix", &self.storage_prefix)
+         .field("data", &self.data)
+         .field("pk_name", &self.pk_name)
+         .finish()
+    }
 }
 
 impl<K, T> Deref for Prefix<K, T>
@@ -438,4 +454,10 @@ mod test {
             .collect();
         assert_eq!(res.unwrap().as_slice(), &[]);
     }
+}
+
+#[test]
+fn prefix_debug() {
+    let prefix: Prefix<String, String> = Prefix::new(b"lol", &[Key::Val8([8; 1])]);
+    dbg!(prefix);
 }
