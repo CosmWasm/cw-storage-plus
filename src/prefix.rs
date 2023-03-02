@@ -61,7 +61,7 @@ where
          .field("storage_prefix", &self.storage_prefix)
          .field("data", &self.data)
          .field("pk_name", &self.pk_name)
-         .finish()
+         .finish_non_exhaustive()
     }
 }
 
@@ -459,5 +459,5 @@ mod test {
 #[test]
 fn prefix_debug() {
     let prefix: Prefix<String, String> = Prefix::new(b"lol", &[Key::Val8([8; 1])]);
-    dbg!(prefix);
+    assert_eq!(format!("{:?}", prefix), "lol".to_string());
 }
