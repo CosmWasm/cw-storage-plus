@@ -459,10 +459,7 @@ mod test {
 #[test]
 fn prefix_debug() {
     let prefix: Prefix<String, String> = Prefix::new(b"lol", &[Key::Val8([8; 1])]);
-<<<<<<< HEAD
     assert_eq!(format!("{:?}", prefix), "Prefix { storage_prefix: [0, 3, 108, 111, 108, 0, 1, 8], data: PhantomData, pk_name: [], .. }");
-}
-=======
+
     assert_eq!(format!("{:?}", prefix), "Prefix { storage_prefix: [0, 3, 108, 111, 108, 0, 1, 8], data: PhantomData<(alloc::string::String, alloc::vec::Vec<u8>)>, pk_name: [], .. }");
 }
->>>>>>> 7029a6e87206b9cc6eb60d0efd7f124b6618b75b
