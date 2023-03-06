@@ -1,7 +1,7 @@
 #![cfg(feature = "iterator")]
+use core::fmt;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use core::fmt;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -51,17 +51,17 @@ where
     de_fn_v: DeserializeVFn<T>,
 }
 
-impl<K, T> Debug for Prefix<K, T> 
+impl<K, T> Debug for Prefix<K, T>
 where
     K: KeyDeserialize,
     T: Serialize + DeserializeOwned,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Prefix")
-         .field("storage_prefix", &self.storage_prefix)
-         .field("data", &self.data)
-         .field("pk_name", &self.pk_name)
-         .finish_non_exhaustive()
+            .field("storage_prefix", &self.storage_prefix)
+            .field("data", &self.data)
+            .field("pk_name", &self.pk_name)
+            .finish_non_exhaustive()
     }
 }
 
