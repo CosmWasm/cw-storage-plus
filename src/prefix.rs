@@ -1,7 +1,7 @@
 #![cfg(feature = "iterator")]
+use core::fmt;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use core::fmt;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -51,17 +51,17 @@ where
     de_fn_v: DeserializeVFn<T>,
 }
 
-impl<K, T> Debug for Prefix<K, T> 
+impl<K, T> Debug for Prefix<K, T>
 where
     K: KeyDeserialize,
     T: Serialize + DeserializeOwned,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Prefix")
-         .field("storage_prefix", &self.storage_prefix)
-         .field("data", &self.data)
-         .field("pk_name", &self.pk_name)
-         .finish_non_exhaustive()
+            .field("storage_prefix", &self.storage_prefix)
+            .field("data", &self.data)
+            .field("pk_name", &self.pk_name)
+            .finish_non_exhaustive()
     }
 }
 
@@ -459,5 +459,10 @@ mod test {
 #[test]
 fn prefix_debug() {
     let prefix: Prefix<String, String> = Prefix::new(b"lol", &[Key::Val8([8; 1])]);
+<<<<<<< HEAD
     assert_eq!(format!("{:?}", prefix), "Prefix { storage_prefix: [0, 3, 108, 111, 108, 0, 1, 8], data: PhantomData, pk_name: [], .. }");
 }
+=======
+    assert_eq!(format!("{:?}", prefix), "Prefix { storage_prefix: [0, 3, 108, 111, 108, 0, 1, 8], data: PhantomData<(alloc::string::String, alloc::vec::Vec<u8>)>, pk_name: [], .. }");
+}
+>>>>>>> 7029a6e87206b9cc6eb60d0efd7f124b6618b75b
