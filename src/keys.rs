@@ -141,11 +141,11 @@ where
 {
     type Prefix = <T as PrimaryKey<'a>>::Prefix;
     type SubPrefix = <T as PrimaryKey<'a>>::SubPrefix;
-    type Suffix = <T as PrimaryKey<'a>>::Suffix;
-    type SuperSuffix = <T as PrimaryKey<'a>>::SuperSuffix;
+    type Suffix = T::Suffix;
+    type SuperSuffix = T::SuperSuffix;
 
     fn key(&self) -> Vec<Key> {
-        <T as PrimaryKey<'a>>::key(&self)
+        <T as PrimaryKey<'a>>::key(self)
     }
 }
 
@@ -209,6 +209,15 @@ impl<'a, T: Prefixer<'a>, U: Prefixer<'a>, V: Prefixer<'a>> Prefixer<'a> for (T,
     }
 }
 
+impl<'a, T> Prefixer<'a> for &'a T
+where
+    T: Prefixer<'a>,
+{
+    fn prefix(&self) -> Vec<Key> {
+        <T as Prefixer<'a>>::prefix(&self)
+    }
+}
+
 // Provide a string version of this to raw encode strings
 impl<'a> Prefixer<'a> for &'a str {
     fn prefix(&self) -> Vec<Key> {
@@ -245,12 +254,6 @@ impl<'a> PrimaryKey<'a> for String {
 }
 
 impl<'a> Prefixer<'a> for String {
-    fn prefix(&self) -> Vec<Key> {
-        vec![Key::Ref(self.as_bytes())]
-    }
-}
-
-impl<'a> Prefixer<'a> for &'a Addr {
     fn prefix(&self) -> Vec<Key> {
         vec![Key::Ref(self.as_bytes())]
     }
