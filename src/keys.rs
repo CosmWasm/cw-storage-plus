@@ -214,7 +214,7 @@ where
     T: Prefixer<'a>,
 {
     fn prefix(&self) -> Vec<Key> {
-        <T as Prefixer<'a>>::prefix(&self)
+        <T as Prefixer<'a>>::prefix(self)
     }
 }
 
