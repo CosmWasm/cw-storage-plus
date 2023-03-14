@@ -134,6 +134,21 @@ impl<'a, T: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize, U: PrimaryKey<'a> + 
     }
 }
 
+// implements PrimaryKey for all &T where T implements PrimaryKey.
+impl<'a, T> PrimaryKey<'a> for &'a T
+where
+    T: PrimaryKey<'a>,
+{
+    type Prefix = <T as PrimaryKey<'a>>::Prefix;
+    type SubPrefix = <T as PrimaryKey<'a>>::SubPrefix;
+    type Suffix = T::Suffix;
+    type SuperSuffix = T::SuperSuffix;
+
+    fn key(&self) -> Vec<Key> {
+        <T as PrimaryKey<'a>>::key(self)
+    }
+}
+
 // use generics for combining there - so we can use &[u8], Vec<u8>, or IntKey
 impl<
         'a,
@@ -194,6 +209,15 @@ impl<'a, T: Prefixer<'a>, U: Prefixer<'a>, V: Prefixer<'a>> Prefixer<'a> for (T,
     }
 }
 
+impl<'a, T> Prefixer<'a> for &'a T
+where
+    T: Prefixer<'a>,
+{
+    fn prefix(&self) -> Vec<Key> {
+        <T as Prefixer<'a>>::prefix(self)
+    }
+}
+
 // Provide a string version of this to raw encode strings
 impl<'a> Prefixer<'a> for &'a str {
     fn prefix(&self) -> Vec<Key> {
@@ -230,25 +254,6 @@ impl<'a> PrimaryKey<'a> for String {
 }
 
 impl<'a> Prefixer<'a> for String {
-    fn prefix(&self) -> Vec<Key> {
-        vec![Key::Ref(self.as_bytes())]
-    }
-}
-
-/// type safe version to ensure address was validated before use.
-impl<'a> PrimaryKey<'a> for &'a Addr {
-    type Prefix = ();
-    type SubPrefix = ();
-    type Suffix = Self;
-    type SuperSuffix = Self;
-
-    fn key(&self) -> Vec<Key> {
-        // this is simple, we don't add more prefixes
-        vec![Key::Ref(self.as_ref().as_bytes())]
-    }
-}
-
-impl<'a> Prefixer<'a> for &'a Addr {
     fn prefix(&self) -> Vec<Key> {
         vec![Key::Ref(self.as_bytes())]
     }
