@@ -8,6 +8,10 @@ use crate::int_key::IntKey;
 pub trait KeyDeserialize {
     type Output: Sized;
 
+    /// This key length is used for the deserialization of compound keys.
+    /// It should be equal to PrimaryKey::key().len()
+    const KEY_LEN: u16;
+
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output>;
 
     fn from_slice(value: &[u8]) -> StdResult<Self::Output> {
@@ -18,6 +22,8 @@ pub trait KeyDeserialize {
 impl KeyDeserialize for () {
     type Output = ();
 
+    const KEY_LEN: u16 = 0;
+
     #[inline(always)]
     fn from_vec(_value: Vec<u8>) -> StdResult<Self::Output> {
         Ok(())
@@ -26,6 +32,8 @@ impl KeyDeserialize for () {
 
 impl KeyDeserialize for Vec<u8> {
     type Output = Vec<u8>;
+
+    const KEY_LEN: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -36,6 +44,8 @@ impl KeyDeserialize for Vec<u8> {
 impl KeyDeserialize for &Vec<u8> {
     type Output = Vec<u8>;
 
+    const KEY_LEN: u16 = 1;
+
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
         Ok(value)
@@ -44,6 +54,8 @@ impl KeyDeserialize for &Vec<u8> {
 
 impl KeyDeserialize for &[u8] {
     type Output = Vec<u8>;
+
+    const KEY_LEN: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -54,6 +66,8 @@ impl KeyDeserialize for &[u8] {
 impl KeyDeserialize for String {
     type Output = String;
 
+    const KEY_LEN: u16 = 1;
+
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
         String::from_utf8(value).map_err(StdError::invalid_utf8)
@@ -62,6 +76,8 @@ impl KeyDeserialize for String {
 
 impl KeyDeserialize for &String {
     type Output = String;
+
+    const KEY_LEN: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -72,6 +88,8 @@ impl KeyDeserialize for &String {
 impl KeyDeserialize for &str {
     type Output = String;
 
+    const KEY_LEN: u16 = 1;
+
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
         Self::Output::from_vec(value)
@@ -81,6 +99,8 @@ impl KeyDeserialize for &str {
 impl KeyDeserialize for Addr {
     type Output = Addr;
 
+    const KEY_LEN: u16 = 1;
+
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
         Ok(Addr::unchecked(String::from_vec(value)?))
@@ -89,6 +109,8 @@ impl KeyDeserialize for Addr {
 
 impl KeyDeserialize for &Addr {
     type Output = Addr;
+
+    const KEY_LEN: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -100,6 +122,8 @@ macro_rules! integer_de {
     (for $($t:ty),+) => {
         $(impl KeyDeserialize for $t {
             type Output = $t;
+
+            const KEY_LEN: u16 = 1;
 
             #[inline(always)]
             fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -121,33 +145,52 @@ fn parse_length(value: &[u8]) -> StdResult<usize> {
     .into())
 }
 
+/// This will split off the first key from the value based on the provided key length.
+/// Since from_vec expects that the last key is not length prefixed, we need to remove the length prefix.
+/// This should not be called on the last key within a compound key.
+/// The return value is ordered as (first_key, remainder)
+fn split_off_first_key(key_len: u16, value: &[u8]) -> StdResult<(Vec<u8>, &[u8])> {
+    let mut slice_index: usize = 0;
+    let mut first_key = Vec::new();
+    // First iterate over the sub keys
+    for key_index in 0..key_len {
+        // Key length is always 2 bytes
+        let key_start_index = slice_index + 2;
+        let len_slice = &value[slice_index..key_start_index];
+        // If this is not the last key, we need to add the length prefix
+        if key_index != key_len - 1 {
+            first_key.extend_from_slice(len_slice);
+        }
+        let subkey_len = parse_length(len_slice)?;
+        first_key.extend_from_slice(&value[key_start_index..key_start_index + subkey_len]);
+        slice_index += subkey_len + 2;
+    }
+    let remainder = &value[slice_index..];
+    Ok((first_key, remainder))
+}
+
 impl<T: KeyDeserialize, U: KeyDeserialize> KeyDeserialize for (T, U) {
     type Output = (T::Output, U::Output);
 
-    #[inline(always)]
-    fn from_vec(mut value: Vec<u8>) -> StdResult<Self::Output> {
-        let mut tu = value.split_off(2);
-        let t_len = parse_length(&value)?;
-        let u = tu.split_off(t_len);
+    const KEY_LEN: u16 = T::KEY_LEN + U::KEY_LEN;
 
-        Ok((T::from_vec(tu)?, U::from_vec(u)?))
+    #[inline(always)]
+    fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
+        let (t, u) = split_off_first_key(T::KEY_LEN, value.as_ref())?;
+        Ok((T::from_vec(t)?, U::from_vec(u.to_vec())?))
     }
 }
 
 impl<T: KeyDeserialize, U: KeyDeserialize, V: KeyDeserialize> KeyDeserialize for (T, U, V) {
     type Output = (T::Output, U::Output, V::Output);
 
+    const KEY_LEN: u16 = T::KEY_LEN + U::KEY_LEN + V::KEY_LEN;
+
     #[inline(always)]
-    fn from_vec(mut value: Vec<u8>) -> StdResult<Self::Output> {
-        let mut tuv = value.split_off(2);
-        let t_len = parse_length(&value)?;
-        let mut len_uv = tuv.split_off(t_len);
-
-        let mut uv = len_uv.split_off(2);
-        let u_len = parse_length(&len_uv)?;
-        let v = uv.split_off(u_len);
-
-        Ok((T::from_vec(tuv)?, U::from_vec(uv)?, V::from_vec(v)?))
+    fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
+        let (t, remainder) = split_off_first_key(T::KEY_LEN, value.as_ref())?;
+        let (u, v) = split_off_first_key(U::KEY_LEN, remainder)?;
+        Ok((T::from_vec(t)?, U::from_vec(u)?, V::from_vec(v.to_vec())?))
     }
 }
 
@@ -254,6 +297,20 @@ mod test {
         assert_eq!(
             <(&[u8], &str)>::from_slice((BYTES, STRING).joined_key().as_slice()).unwrap(),
             (BYTES.to_vec(), STRING.to_string())
+        );
+    }
+
+    #[test]
+    fn deserialize_tuple_of_tuples_works() {
+        assert_eq!(
+            <((&[u8], &str), (&[u8], &str))>::from_slice(
+                ((BYTES, STRING), (BYTES, STRING)).joined_key().as_slice()
+            )
+            .unwrap(),
+            (
+                (BYTES.to_vec(), STRING.to_string()),
+                (BYTES.to_vec(), STRING.to_string())
+            )
         );
     }
 
