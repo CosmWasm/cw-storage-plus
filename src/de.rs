@@ -8,9 +8,9 @@ use crate::int_key::IntKey;
 pub trait KeyDeserialize {
     type Output: Sized;
 
-    /// This key length is used for the deserialization of compound keys.
+    /// The number of key elements is used for the deserialization of compound keys.
     /// It should be equal to PrimaryKey::key().len()
-    const KEY_LEN: u16;
+    const KEY_ELEMS: u16;
 
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output>;
 
@@ -22,7 +22,7 @@ pub trait KeyDeserialize {
 impl KeyDeserialize for () {
     type Output = ();
 
-    const KEY_LEN: u16 = 0;
+    const KEY_ELEMS: u16 = 0;
 
     #[inline(always)]
     fn from_vec(_value: Vec<u8>) -> StdResult<Self::Output> {
@@ -33,7 +33,7 @@ impl KeyDeserialize for () {
 impl KeyDeserialize for Vec<u8> {
     type Output = Vec<u8>;
 
-    const KEY_LEN: u16 = 1;
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -44,7 +44,7 @@ impl KeyDeserialize for Vec<u8> {
 impl KeyDeserialize for &Vec<u8> {
     type Output = Vec<u8>;
 
-    const KEY_LEN: u16 = 1;
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -55,7 +55,7 @@ impl KeyDeserialize for &Vec<u8> {
 impl KeyDeserialize for &[u8] {
     type Output = Vec<u8>;
 
-    const KEY_LEN: u16 = 1;
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -66,7 +66,7 @@ impl KeyDeserialize for &[u8] {
 impl KeyDeserialize for String {
     type Output = String;
 
-    const KEY_LEN: u16 = 1;
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -77,7 +77,7 @@ impl KeyDeserialize for String {
 impl KeyDeserialize for &String {
     type Output = String;
 
-    const KEY_LEN: u16 = 1;
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -88,7 +88,7 @@ impl KeyDeserialize for &String {
 impl KeyDeserialize for &str {
     type Output = String;
 
-    const KEY_LEN: u16 = 1;
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -99,7 +99,7 @@ impl KeyDeserialize for &str {
 impl KeyDeserialize for Addr {
     type Output = Addr;
 
-    const KEY_LEN: u16 = 1;
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -110,7 +110,7 @@ impl KeyDeserialize for Addr {
 impl KeyDeserialize for &Addr {
     type Output = Addr;
 
-    const KEY_LEN: u16 = 1;
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -123,7 +123,7 @@ macro_rules! integer_de {
         $(impl KeyDeserialize for $t {
             type Output = $t;
 
-            const KEY_LEN: u16 = 1;
+            const KEY_ELEMS: u16 = 1;
 
             #[inline(always)]
             fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -145,20 +145,20 @@ fn parse_length(value: &[u8]) -> StdResult<usize> {
     .into())
 }
 
-/// This will split off the first key from the value based on the provided key length.
+/// This will split off the first key from the value based on the provided number of key elements.
 /// Since from_vec expects that the last key is not length prefixed, we need to remove the length prefix.
 /// This should not be called on the last key within a compound key.
 /// The return value is ordered as (first_key, remainder)
-fn split_off_first_key(key_len: u16, value: &[u8]) -> StdResult<(Vec<u8>, &[u8])> {
+fn split_off_first_key(key_elems: u16, value: &[u8]) -> StdResult<(Vec<u8>, &[u8])> {
     let mut slice_index: usize = 0;
     let mut first_key = Vec::new();
     // First iterate over the sub keys
-    for key_index in 0..key_len {
+    for key_index in 0..key_elems {
         // Key length is always 2 bytes
         let key_start_index = slice_index + 2;
         let len_slice = &value[slice_index..key_start_index];
         // If this is not the last key, we need to add the length prefix
-        if key_index != key_len - 1 {
+        if key_index != key_elems - 1 {
             first_key.extend_from_slice(len_slice);
         }
         let subkey_len = parse_length(len_slice)?;
@@ -172,11 +172,11 @@ fn split_off_first_key(key_len: u16, value: &[u8]) -> StdResult<(Vec<u8>, &[u8])
 impl<T: KeyDeserialize, U: KeyDeserialize> KeyDeserialize for (T, U) {
     type Output = (T::Output, U::Output);
 
-    const KEY_LEN: u16 = T::KEY_LEN + U::KEY_LEN;
+    const KEY_ELEMS: u16 = T::KEY_ELEMS + U::KEY_ELEMS;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
-        let (t, u) = split_off_first_key(T::KEY_LEN, value.as_ref())?;
+        let (t, u) = split_off_first_key(T::KEY_ELEMS, value.as_ref())?;
         Ok((T::from_vec(t)?, U::from_vec(u.to_vec())?))
     }
 }
@@ -184,12 +184,12 @@ impl<T: KeyDeserialize, U: KeyDeserialize> KeyDeserialize for (T, U) {
 impl<T: KeyDeserialize, U: KeyDeserialize, V: KeyDeserialize> KeyDeserialize for (T, U, V) {
     type Output = (T::Output, U::Output, V::Output);
 
-    const KEY_LEN: u16 = T::KEY_LEN + U::KEY_LEN + V::KEY_LEN;
+    const KEY_ELEMS: u16 = T::KEY_ELEMS + U::KEY_ELEMS + V::KEY_ELEMS;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
-        let (t, remainder) = split_off_first_key(T::KEY_LEN, value.as_ref())?;
-        let (u, v) = split_off_first_key(U::KEY_LEN, remainder)?;
+        let (t, remainder) = split_off_first_key(T::KEY_ELEMS, value.as_ref())?;
+        let (u, v) = split_off_first_key(U::KEY_ELEMS, remainder)?;
         Ok((T::from_vec(t)?, U::from_vec(u)?, V::from_vec(v.to_vec())?))
     }
 }
