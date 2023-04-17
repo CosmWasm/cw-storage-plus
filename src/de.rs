@@ -315,6 +315,60 @@ mod test {
     }
 
     #[test]
+    fn deserialize_tuple_of_triples_works() {
+        assert_eq!(
+            <((&[u8], &str, u32), (&[u8], &str, u16))>::from_slice(
+                ((BYTES, STRING, 1234u32), (BYTES, STRING, 567u16))
+                    .joined_key()
+                    .as_slice()
+            )
+            .unwrap(),
+            (
+                (BYTES.to_vec(), STRING.to_string(), 1234),
+                (BYTES.to_vec(), STRING.to_string(), 567)
+            )
+        );
+    }
+
+    #[test]
+    fn deserialize_triple_of_tuples_works() {
+        assert_eq!(
+            <((u32, &str), (&str, &[u8]), (i32, i32))>::from_slice(
+                ((1234u32, STRING), (STRING, BYTES), (1234i32, 567i32))
+                    .joined_key()
+                    .as_slice()
+            )
+            .unwrap(),
+            (
+                (1234, STRING.to_string()),
+                (STRING.to_string(), BYTES.to_vec()),
+                (1234, 567)
+            )
+        );
+    }
+
+    #[test]
+    fn deserialize_triple_of_triples_works() {
+        assert_eq!(
+            <((u32, &str, &str), (&str, &[u8], u8), (i32, u8, i32))>::from_slice(
+                (
+                    (1234u32, STRING, STRING),
+                    (STRING, BYTES, 123u8),
+                    (4567i32, 89u8, 10i32)
+                )
+                    .joined_key()
+                    .as_slice()
+            )
+            .unwrap(),
+            (
+                (1234, STRING.to_string(), STRING.to_string()),
+                (STRING.to_string(), BYTES.to_vec(), 123),
+                (4567, 89, 10)
+            )
+        );
+    }
+
+    #[test]
     fn deserialize_triple_works() {
         assert_eq!(
             <(&[u8], u32, &str)>::from_slice((BYTES, 1234u32, STRING).joined_key().as_slice())
