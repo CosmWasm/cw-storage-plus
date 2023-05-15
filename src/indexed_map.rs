@@ -1444,7 +1444,7 @@ mod test {
         use super::*;
 
         struct Indexes<'a> {
-            secondary: UniqueIndex<'a, u64, u64>,
+            secondary: UniqueIndex<'a, u64, u64, ()>,
         }
 
         impl<'a> IndexList<u64> for Indexes<'a> {
