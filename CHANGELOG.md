@@ -1,10 +1,20 @@
 # Changelog
 
-## [Unreleased](https://github.com/CosmWasm/cw-storage-plus/compare/v1.0.1...HEAD)
+## [Unreleased](https://github.com/CosmWasm/cw-storage-plus/tree/HEAD)
+
+[Full Changelog](https://github.com/CosmWasm/cw-storage-plus/compare/v1.0.1...HEAD)
+
+**Closed issues:**
+
+- implementation of KeyDeserialize for \(T, U\) is incorrect. [\#33](https://github.com/CosmWasm/cw-storage-plus/issues/33)
 
 **Merged pull requests:**
 
-- Make the following constructor functions constant: `IndexedMap::new`, `MultiIndex::new`, `UniqueIndex::new` [\#22](https://github.com/CosmWasm/cw-storage-plus/pull/22)
+- fix for incorrect implementation of KeyDeserialize for \(T, U\) [\#34](https://github.com/CosmWasm/cw-storage-plus/pull/34) ([ewoolsey](https://github.com/ewoolsey))
+- Test CI [\#32](https://github.com/CosmWasm/cw-storage-plus/pull/32) ([webmaster128](https://github.com/webmaster128))
+- Implement Debug for Prefix [\#31](https://github.com/CosmWasm/cw-storage-plus/pull/31) ([amab8901](https://github.com/amab8901))
+- Implement PrimaryKey for all &T where T implements PrimaryKey. [\#30](https://github.com/CosmWasm/cw-storage-plus/pull/30) ([0xekez](https://github.com/0xekez))
+- Make IndexedMap constructor function const [\#22](https://github.com/CosmWasm/cw-storage-plus/pull/22) ([larry0x](https://github.com/larry0x))
 
 ## [v1.0.1](https://github.com/CosmWasm/cw-storage-plus/tree/v1.0.1) (2022-12-05)
 
