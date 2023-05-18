@@ -25,8 +25,8 @@ pub(crate) struct UniqueRef<T> {
 
 /// UniqueIndex stores (namespace, index_name, idx_value) -> {key, value}
 /// Allows one value per index (i.e. unique) and copies pk and data
-/// The optional PK type defines the type of Primary Key deserialization.
-pub struct UniqueIndex<'a, IK, T, PK = ()> {
+/// The PK type defines the type of Primary Key deserialization.
+pub struct UniqueIndex<'a, IK, T, PK> {
     index: fn(&T) -> IK,
     idx_map: Map<'a, IK, UniqueRef<T>>,
     idx_namespace: &'a [u8],
