@@ -73,7 +73,7 @@ where
         self.key(k).load(store)
     }
 
-    pub fn load_raw(&self, store: &dyn Storage, k: K) -> Option<Vec<u8>>{
+    pub fn load_raw(&self, store: &dyn Storage, k: K) -> Option<Vec<u8>> {
         self.key(k).load_raw(store)
     }
 
@@ -304,9 +304,9 @@ mod test {
     use serde::{Deserialize, Serialize};
     use std::ops::Deref;
 
-    use cosmwasm_std::testing::MockStorage;
     use cosmwasm_std::to_binary;
     use cosmwasm_std::StdError::InvalidUtf8;
+    use cosmwasm_std::{testing::MockStorage, to_vec};
     #[cfg(feature = "iterator")]
     use cosmwasm_std::{Order, StdResult};
 
@@ -1584,5 +1584,18 @@ mod test {
         TEST_MAP.save(&mut storage, "key2", &2u32).unwrap();
 
         assert!(!TEST_MAP.is_empty(&storage));
+    }
+
+    #[test]
+    fn save_and_load_raw() {
+        let mut store = MockStorage::new();
+        let john = PEOPLE.key(b"john");
+        let data = Data {
+            name: "John".to_string(),
+            age: 32,
+        };
+        assert_eq!(None, john.may_load(&store).unwrap());
+        john.save_raw(&mut store, &to_vec(&data).unwrap()).unwrap();
+        assert_eq!(to_vec(&data).unwrap(), john.load_raw(&store).unwrap());
     }
 }

@@ -72,8 +72,7 @@ where
     }
 
     pub fn load_raw(&self, store: &dyn Storage) -> Option<Vec<u8>> {
-        let value = store.get(&self.storage_key);
-        value
+        store.get(&self.storage_key)
     }
 
     /// may_load will parse the data stored at the key if present, returns Ok(None) if no data there.
