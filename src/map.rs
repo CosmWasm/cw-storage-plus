@@ -1597,5 +1597,17 @@ mod test {
         assert_eq!(None, john.may_load(&store).unwrap());
         john.save_raw(&mut store, &to_vec(&data).unwrap()).unwrap();
         assert_eq!(to_vec(&data).unwrap(), john.load_raw(&store).unwrap());
+
+        const TEST_MAP: Map<&str, Vec<u8>> = Map::new("test_map");
+        assert!(TEST_MAP.is_empty(&store));
+        let data:Vec<u8> = vec![40,55,60];
+
+        TEST_MAP.save_raw(&mut store, "key1", &data).unwrap();
+        assert!(!TEST_MAP.is_empty(&store));
+        let saved= TEST_MAP.load_raw(&mut store, "key1").unwrap();
+        assert_eq!(data,saved);
+
+
+
     }
 }
