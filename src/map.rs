@@ -60,6 +60,10 @@ where
         self.key(k).save(store, data)
     }
 
+    pub fn save_raw(&self, store: &mut dyn Storage, k: K, data: &[u8]) -> StdResult<()> {
+        self.key(k).save_raw(store, data)
+    }
+
     pub fn remove(&self, store: &mut dyn Storage, k: K) {
         self.key(k).remove(store)
     }
@@ -67,6 +71,10 @@ where
     /// load will return an error if no data is set at the given key, or on parse error
     pub fn load(&self, store: &dyn Storage, k: K) -> StdResult<T> {
         self.key(k).load(store)
+    }
+
+    pub fn load_raw(&self, store: &dyn Storage, k: K) -> Option<Vec<u8>>{
+        self.key(k).load_raw(store)
     }
 
     /// may_load will parse the data stored at the key if present, returns Ok(None) if no data there.
