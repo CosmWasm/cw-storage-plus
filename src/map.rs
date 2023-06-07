@@ -1610,7 +1610,7 @@ mod test {
 
         TEST_MAP.save_raw(&mut store, "key1", &data).unwrap();
         assert!(!TEST_MAP.is_empty(&store));
-        let saved = TEST_MAP.load_raw(&mut store, "key1").unwrap();
+        let saved = TEST_MAP.load_raw(&store, "key1").unwrap();
         assert_eq!(data, saved);
     }
 }
