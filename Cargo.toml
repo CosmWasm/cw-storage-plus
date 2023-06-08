@@ -24,7 +24,7 @@ std = ["cosmwasm-std/std", "schemars"]
 bench = false
 
 [dependencies]
-cosmwasm-std = { git = "https://github.com/dzmitry-lahoda-forks/cosmwasm.git", rev = "7dd513691d9d9afc0871a7eda93d3ecf8d3bc07e", default-features = false }
+cosmwasm-std = { git = "https://github.com/dzmitry-lahoda-forks/cosmwasm.git", rev = "677fa9c04b07a4934db82a6a9aa9e68fa13fcff9", default-features = false }
 schemars = { version = "0.8.3", optional = true}
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
 cw-storage-macro = { version = "1.0.0", optional = true, path = "macros" }

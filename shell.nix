@@ -10,14 +10,15 @@ let
       cargo build --locked --no-default-features --target thumbv7em-none-eabi --package ${package} ${features}
     '';
   };
-  check-wasm-std = pkgs.writeShellApplication rec {
-    name = "check-wasm-std";
+  check-std = pkgs.writeShellApplication rec {
+    name = "check-std";
     runtimeInputs = [ rust-as-on-ci ];
     text = ''
       cargo build --target wasm32-unknown-unknown --locked ${features},std --package ${package}
+      cargo build --locked ${features},std --package ${package}
     '';
   };
 in
 pkgs.mkShell {
-  nativeBuildInputs = [ rust-as-on-ci check-no-std check-wasm-std];
+  nativeBuildInputs = [ rust-as-on-ci check-no-std check-std];
 }
