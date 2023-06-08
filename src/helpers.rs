@@ -4,10 +4,10 @@
 //! Everything in this file is only responsible for building such keys
 //! and is in no way specific to any kind of storage.
 
-use serde::de::DeserializeOwned;
-use crate::cw_std::any::type_name;
-use crate::cw_std::prelude::*;
 use crate::keys::Key;
+use crate::no_std::any::type_name;
+use crate::no_std::prelude::*;
+use serde::de::DeserializeOwned;
 
 use cosmwasm_std::{
     from_slice, to_vec, Addr, Binary, ContractResult, CustomQuery, QuerierWrapper, QueryRequest,
@@ -123,7 +123,7 @@ pub(crate) fn query_raw<Q: CustomQuery>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::cw_std::prelude::*;
+    use crate::no_std::prelude::*;
     use cosmwasm_std::{to_vec, StdError};
     use serde::{Deserialize, Serialize};
 

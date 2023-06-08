@@ -1,8 +1,8 @@
-use cosmwasm_std::Addr;
-use crate::cw_std::{vec::Vec, string::String};
 use crate::de::KeyDeserialize;
 use crate::helpers::namespaces_with_key;
 use crate::int_key::IntKey;
+use crate::no_std::{string::String, vec::Vec};
+use cosmwasm_std::Addr;
 
 #[derive(Debug)]
 pub enum Key<'a> {

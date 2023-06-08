@@ -11,9 +11,10 @@ use crate::de::KeyDeserialize;
 use crate::helpers::namespaces_with_key;
 use crate::iter_helpers::deserialize_kv;
 use crate::map::Map;
+use crate::no_std::marker::PhantomData;
+use crate::no_std::prelude::*;
 use crate::prefix::namespaced_prefix_range;
 use crate::{Bound, Index, Prefix, Prefixer, PrimaryKey};
-use std::marker::PhantomData;
 
 /// MultiIndex stores (namespace, index_name, idx_value, pk) -> b"pk_len".
 /// Allows many values per index, and references pk.

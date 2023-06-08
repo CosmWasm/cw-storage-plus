@@ -11,6 +11,7 @@ use crate::indexes::Index;
 use crate::iter_helpers::{deserialize_kv, deserialize_v};
 use crate::keys::{Prefixer, PrimaryKey};
 use crate::map::Map;
+use crate::no_std::prelude::*;
 use crate::prefix::{namespaced_prefix_range, Prefix};
 use crate::{Bound, Path};
 

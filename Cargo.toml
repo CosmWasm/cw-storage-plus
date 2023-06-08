@@ -17,15 +17,15 @@ all-features = true # include macro feature when building docs
 default = ["iterator", "std"]
 iterator = ["cosmwasm-std/iterator"]
 macro = ["cw-storage-macro"]
-std = ["cosmwasm-std/std"]
+std = ["cosmwasm-std/std", "schemars"]
 
 [lib]
 # See https://bheisler.github.io/criterion.rs/book/faq.html#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options
 bench = false
 
 [dependencies]
-cosmwasm-std = { git = "https://github.com/ComposableFi/cosmwasm.git", rev = "21351cc1ced863b9af7c8a69f923036bc919b3b1", default-features = false }
-schemars = "0.8.3"
+cosmwasm-std = { git = "https://github.com/dzmitry-lahoda-forks/cosmwasm.git", rev = "7dd513691d9d9afc0871a7eda93d3ecf8d3bc07e", default-features = false }
+schemars = { version = "0.8.3", optional = true}
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
 cw-storage-macro = { version = "1.0.0", optional = true, path = "macros" }
 

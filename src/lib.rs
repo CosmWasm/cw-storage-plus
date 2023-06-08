@@ -13,7 +13,7 @@ For more information on this package, please check out the
 [README](https://github.com/CosmWasm/cw-plus/blob/main/packages/storage-plus/README.md).
 */
 #![cfg_attr(not(feature = "std"), no_std)]
-
+#![feature(error_in_core)]
 #[cfg(not(feature = "std"))]
 #[macro_use]
 extern crate alloc;
@@ -31,10 +31,10 @@ mod item;
 mod iter_helpers;
 mod keys;
 mod map;
+mod no_std;
 mod path;
 mod prefix;
 mod snapshot;
-mod cw_std;
 
 #[cfg(feature = "iterator")]
 pub use bound::{Bound, Bounder, PrefixBound, RawBound};

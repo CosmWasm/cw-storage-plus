@@ -1,5 +1,5 @@
-use crate::cw_std::{any::type_name, convert::TryInto, marker::PhantomData};
-use crate::cw_std::prelude::*;
+use crate::no_std::prelude::*;
+use crate::no_std::{any::type_name, convert::TryInto, marker::PhantomData};
 use cosmwasm_std::{to_vec, StdError, StdResult, Storage};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -291,7 +291,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::deque::Deque;
-    use crate::cw_std::{vec::Vec, string::String};
+    use crate::no_std::{string::String, vec::Vec};
     use cosmwasm_std::testing::MockStorage;
     use cosmwasm_std::{StdError, StdResult};
     use serde::{Deserialize, Serialize};

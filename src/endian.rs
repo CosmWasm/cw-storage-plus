@@ -7,8 +7,8 @@
 // TODO: figure out these macros and let us replace (self: Self) with self
 #![allow(clippy::needless_arbitrary_self_type)]
 
-use crate::cw_std::mem;
-use crate::cw_std::prelude::*;
+use crate::no_std::mem;
+use crate::no_std::prelude::*;
 
 pub trait Endian: Sized + Copy {
     type Buf: AsRef<[u8]> + AsMut<[u8]> + Into<Vec<u8>> + Default;
