@@ -7,15 +7,15 @@ let
     name = "check-no-std";
     runtimeInputs = [ rust-as-on-ci ];
     text = ''
-      cargo build --locked --no-default-features --target thumbv7em-none-eabi --package ${package} ${features}
+      cargo build --no-default-features --target thumbv7em-none-eabi --package ${package} ${features}
     '';
   };
   check-std = pkgs.writeShellApplication rec {
     name = "check-std";
     runtimeInputs = [ rust-as-on-ci ];
     text = ''
-      cargo build --target wasm32-unknown-unknown --locked ${features},std --package ${package}
-      cargo build --locked ${features},std --package ${package}
+      cargo build --target wasm32-unknown-unknown ${features},std --package ${package}
+      cargo build ${features},std --package ${package}
     '';
   };
 in
