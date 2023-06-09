@@ -15,9 +15,9 @@ use crate::keys::{Key, PrimaryKey};
 use crate::path::Path;
 #[cfg(feature = "iterator")]
 use crate::prefix::{namespaced_prefix_range, Prefix};
-use cosmwasm_std::{
-    from_slice, Addr, CustomQuery, Order, QuerierWrapper, StdError, StdResult, Storage,
-};
+#[cfg(feature = "iterator")]
+use cosmwasm_std::Order;
+use cosmwasm_std::{from_slice, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage};
 
 #[derive(Debug, Clone)]
 pub struct Map<'a, K, T> {
