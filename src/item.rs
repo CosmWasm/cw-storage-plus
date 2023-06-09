@@ -1,6 +1,7 @@
+use crate::no_std::marker::PhantomData;
+use crate::no_std::prelude::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use std::marker::PhantomData;
 
 use cosmwasm_std::{
     to_vec, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage, WasmQuery,

@@ -1,7 +1,7 @@
 // this module requires iterator to be useful at all
 #![cfg(feature = "iterator")]
 
-use std::marker::PhantomData;
+use crate::no_std::marker::PhantomData;
 
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -12,6 +12,7 @@ use crate::bound::PrefixBound;
 use crate::de::KeyDeserialize;
 use crate::iter_helpers::deserialize_kv;
 use crate::map::Map;
+use crate::no_std::prelude::*;
 use crate::prefix::namespaced_prefix_range;
 use crate::{Bound, Index, Prefix, Prefixer, PrimaryKey};
 

@@ -8,6 +8,7 @@ use crate::de::KeyDeserialize;
 use crate::iter_helpers::deserialize_kv;
 use crate::keys::PrimaryKey;
 use crate::map::Map;
+use crate::no_std::prelude::*;
 use crate::path::Path;
 use crate::prefix::{namespaced_prefix_range, Prefix};
 use crate::snapshot::{ChangeSet, Snapshot};

@@ -1,11 +1,11 @@
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use std::marker::PhantomData;
-
 use crate::helpers::{may_deserialize, must_deserialize, nested_namespaces_with_key};
 use crate::keys::Key;
+use crate::no_std::marker::PhantomData;
+use crate::no_std::ops::Deref;
+use crate::no_std::vec::Vec;
 use cosmwasm_std::{to_vec, StdError, StdResult, Storage};
-use std::ops::Deref;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 
 #[derive(Debug, Clone)]
 pub struct Path<T>

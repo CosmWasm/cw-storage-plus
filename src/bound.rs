@@ -1,7 +1,8 @@
 #![cfg(feature = "iterator")]
 
+use crate::no_std::marker::PhantomData;
+use crate::no_std::prelude::*;
 use cosmwasm_std::Addr;
-use std::marker::PhantomData;
 
 use crate::de::KeyDeserialize;
 use crate::{Prefixer, PrimaryKey};
