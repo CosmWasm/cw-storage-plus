@@ -182,6 +182,13 @@ where
         }
     }
 
+    /// Returns `true` if the prefix is empty.
+    pub fn is_empty(&self, store: &dyn Storage) -> bool {
+        range_full_keys(store, &self.storage_prefix, None, None, Order::Ascending)
+            .next()
+            .is_none()
+    }
+
     pub fn range<'a>(
         &self,
         store: &'a dyn Storage,
@@ -579,5 +586,26 @@ mod test {
             prefix.range(&store, None, None, Order::Ascending).count(),
             0
         );
+    }
+
+    #[test]
+    fn is_empty_works() {
+        // manually create this - not testing nested prefixes here
+        let prefix: Prefix<Vec<u8>, u64> = Prefix {
+            storage_prefix: b"foo".to_vec(),
+            data: PhantomData::<(u64, _)>,
+            pk_name: vec![],
+            de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
+            de_fn_v: |_, _, kv| deserialize_v(kv),
+        };
+
+        let mut storage = MockStorage::new();
+
+        assert!(prefix.is_empty(&storage));
+
+        storage.set(b"fookey1", b"1");
+        storage.set(b"fookey2", b"2");
+
+        assert!(!prefix.is_empty(&storage));
     }
 }

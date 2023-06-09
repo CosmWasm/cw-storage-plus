@@ -119,10 +119,7 @@ where
     /// Returns `true` if the map is empty.
     #[cfg(feature = "iterator")]
     pub fn is_empty(&self, store: &dyn Storage) -> bool {
-        self.no_prefix_raw()
-            .keys_raw(store, None, None, cosmwasm_std::Order::Ascending)
-            .next()
-            .is_none()
+        self.no_prefix_raw().is_empty(store)
     }
 }
 
