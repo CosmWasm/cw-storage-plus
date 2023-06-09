@@ -59,6 +59,11 @@ where
         may_deserialize(&value)
     }
 
+    /// Returns `true` if data is stored at the key, `false` otherwise.
+    pub fn exists(&self, store: &dyn Storage) -> bool {
+        store.get(self.storage_key).is_some()
+    }
+
     /// Loads the data, perform the specified action, and store the result
     /// in the database. This is shorthand for some common sequences, which may be useful.
     ///
@@ -123,6 +128,29 @@ mod test {
         CONFIG.save(&mut store, &cfg).unwrap();
 
         assert_eq!(cfg, CONFIG.load(&store).unwrap());
+    }
+
+    #[test]
+    fn existance() {
+        let mut store = MockStorage::new();
+
+        assert!(!CONFIG.exists(&store));
+
+        let cfg = Config {
+            owner: "admin".to_string(),
+            max_tokens: 1234,
+        };
+        CONFIG.save(&mut store, &cfg).unwrap();
+
+        assert!(CONFIG.exists(&store));
+
+        const OPTIONAL: Item<Option<u32>> = Item::new("optional");
+
+        assert!(!OPTIONAL.exists(&store));
+
+        OPTIONAL.save(&mut store, &None).unwrap();
+
+        assert!(OPTIONAL.exists(&store));
     }
 
     #[test]
