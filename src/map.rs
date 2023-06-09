@@ -15,7 +15,9 @@ use crate::keys::{Key, PrimaryKey};
 use crate::path::Path;
 #[cfg(feature = "iterator")]
 use crate::prefix::{namespaced_prefix_range, Prefix};
-use cosmwasm_std::{from_slice, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage};
+use cosmwasm_std::{
+    from_slice, Addr, CustomQuery, Order, QuerierWrapper, StdError, StdResult, Storage,
+};
 
 #[derive(Debug, Clone)]
 pub struct Map<'a, K, T> {
@@ -287,6 +289,62 @@ where
         K::Output: 'static,
     {
         self.no_prefix().keys(store, min, max, order)
+    }
+
+    /// Returns the first key-value pair in the map.
+    /// This is *not* according to insertion-order, but according to the key ordering.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use cw_storage_plus::{Map};
+    /// # let mut storage = cosmwasm_std::testing::MockStorage::new();
+    /// const MAP: Map<i32, u32> = Map::new("map");
+    ///
+    /// // empty map
+    /// assert_eq!(MAP.first(&storage), Ok(None));
+    ///
+    /// // insert entries
+    /// MAP.save(&mut storage, 1, &10);
+    /// MAP.save(&mut storage, -2, &20);
+    ///
+    /// assert_eq!(MAP.first(&storage), Ok(Some((-2, 20))));
+    /// ```
+    pub fn first(&self, storage: &dyn Storage) -> StdResult<Option<(K::Output, T)>>
+    where
+        K::Output: 'static,
+    {
+        self.range(storage, None, None, Order::Ascending)
+            .next()
+            .transpose()
+    }
+
+    /// Returns the last key-value pair in the map.
+    /// This is *not* according to insertion-order, but according to the key ordering.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use cw_storage_plus::{Map};
+    /// # let mut storage = cosmwasm_std::testing::MockStorage::new();
+    /// const MAP: Map<i32, u32> = Map::new("map");
+    ///
+    /// // empty map
+    /// assert_eq!(MAP.last(&storage), Ok(None));
+    ///
+    /// // insert entries
+    /// MAP.save(&mut storage, 1, &10);
+    /// MAP.save(&mut storage, -2, &20);
+    ///
+    /// assert_eq!(MAP.last(&storage), Ok(Some((1, 10))));
+    /// ```
+    pub fn last(&self, storage: &dyn Storage) -> StdResult<Option<(K::Output, T)>>
+    where
+        K::Output: 'static,
+    {
+        self.range(storage, None, None, Order::Descending)
+            .next()
+            .transpose()
     }
 }
 
