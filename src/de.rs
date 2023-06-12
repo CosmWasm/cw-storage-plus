@@ -189,6 +189,7 @@ mod test {
         assert_eq!(<&Vec<u8>>::from_slice(BYTES).unwrap(), BYTES);
         assert_eq!(<&[u8]>::from_slice(BYTES).unwrap(), BYTES);
         assert_eq!(<[u8; 5]>::from_slice(BYTES).unwrap(), BYTES);
+        assert_eq!(<&[u8; 5]>::from_slice(BYTES).unwrap(), BYTES);
     }
 
     #[test]
