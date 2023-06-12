@@ -190,7 +190,8 @@ A `Map` key can be anything that implements the `PrimaryKey` trait. There are a 
  - `impl<'a> PrimaryKey<'a> for Vec<u8>`
  - `impl<'a> PrimaryKey<'a> for String`
  - `impl<'a> PrimaryKey<'a> for Addr`
- - `impl<'a> PrimaryKey<'a> for &'a Addr`
+ - `impl<'a, const N: usize> PrimaryKey<'a> for [u8; N]`
+ - `impl<'a, T: Prefixer<'a>> Prefixer<'a> for &'a T`
  - `impl<'a, T: PrimaryKey<'a> + Prefixer<'a>, U: PrimaryKey<'a>> PrimaryKey<'a> for (T, U)`
  - `impl<'a, T: PrimaryKey<'a> + Prefixer<'a>, U: PrimaryKey<'a> + Prefixer<'a>, V: PrimaryKey<'a>> PrimaryKey<'a> for (T, U, V)`
  - `PrimaryKey` implemented for unsigned integers up to `u128`
