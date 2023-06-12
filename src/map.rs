@@ -305,8 +305,8 @@ where
     /// assert_eq!(MAP.first(&storage), Ok(None));
     ///
     /// // insert entries
-    /// MAP.save(&mut storage, 1, &10);
-    /// MAP.save(&mut storage, -2, &20);
+    /// MAP.save(&mut storage, 1, &10).unwrap();
+    /// MAP.save(&mut storage, -2, &20).unwrap();
     ///
     /// assert_eq!(MAP.first(&storage), Ok(Some((-2, 20))));
     /// ```
@@ -333,8 +333,8 @@ where
     /// assert_eq!(MAP.last(&storage), Ok(None));
     ///
     /// // insert entries
-    /// MAP.save(&mut storage, 1, &10);
-    /// MAP.save(&mut storage, -2, &20);
+    /// MAP.save(&mut storage, 1, &10).unwrap();
+    /// MAP.save(&mut storage, -2, &20).unwrap();
     ///
     /// assert_eq!(MAP.last(&storage), Ok(Some((1, 10))));
     /// ```
@@ -1634,5 +1634,24 @@ mod test {
         TEST_MAP.save(&mut storage, "key2", &2u32).unwrap();
 
         assert!(!TEST_MAP.is_empty(&storage));
+    }
+
+    #[test]
+    #[cfg(feature = "iterator")]
+    fn first_last_work() {
+        let mut storage = cosmwasm_std::testing::MockStorage::new();
+        const MAP: Map<&str, u32> = Map::new("map");
+
+        // empty map
+        assert_eq!(MAP.first(&storage), Ok(None));
+        assert_eq!(MAP.last(&storage), Ok(None));
+
+        // insert entries
+        MAP.save(&mut storage, "ghi", &1).unwrap();
+        MAP.save(&mut storage, "abc", &2).unwrap();
+        MAP.save(&mut storage, "def", &3).unwrap();
+
+        assert_eq!(MAP.first(&storage), Ok(Some(("abc".to_string(), 2))));
+        assert_eq!(MAP.last(&storage), Ok(Some(("ghi".to_string(), 1))));
     }
 }
