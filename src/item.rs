@@ -131,7 +131,7 @@ mod test {
     }
 
     #[test]
-    fn existance() {
+    fn exists_works() {
         let mut store = MockStorage::new();
 
         assert!(!CONFIG.exists(&store));
@@ -167,11 +167,11 @@ mod test {
 
         // remove it and loads None
         CONFIG.remove(&mut store);
-        assert_eq!(None, CONFIG.may_load(&store).unwrap());
+        assert!(!CONFIG.exists(&store));
 
         // safe to remove 2 times
         CONFIG.remove(&mut store);
-        assert_eq!(None, CONFIG.may_load(&store).unwrap());
+        assert!(!CONFIG.exists(&store));
     }
 
     #[test]
