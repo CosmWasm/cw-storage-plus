@@ -115,31 +115,13 @@ where
     /// Clears the map, removing all elements.
     #[cfg(feature = "iterator")]
     pub fn clear(&self, store: &mut dyn Storage) {
-        const TAKE: usize = 10;
-        let mut cleared = false;
-
-        while !cleared {
-            let paths = self
-                .no_prefix_raw()
-                .keys_raw(store, None, None, cosmwasm_std::Order::Ascending)
-                .map(|raw_key| Path::<T>::new(self.namespace, &[raw_key.as_slice()]))
-                // Take just TAKE elements to prevent possible heap overflow if the Map is big.
-                .take(TAKE)
-                .collect::<Vec<_>>();
-
-            paths.iter().for_each(|path| store.remove(path));
-
-            cleared = paths.len() < TAKE;
-        }
+        self.no_prefix_raw().clear(store, None);
     }
 
     /// Returns `true` if the map is empty.
     #[cfg(feature = "iterator")]
     pub fn is_empty(&self, store: &dyn Storage) -> bool {
-        self.no_prefix_raw()
-            .keys_raw(store, None, None, cosmwasm_std::Order::Ascending)
-            .next()
-            .is_none()
+        self.no_prefix_raw().is_empty(store)
     }
 }
 
