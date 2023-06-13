@@ -66,6 +66,8 @@ impl KeyDeserialize for &[u8] {
 impl<const N: usize> KeyDeserialize for [u8; N] {
     type Output = [u8; N];
 
+    const KEY_ELEMS: u16 = 1;
+
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
         <[u8; N]>::try_from(value).map_err(|v: Vec<_>| StdError::invalid_data_size(N, v.len()))
@@ -74,6 +76,8 @@ impl<const N: usize> KeyDeserialize for [u8; N] {
 
 impl<const N: usize> KeyDeserialize for &[u8; N] {
     type Output = [u8; N];
+
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
