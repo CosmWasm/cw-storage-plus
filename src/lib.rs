@@ -80,7 +80,7 @@ extern crate cw_storage_macro;
 /// #[index_list(TestStruct)] // <- Add this line right here.
 /// struct TestIndexes<'a> {
 ///     id: MultiIndex<'a, u32, TestStruct, u64>,
-///     addr: UniqueIndex<'a, Addr, TestStruct>,
+///     addr: UniqueIndex<'a, Addr, TestStruct, ()>,
 /// }
 /// ```
 ///

@@ -8,6 +8,10 @@ use crate::int_key::IntKey;
 pub trait KeyDeserialize {
     type Output: Sized;
 
+    /// The number of key elements is used for the deserialization of compound keys.
+    /// It should be equal to PrimaryKey::key().len()
+    const KEY_ELEMS: u16;
+
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output>;
 
     fn from_slice(value: &[u8]) -> StdResult<Self::Output> {
@@ -18,6 +22,8 @@ pub trait KeyDeserialize {
 impl KeyDeserialize for () {
     type Output = ();
 
+    const KEY_ELEMS: u16 = 0;
+
     #[inline(always)]
     fn from_vec(_value: Vec<u8>) -> StdResult<Self::Output> {
         Ok(())
@@ -26,6 +32,8 @@ impl KeyDeserialize for () {
 
 impl KeyDeserialize for Vec<u8> {
     type Output = Vec<u8>;
+
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -36,6 +44,8 @@ impl KeyDeserialize for Vec<u8> {
 impl KeyDeserialize for &Vec<u8> {
     type Output = Vec<u8>;
 
+    const KEY_ELEMS: u16 = 1;
+
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
         Ok(value)
@@ -44,6 +54,8 @@ impl KeyDeserialize for &Vec<u8> {
 
 impl KeyDeserialize for &[u8] {
     type Output = Vec<u8>;
+
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -72,6 +84,8 @@ impl<const N: usize> KeyDeserialize for &[u8; N] {
 impl KeyDeserialize for String {
     type Output = String;
 
+    const KEY_ELEMS: u16 = 1;
+
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
         String::from_utf8(value).map_err(StdError::invalid_utf8)
@@ -80,6 +94,8 @@ impl KeyDeserialize for String {
 
 impl KeyDeserialize for &String {
     type Output = String;
+
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -90,6 +106,8 @@ impl KeyDeserialize for &String {
 impl KeyDeserialize for &str {
     type Output = String;
 
+    const KEY_ELEMS: u16 = 1;
+
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
         Self::Output::from_vec(value)
@@ -99,6 +117,8 @@ impl KeyDeserialize for &str {
 impl KeyDeserialize for Addr {
     type Output = Addr;
 
+    const KEY_ELEMS: u16 = 1;
+
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
         Ok(Addr::unchecked(String::from_vec(value)?))
@@ -107,6 +127,8 @@ impl KeyDeserialize for Addr {
 
 impl KeyDeserialize for &Addr {
     type Output = Addr;
+
+    const KEY_ELEMS: u16 = 1;
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -118,6 +140,8 @@ macro_rules! integer_de {
     (for $($t:ty),+) => {
         $(impl KeyDeserialize for $t {
             type Output = $t;
+
+            const KEY_ELEMS: u16 = 1;
 
             #[inline(always)]
             fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
@@ -139,33 +163,54 @@ fn parse_length(value: &[u8]) -> StdResult<usize> {
     .into())
 }
 
+/// Splits the first key from the value based on the provided number of key elements.
+/// The return value is ordered as (first_key, remainder).
+///
+fn split_first_key(key_elems: u16, value: &[u8]) -> StdResult<(Vec<u8>, &[u8])> {
+    let mut index = 0;
+    let mut first_key = Vec::new();
+
+    // Iterate over the sub keys
+    for i in 0..key_elems {
+        let len_slice = &value[index..index + 2];
+        index += 2;
+        let is_last_key = i == key_elems - 1;
+
+        if !is_last_key {
+            first_key.extend_from_slice(len_slice);
+        }
+
+        let subkey_len = parse_length(len_slice)?;
+        first_key.extend_from_slice(&value[index..index + subkey_len]);
+        index += subkey_len;
+    }
+
+    let remainder = &value[index..];
+    Ok((first_key, remainder))
+}
+
 impl<T: KeyDeserialize, U: KeyDeserialize> KeyDeserialize for (T, U) {
     type Output = (T::Output, U::Output);
 
-    #[inline(always)]
-    fn from_vec(mut value: Vec<u8>) -> StdResult<Self::Output> {
-        let mut tu = value.split_off(2);
-        let t_len = parse_length(&value)?;
-        let u = tu.split_off(t_len);
+    const KEY_ELEMS: u16 = T::KEY_ELEMS + U::KEY_ELEMS;
 
-        Ok((T::from_vec(tu)?, U::from_vec(u)?))
+    #[inline(always)]
+    fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
+        let (t, u) = split_first_key(T::KEY_ELEMS, value.as_ref())?;
+        Ok((T::from_vec(t)?, U::from_vec(u.to_vec())?))
     }
 }
 
 impl<T: KeyDeserialize, U: KeyDeserialize, V: KeyDeserialize> KeyDeserialize for (T, U, V) {
     type Output = (T::Output, U::Output, V::Output);
 
+    const KEY_ELEMS: u16 = T::KEY_ELEMS + U::KEY_ELEMS + V::KEY_ELEMS;
+
     #[inline(always)]
-    fn from_vec(mut value: Vec<u8>) -> StdResult<Self::Output> {
-        let mut tuv = value.split_off(2);
-        let t_len = parse_length(&value)?;
-        let mut len_uv = tuv.split_off(t_len);
-
-        let mut uv = len_uv.split_off(2);
-        let u_len = parse_length(&len_uv)?;
-        let v = uv.split_off(u_len);
-
-        Ok((T::from_vec(tuv)?, U::from_vec(uv)?, V::from_vec(v)?))
+    fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
+        let (t, remainder) = split_first_key(T::KEY_ELEMS, value.as_ref())?;
+        let (u, v) = split_first_key(U::KEY_ELEMS, remainder)?;
+        Ok((T::from_vec(t)?, U::from_vec(u)?, V::from_vec(v.to_vec())?))
     }
 }
 
@@ -274,6 +319,74 @@ mod test {
         assert_eq!(
             <(&[u8], &str)>::from_slice((BYTES, STRING).joined_key().as_slice()).unwrap(),
             (BYTES.to_vec(), STRING.to_string())
+        );
+    }
+
+    #[test]
+    fn deserialize_tuple_of_tuples_works() {
+        assert_eq!(
+            <((&[u8], &str), (&[u8], &str))>::from_slice(
+                ((BYTES, STRING), (BYTES, STRING)).joined_key().as_slice()
+            )
+            .unwrap(),
+            (
+                (BYTES.to_vec(), STRING.to_string()),
+                (BYTES.to_vec(), STRING.to_string())
+            )
+        );
+    }
+
+    #[test]
+    fn deserialize_tuple_of_triples_works() {
+        assert_eq!(
+            <((&[u8], &str, u32), (&[u8], &str, u16))>::from_slice(
+                ((BYTES, STRING, 1234u32), (BYTES, STRING, 567u16))
+                    .joined_key()
+                    .as_slice()
+            )
+            .unwrap(),
+            (
+                (BYTES.to_vec(), STRING.to_string(), 1234),
+                (BYTES.to_vec(), STRING.to_string(), 567)
+            )
+        );
+    }
+
+    #[test]
+    fn deserialize_triple_of_tuples_works() {
+        assert_eq!(
+            <((u32, &str), (&str, &[u8]), (i32, i32))>::from_slice(
+                ((1234u32, STRING), (STRING, BYTES), (1234i32, 567i32))
+                    .joined_key()
+                    .as_slice()
+            )
+            .unwrap(),
+            (
+                (1234, STRING.to_string()),
+                (STRING.to_string(), BYTES.to_vec()),
+                (1234, 567)
+            )
+        );
+    }
+
+    #[test]
+    fn deserialize_triple_of_triples_works() {
+        assert_eq!(
+            <((u32, &str, &str), (&str, &[u8], u8), (i32, u8, i32))>::from_slice(
+                (
+                    (1234u32, STRING, STRING),
+                    (STRING, BYTES, 123u8),
+                    (4567i32, 89u8, 10i32)
+                )
+                    .joined_key()
+                    .as_slice()
+            )
+            .unwrap(),
+            (
+                (1234, STRING.to_string(), STRING.to_string()),
+                (STRING.to_string(), BYTES.to_vec(), 123),
+                (4567, 89, 10)
+            )
         );
     }
 

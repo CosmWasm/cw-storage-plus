@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased](https://github.com/CosmWasm/cw-storage-plus/tree/HEAD)
+
+[Full Changelog](https://github.com/CosmWasm/cw-storage-plus/compare/v1.0.1...HEAD)
+
+**Closed issues:**
+
+- implementation of KeyDeserialize for \(T, U\) is incorrect. [\#33](https://github.com/CosmWasm/cw-storage-plus/issues/33)
+
+**Merged pull requests:**
+
+- fix for incorrect implementation of KeyDeserialize for \(T, U\) [\#34](https://github.com/CosmWasm/cw-storage-plus/pull/34) ([ewoolsey](https://github.com/ewoolsey))
+
 ## [v1.1.0](https://github.com/CosmWasm/cw-storage-plus/tree/v1.1.0) (2023-06-12)
 
 [Full Changelog](https://github.com/CosmWasm/cw-storage-plus/compare/v1.0.1...v1.1.0)
