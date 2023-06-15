@@ -105,6 +105,18 @@ impl<'a> PrimaryKey<'a> for &'a [u8] {
     }
 }
 
+impl<'a, const N: usize> PrimaryKey<'a> for [u8; N] {
+    type Prefix = ();
+    type SubPrefix = ();
+    type Suffix = Self;
+    type SuperSuffix = Self;
+
+    fn key(&self) -> Vec<Key> {
+        // this is simple, we don't add more prefixes
+        vec![Key::Ref(self.as_slice())]
+    }
+}
+
 // Provide a string version of this to raw encode strings
 impl<'a> PrimaryKey<'a> for &'a str {
     type Prefix = ();
@@ -309,6 +321,8 @@ integer_prefix!(for i8, Val8, u8, Val8, i16, Val16, u16, Val16, i32, Val32, u32,
 
 #[cfg(test)]
 mod test {
+    use cosmwasm_std::{Uint256, Uint512};
+
     use super::*;
 
     #[test]
@@ -400,6 +414,30 @@ mod test {
 
         let joined = k.joined_key();
         assert_eq!(joined, b"hello")
+    }
+
+    #[test]
+    fn fixed_size_bytes_key_works() {
+        type K = [u8; 32];
+
+        let k: K = Uint256::MAX.to_be_bytes();
+        let path = k.key();
+        assert_eq!(1, path.len());
+        assert_eq!(k, path[0].as_ref());
+
+        let joined = k.joined_key();
+        assert_eq!(joined, k);
+
+        // ref also works
+        type K2<'a> = &'a [u8; 64];
+
+        let k: K2 = &Uint512::MAX.to_be_bytes();
+        let path = k.key();
+        assert_eq!(1, path.len());
+        assert_eq!(k, path[0].as_ref());
+
+        let joined = k.joined_key();
+        assert_eq!(joined, k);
     }
 
     #[test]

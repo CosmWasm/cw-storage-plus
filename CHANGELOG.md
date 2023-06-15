@@ -11,6 +11,23 @@
 **Merged pull requests:**
 
 - fix for incorrect implementation of KeyDeserialize for \(T, U\) [\#34](https://github.com/CosmWasm/cw-storage-plus/pull/34) ([ewoolsey](https://github.com/ewoolsey))
+
+## [v1.1.0](https://github.com/CosmWasm/cw-storage-plus/tree/v1.1.0) (2023-06-12)
+
+[Full Changelog](https://github.com/CosmWasm/cw-storage-plus/compare/v1.0.1...v1.1.0)
+
+**Implemented enhancements:**
+
+- Add Item::exists since Item is optional [\#14](https://github.com/CosmWasm/cw-storage-plus/issues/14)
+
+**Closed issues:**
+
+- About the requirement of using `Uint256` as `key` in `Map`. [\#40](https://github.com/CosmWasm/cw-storage-plus/issues/40)
+- Add methods to fetch the first or last item in a Map [\#35](https://github.com/CosmWasm/cw-storage-plus/issues/35)
+- Add a method to delete all Map elements under a prefix [\#29](https://github.com/CosmWasm/cw-storage-plus/issues/29)
+
+**Merged pull requests:**
+
 - Test CI [\#32](https://github.com/CosmWasm/cw-storage-plus/pull/32) ([webmaster128](https://github.com/webmaster128))
 - Implement Debug for Prefix [\#31](https://github.com/CosmWasm/cw-storage-plus/pull/31) ([amab8901](https://github.com/amab8901))
 - Implement PrimaryKey for all &T where T implements PrimaryKey. [\#30](https://github.com/CosmWasm/cw-storage-plus/pull/30) ([0xekez](https://github.com/0xekez))
