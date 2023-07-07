@@ -1,16 +1,19 @@
 #[cfg(all(test, feature = "iterator", feature = "macro"))]
 mod test {
+    use cosmwasm_schema::cw_prost;
     use cosmwasm_std::{testing::MockStorage, Addr};
     use cw_storage_macro::index_list;
     use cw_storage_plus::{IndexedMap, MultiIndex, UniqueIndex};
-    use serde::{Deserialize, Serialize};
 
     #[test]
     fn index_list_compiles() {
-        #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+        #[cw_prost]
         struct TestStruct {
+            #[prost(uint64, tag = "1")]
             id: u64,
+            #[prost(uint32, tag = "2")]
             id2: u32,
+            #[prost(message, tag = "3")]
             addr: Addr,
         }
 
@@ -31,10 +34,13 @@ mod test {
 
     #[test]
     fn index_list_works() {
-        #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+        #[cw_prost]
         struct TestStruct {
+            #[prost(uint64, tag = "1")]
             id: u64,
+            #[prost(uint32, tag = "2")]
             id2: u32,
+            #[prost(message, tag = "3")]
             addr: Addr,
         }
 

@@ -6,16 +6,13 @@ mod unique;
 pub use multi::MultiIndex;
 pub use unique::UniqueIndex;
 
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-
 use cosmwasm_std::{StdResult, Storage};
 
 // Note: we cannot store traits with generic functions inside `Box<dyn Index>`,
 // so I pull S: Storage to a top-level
 pub trait Index<T>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
 {
     fn save(&self, store: &mut dyn Storage, pk: &[u8], data: &T) -> StdResult<()>;
     fn remove(&self, store: &mut dyn Storage, pk: &[u8], old_data: &T) -> StdResult<()>;

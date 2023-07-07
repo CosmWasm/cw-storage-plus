@@ -3,10 +3,8 @@
 
 use std::marker::PhantomData;
 
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-
-use cosmwasm_std::{from_slice, Binary, Order, Record, StdError, StdResult, Storage};
+use cosmwasm_schema::cw_prost;
+use cosmwasm_std::{prost::from_slice, Binary, Order, Record, StdError, StdResult, Storage};
 
 use crate::bound::PrefixBound;
 use crate::de::KeyDeserialize;
@@ -16,24 +14,35 @@ use crate::prefix::namespaced_prefix_range;
 use crate::{Bound, Index, Prefix, Prefixer, PrimaryKey};
 
 /// UniqueRef stores Binary(Vec[u8]) representation of private key and index value
-#[derive(Deserialize, Serialize)]
-pub(crate) struct UniqueRef<T> {
+#[cw_prost]
+pub(crate) struct UniqueRef<T>
+where
+    T: prost::Message + Default,
+{
+    #[prost(message, required, tag = "1")]
     // note, we collapse the pk - combining everything under the namespace - even if it is composite
     pk: Binary,
+    #[prost(message, required, tag = "2")]
     value: T,
 }
 
 /// UniqueIndex stores (namespace, index_name, idx_value) -> {key, value}
 /// Allows one value per index (i.e. unique) and copies pk and data
 /// The PK type defines the type of Primary Key deserialization.
-pub struct UniqueIndex<'a, IK, T, PK> {
+pub struct UniqueIndex<'a, IK, T, PK>
+where
+    T: prost::Message + Default,
+{
     index: fn(&T) -> IK,
     idx_map: Map<'a, IK, UniqueRef<T>>,
     idx_namespace: &'a [u8],
     phantom: PhantomData<PK>,
 }
 
-impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK> {
+impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK>
+where
+    T: prost::Message + Default,
+{
     /// Create a new UniqueIndex
     ///
     /// idx_fn - lambda creating index key from index value
@@ -63,7 +72,7 @@ impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK> {
 
 impl<'a, IK, T, PK> Index<T> for UniqueIndex<'a, IK, T, PK>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     IK: PrimaryKey<'a>,
 {
     fn save(&self, store: &mut dyn Storage, pk: &[u8], data: &T) -> StdResult<()> {
@@ -89,13 +98,13 @@ where
     }
 }
 
-fn deserialize_unique_v<T: DeserializeOwned>(kv: Record) -> StdResult<Record<T>> {
+fn deserialize_unique_v<T: prost::Message + Default>(kv: Record) -> StdResult<Record<T>> {
     let (_, v) = kv;
     let t = from_slice::<UniqueRef<T>>(&v)?;
     Ok((t.pk.0, t.value))
 }
 
-fn deserialize_unique_kv<K: KeyDeserialize, T: DeserializeOwned>(
+fn deserialize_unique_kv<K: KeyDeserialize, T: prost::Message + Default>(
     kv: Record,
 ) -> StdResult<(K::Output, T)> {
     let (_, v) = kv;
@@ -105,7 +114,7 @@ fn deserialize_unique_kv<K: KeyDeserialize, T: DeserializeOwned>(
 
 impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     IK: PrimaryKey<'a>,
 {
     pub fn index_key(&self, k: IK) -> Vec<u8> {
@@ -135,7 +144,7 @@ where
 // short-cut for simple keys, rather than .prefix(()).range_raw(...)
 impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     IK: PrimaryKey<'a>,
 {
     // I would prefer not to copy code from Prefix, but no other way
@@ -168,7 +177,7 @@ where
 impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK>
 where
     PK: PrimaryKey<'a> + KeyDeserialize,
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     IK: PrimaryKey<'a>,
 {
     /// While `range` over a `prefix` fixes the prefix to one element and iterates over the

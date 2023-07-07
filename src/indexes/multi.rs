@@ -1,10 +1,7 @@
 // this module requires iterator to be useful at all
 #![cfg(feature = "iterator")]
 
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-
-use cosmwasm_std::{from_slice, Order, Record, StdError, StdResult, Storage};
+use cosmwasm_std::{prost::from_slice, Order, Record, StdError, StdResult, Storage};
 
 use crate::bound::PrefixBound;
 use crate::de::KeyDeserialize;
@@ -38,7 +35,7 @@ pub struct MultiIndex<'a, IK, T, PK> {
 
 impl<'a, IK, T, PK> MultiIndex<'a, IK, T, PK>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
 {
     /// Create a new MultiIndex
     ///
@@ -50,11 +47,13 @@ where
     ///
     /// ```rust
     /// use cw_storage_plus::MultiIndex;
-    /// use serde::{Deserialize, Serialize};
+    /// use cosmwasm_schema::cw_prost;
     ///
-    /// #[derive(Deserialize, Serialize, Clone)]
+    /// #[cw_prost]
     /// struct Data {
+    ///     #[prost(string, tag="1")]
     ///     pub name: String,
+    ///     #[prost(uint32, tag="2")]
     ///     pub age: u32,
     /// }
     ///
@@ -79,7 +78,7 @@ where
     }
 }
 
-fn deserialize_multi_v<T: DeserializeOwned>(
+fn deserialize_multi_v<T: prost::Message + Default>(
     store: &dyn Storage,
     pk_namespace: &[u8],
     kv: Record,
@@ -103,7 +102,7 @@ fn deserialize_multi_v<T: DeserializeOwned>(
     Ok((pk.to_vec(), v))
 }
 
-fn deserialize_multi_kv<K: KeyDeserialize, T: DeserializeOwned>(
+fn deserialize_multi_kv<K: KeyDeserialize, T: prost::Message + Default>(
     store: &dyn Storage,
     pk_namespace: &[u8],
     kv: Record,
@@ -130,7 +129,7 @@ fn deserialize_multi_kv<K: KeyDeserialize, T: DeserializeOwned>(
 
 impl<'a, IK, T, PK> Index<T> for MultiIndex<'a, IK, T, PK>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     IK: PrimaryKey<'a>,
 {
     fn save(&self, store: &mut dyn Storage, pk: &[u8], data: &T) -> StdResult<()> {
@@ -147,7 +146,7 @@ where
 
 impl<'a, IK, T, PK> MultiIndex<'a, IK, T, PK>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     IK: PrimaryKey<'a> + Prefixer<'a>,
 {
     fn no_prefix_raw(&self) -> Prefix<Vec<u8>, T, (IK, PK)> {
@@ -164,7 +163,7 @@ where
 impl<'a, IK, T, PK> MultiIndex<'a, IK, T, PK>
 where
     PK: PrimaryKey<'a> + KeyDeserialize,
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     IK: PrimaryKey<'a> + Prefixer<'a>,
 {
     pub fn index_key(&self, k: IK) -> Vec<u8> {
@@ -197,7 +196,7 @@ where
 // short-cut for simple keys, rather than .prefix(()).range_raw(...)
 impl<'a, IK, T, PK> MultiIndex<'a, IK, T, PK>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     IK: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
     PK: PrimaryKey<'a> + KeyDeserialize,
 {
@@ -253,7 +252,7 @@ where
 impl<'a, IK, T, PK> MultiIndex<'a, IK, T, PK>
 where
     PK: PrimaryKey<'a> + KeyDeserialize,
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     IK: PrimaryKey<'a> + Prefixer<'a>,
 {
     pub fn prefix(&self, p: IK) -> Prefix<PK, T, PK> {
@@ -281,7 +280,7 @@ where
 impl<'a, IK, T, PK> MultiIndex<'a, IK, T, PK>
 where
     PK: PrimaryKey<'a> + KeyDeserialize,
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     IK: PrimaryKey<'a> + KeyDeserialize + Prefixer<'a>,
 {
     /// While `range` over a `prefix` fixes the prefix to one element and iterates over the
