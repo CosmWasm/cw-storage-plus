@@ -143,7 +143,7 @@ checksum = "6340df57935414636969091153f35f68d9f00bbc8fb4a9c6054706c213e6c6bc"
 [[package]]
 name = "cosmwasm-crypto"
 version = "1.3.0-rc.0"
-source = "git+https://github.com/CosmWasm/cosmwasm.git?branch=add-prost-support#17f612230fcf319fd41ec13efc8d4b28abb67b29"
+source = "git+https://github.com/CosmWasm/cosmwasm.git?branch=add-prost-support#11461e4ee290f158ac570a3064e67b4e0f838fe5"
 dependencies = [
  "digest 0.10.7",
  "ed25519-zebra",
@@ -155,7 +155,7 @@ dependencies = [
 [[package]]
 name = "cosmwasm-derive"
 version = "1.3.0-rc.0"
-source = "git+https://github.com/CosmWasm/cosmwasm.git?branch=add-prost-support#17f612230fcf319fd41ec13efc8d4b28abb67b29"
+source = "git+https://github.com/CosmWasm/cosmwasm.git?branch=add-prost-support#11461e4ee290f158ac570a3064e67b4e0f838fe5"
 dependencies = [
  "syn 1.0.109",
 ]
@@ -163,7 +163,7 @@ dependencies = [
 [[package]]
 name = "cosmwasm-schema"
 version = "1.3.0-rc.0"
-source = "git+https://github.com/CosmWasm/cosmwasm.git?branch=add-prost-support#17f612230fcf319fd41ec13efc8d4b28abb67b29"
+source = "git+https://github.com/CosmWasm/cosmwasm.git?branch=add-prost-support#11461e4ee290f158ac570a3064e67b4e0f838fe5"
 dependencies = [
  "cosmwasm-schema-derive",
  "schemars",
@@ -175,7 +175,7 @@ dependencies = [
 [[package]]
 name = "cosmwasm-schema-derive"
 version = "1.3.0-rc.0"
-source = "git+https://github.com/CosmWasm/cosmwasm.git?branch=add-prost-support#17f612230fcf319fd41ec13efc8d4b28abb67b29"
+source = "git+https://github.com/CosmWasm/cosmwasm.git?branch=add-prost-support#11461e4ee290f158ac570a3064e67b4e0f838fe5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -185,7 +185,7 @@ dependencies = [
 [[package]]
 name = "cosmwasm-std"
 version = "1.3.0-rc.0"
-source = "git+https://github.com/CosmWasm/cosmwasm.git?branch=add-prost-support#17f612230fcf319fd41ec13efc8d4b28abb67b29"
+source = "git+https://github.com/CosmWasm/cosmwasm.git?branch=add-prost-support#11461e4ee290f158ac570a3064e67b4e0f838fe5"
 dependencies = [
  "base64",
  "bnum",

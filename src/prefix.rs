@@ -351,6 +351,7 @@ fn increment_last_byte(input: &[u8]) -> Vec<u8> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use cosmwasm_std::prost::to_vec;
     use cosmwasm_std::testing::MockStorage;
 
     #[test]
@@ -366,12 +367,12 @@ mod test {
         };
 
         // set some data, we care about "foo" prefix
-        store.set(b"foobar", b"1");
-        store.set(b"foora", b"2");
-        store.set(b"foozi", b"3");
+        store.set(b"foobar", &to_vec(&1u64).unwrap());
+        store.set(b"foora", &to_vec(&2u64).unwrap());
+        store.set(b"foozi", &to_vec(&3u64).unwrap());
         // these shouldn't match
-        store.set(b"foply", b"100");
-        store.set(b"font", b"200");
+        store.set(b"foply", &to_vec(&100u64).unwrap());
+        store.set(b"font", &to_vec(&200u64).unwrap());
 
         let expected = vec![
             (b"bar".to_vec(), 1u64),

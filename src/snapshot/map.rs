@@ -30,7 +30,7 @@ where
     /// ```rust
     /// use cw_storage_plus::{SnapshotMap, Strategy};
     ///
-    /// SnapshotMap::<&[u8], &str>::new(
+    /// SnapshotMap::<&[u8], String>::new(
     ///     "never",
     ///     "never__check",
     ///     "never__change",

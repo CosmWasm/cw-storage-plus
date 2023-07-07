@@ -52,9 +52,13 @@ where
     ///
     /// ```rust
     /// use cw_storage_plus::UniqueIndex;
+    /// use cosmwasm_schema::cw_prost;
     ///
+    /// #[cw_prost]
     /// struct Data {
+    ///     #[prost(string, tag="1")]
     ///     pub name: String,
+    ///     #[prost(uint32, tag="2")]
     ///     pub age: u32,
     /// }
     ///

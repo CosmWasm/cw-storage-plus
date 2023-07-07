@@ -31,10 +31,13 @@ where
     ///
     /// ```rust
     /// use cw_storage_plus::{IndexedSnapshotMap, Strategy, UniqueIndex};
+    /// use cosmwasm_schema::cw_prost;
     ///
-    /// #[derive(PartialEq, Debug, Clone)]
+    /// #[cw_prost]
     /// struct Data {
+    ///     #[prost(string, tag = "1")]
     ///     pub name: String,
+    ///     #[prost(uint32, tag = "2")]
     ///     pub age: u32,
     /// }
     ///
