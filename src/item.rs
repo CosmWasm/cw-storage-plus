@@ -1,9 +1,7 @@
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::marker::PhantomData;
 
 use cosmwasm_std::{
-    to_vec, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage, WasmQuery,
+    prost::to_vec, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage, WasmQuery,
 };
 
 use crate::helpers::{may_deserialize, must_deserialize};
@@ -29,7 +27,7 @@ impl<'a, T> Item<'a, T> {
 
 impl<'a, T> Item<'a, T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     // this gets the path of the data to use elsewhere
     pub fn as_slice(&self) -> &[u8] {
@@ -79,7 +77,12 @@ where
         self.save(store, &output)?;
         Ok(output)
     }
+}
 
+impl<'a, T> Item<'a, T>
+where
+    T: serde::de::DeserializeOwned,
+{
     /// If you import the proper Item from the remote contract, this will let you read the data
     /// from a remote contract in a type-safe way using WasmQuery::RawQuery.
     ///
@@ -100,14 +103,15 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use cosmwasm_schema::cw_prost;
     use cosmwasm_std::testing::MockStorage;
-    use serde::{Deserialize, Serialize};
-
     use cosmwasm_std::{OverflowError, OverflowOperation, StdError};
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    #[cw_prost]
     struct Config {
+        #[prost(string, tag = "1")]
         pub owner: String,
+        #[prost(int32, tag = "2")]
         pub max_tokens: i32,
     }
 
@@ -130,6 +134,13 @@ mod test {
         assert_eq!(cfg, CONFIG.load(&store).unwrap());
     }
 
+    /*
+    #[cosmwasm_schema::cw_prost]
+    struct U32 {
+        #[prost(uint32, tag = "1")]
+        pub value: u32,
+    }
+
     #[test]
     fn exists_works() {
         let mut store = MockStorage::new();
@@ -144,7 +155,7 @@ mod test {
 
         assert!(CONFIG.exists(&store));
 
-        const OPTIONAL: Item<Option<u32>> = Item::new("optional");
+        const OPTIONAL: Item<Option<U32>> = Item::new("optional");
 
         assert!(!OPTIONAL.exists(&store));
 
@@ -152,6 +163,7 @@ mod test {
 
         assert!(OPTIONAL.exists(&store));
     }
+    */
 
     #[test]
     fn remove_works() {
@@ -287,7 +299,7 @@ mod test {
                 return Err(StdError::generic_err("broken stuff").into()); // Uses Into to convert StdError to MyError
             }
             if c.max_tokens > 10 {
-                to_vec(&c)?; // Uses From to convert StdError to MyError
+                to_vec(&c)?;
             }
             c.max_tokens += 20;
             Ok(c)

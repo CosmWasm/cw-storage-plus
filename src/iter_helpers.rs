@@ -1,21 +1,19 @@
 #![cfg(feature = "iterator")]
 
-use serde::de::DeserializeOwned;
-
 use cosmwasm_std::Record;
-use cosmwasm_std::{from_slice, StdResult};
+use cosmwasm_std::{prost::from_slice, StdResult};
 
 use crate::de::KeyDeserialize;
 use crate::helpers::encode_length;
 
 #[allow(dead_code)]
-pub(crate) fn deserialize_v<T: DeserializeOwned>(kv: Record) -> StdResult<Record<T>> {
+pub(crate) fn deserialize_v<T: prost::Message + Default>(kv: Record) -> StdResult<Record<T>> {
     let (k, v) = kv;
     let t = from_slice::<T>(&v)?;
     Ok((k, t))
 }
 
-pub(crate) fn deserialize_kv<K: KeyDeserialize, T: DeserializeOwned>(
+pub(crate) fn deserialize_kv<K: KeyDeserialize, T: prost::Message + Default>(
     kv: Record,
 ) -> StdResult<(K::Output, T)> {
     let (k, v) = kv;

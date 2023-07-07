@@ -2,8 +2,6 @@
 #![cfg(feature = "iterator")]
 
 use cosmwasm_std::{StdError, StdResult, Storage};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 
 use crate::de::KeyDeserialize;
 use crate::iter_helpers::deserialize_kv;
@@ -14,7 +12,10 @@ use crate::PrefixBound;
 use crate::{Bound, IndexList, Map, Path, Strategy};
 
 /// `IndexedSnapshotMap` works like a `SnapshotMap` but has a secondary index
-pub struct IndexedSnapshotMap<'a, K, T, I> {
+pub struct IndexedSnapshotMap<'a, K, T, I>
+where
+    T: prost::Message + Default,
+{
     pk_namespace: &'a [u8],
     primary: SnapshotMap<'a, K, T>,
     /// This is meant to be read directly to get the proper types, like:
@@ -22,15 +23,21 @@ pub struct IndexedSnapshotMap<'a, K, T, I> {
     pub idx: I,
 }
 
-impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I> {
+impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I>
+where
+    T: prost::Message + Default,
+{
     /// Examples:
     ///
     /// ```rust
     /// use cw_storage_plus::{IndexedSnapshotMap, Strategy, UniqueIndex};
+    /// use cosmwasm_schema::cw_prost;
     ///
-    /// #[derive(PartialEq, Debug, Clone)]
+    /// #[cw_prost]
     /// struct Data {
+    ///     #[prost(string, tag = "1")]
     ///     pub name: String,
+    ///     #[prost(uint32, tag = "2")]
     ///     pub age: u32,
     /// }
     ///
@@ -65,7 +72,7 @@ impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I> {
 
 impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
     I: IndexList<T>,
 {
@@ -98,7 +105,7 @@ where
 impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I>
 where
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     I: IndexList<T>,
 {
     /// save will serialize the model and store, returns an error on serialization issues.
@@ -189,7 +196,7 @@ where
 impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I>
 where
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     I: IndexList<T>,
 {
     // I would prefer not to copy code from Prefix, but no other way
@@ -221,7 +228,7 @@ where
 #[cfg(feature = "iterator")]
 impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     K: PrimaryKey<'a>,
     I: IndexList<T>,
 {
@@ -237,7 +244,7 @@ where
 #[cfg(feature = "iterator")]
 impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I>
 where
-    T: Serialize + DeserializeOwned + Clone,
+    T: prost::Message + Clone + Default,
     K: PrimaryKey<'a> + KeyDeserialize,
     I: IndexList<T>,
 {
@@ -304,14 +311,17 @@ mod test {
 
     use crate::indexes::test::{index_string_tuple, index_tuple};
     use crate::{Index, MultiIndex, UniqueIndex};
+    use cosmwasm_schema::cw_prost;
     use cosmwasm_std::testing::MockStorage;
     use cosmwasm_std::{MemoryStorage, Order};
-    use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+    #[cw_prost]
     struct Data {
+        #[prost(string, tag = "1")]
         pub name: String,
+        #[prost(string, tag = "2")]
         pub last_name: String,
+        #[prost(uint32, tag = "3")]
         pub age: u32,
     }
 

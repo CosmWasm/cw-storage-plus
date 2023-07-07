@@ -58,6 +58,7 @@ pub use snapshot::{SnapshotItem, SnapshotMap, Strategy};
 
 // cw_storage_macro reexports
 #[cfg(all(feature = "iterator", feature = "macro"))]
+#[allow(unused_imports)]
 #[macro_use]
 extern crate cw_storage_macro;
 #[cfg(all(feature = "iterator", feature = "macro"))]
@@ -68,12 +69,15 @@ extern crate cw_storage_macro;
 /// ```rust
 /// use cosmwasm_std::Addr;
 /// use cw_storage_plus::{MultiIndex, UniqueIndex, index_list};
-/// use serde::{Serialize, Deserialize};
+/// use cosmwasm_schema::cw_prost;
 ///
-/// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+/// #[cw_prost]
 /// struct TestStruct {
+///     #[prost(uint64, tag="1")]
 ///     id: u64,
+///     #[prost(uint32, tag="2")]
 ///     id2: u32,
+///     #[prost(message, required, tag="3")]
 ///     addr: Addr,
 /// }
 ///

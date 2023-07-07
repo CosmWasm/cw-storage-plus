@@ -1,16 +1,14 @@
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::marker::PhantomData;
 
 use crate::helpers::{may_deserialize, must_deserialize, nested_namespaces_with_key};
 use crate::keys::Key;
-use cosmwasm_std::{to_vec, StdError, StdResult, Storage};
+use cosmwasm_std::{prost::to_vec, StdError, StdResult, Storage};
 use std::ops::Deref;
 
 #[derive(Debug, Clone)]
 pub struct Path<T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     /// all namespaces prefixes and concatenated with the key
     pub(crate) storage_key: Vec<u8>,
@@ -20,7 +18,7 @@ where
 
 impl<T> Deref for Path<T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     type Target = [u8];
 
@@ -31,7 +29,7 @@ where
 
 impl<T> Path<T>
 where
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     pub fn new(namespace: &[u8], keys: &[&[u8]]) -> Self {
         let l = keys.len();

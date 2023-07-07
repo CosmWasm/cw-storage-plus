@@ -4,13 +4,12 @@
 //! Everything in this file is only responsible for building such keys
 //! and is in no way specific to any kind of storage.
 
-use serde::de::DeserializeOwned;
 use std::any::type_name;
 
 use crate::keys::Key;
 
 use cosmwasm_std::{
-    from_slice, to_vec, Addr, Binary, ContractResult, CustomQuery, QuerierWrapper, QueryRequest,
+    prost::from_slice, Addr, Binary, ContractResult, CustomQuery, QuerierWrapper, QueryRequest,
     StdError, StdResult, SystemResult, WasmQuery,
 };
 
@@ -18,7 +17,7 @@ use cosmwasm_std::{
 ///
 /// value is an odd type, but this is meant to be easy to use with output from storage.get (Option<Vec<u8>>)
 /// and value.map(|s| s.as_slice()) seems trickier than &value
-pub(crate) fn may_deserialize<T: DeserializeOwned>(
+pub(crate) fn may_deserialize<T: prost::Message + Default>(
     value: &Option<Vec<u8>>,
 ) -> StdResult<Option<T>> {
     match value {
@@ -28,7 +27,9 @@ pub(crate) fn may_deserialize<T: DeserializeOwned>(
 }
 
 /// must_deserialize parses json bytes from storage (Option), returning NotFound error if no data present
-pub(crate) fn must_deserialize<T: DeserializeOwned>(value: &Option<Vec<u8>>) -> StdResult<T> {
+pub(crate) fn must_deserialize<T: prost::Message + Default>(
+    value: &Option<Vec<u8>>,
+) -> StdResult<T> {
     match value {
         Some(vec) => from_slice(vec),
         None => Err(StdError::not_found(type_name::<T>())),
@@ -104,7 +105,7 @@ pub(crate) fn query_raw<Q: CustomQuery>(
     }
     .into();
 
-    let raw = to_vec(&request).map_err(|serialize_err| {
+    let raw = cosmwasm_std::to_vec(&request).map_err(|serialize_err| {
         StdError::generic_err(format!("Serializing QueryRequest: {}", serialize_err))
     })?;
     match querier.raw_query(&raw) {
@@ -123,12 +124,14 @@ pub(crate) fn query_raw<Q: CustomQuery>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use cosmwasm_std::{to_vec, StdError};
-    use serde::{Deserialize, Serialize};
+    use cosmwasm_schema::cw_prost;
+    use cosmwasm_std::{prost::to_vec, StdError};
 
-    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    #[cw_prost]
     struct Person {
+        #[prost(string, tag = "1")]
         pub name: String,
+        #[prost(int32, tag = "2")]
         pub age: i32,
     }
 

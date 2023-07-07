@@ -1,7 +1,5 @@
 #![cfg(feature = "iterator")]
 use core::fmt;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -20,7 +18,7 @@ type DeserializeVFn<T> = fn(&dyn Storage, &[u8], Record) -> StdResult<Record<T>>
 type DeserializeKvFn<K, T> =
     fn(&dyn Storage, &[u8], Record) -> StdResult<(<K as KeyDeserialize>::Output, T)>;
 
-pub fn default_deserializer_v<T: DeserializeOwned>(
+pub fn default_deserializer_v<T: prost::Message + Default>(
     _: &dyn Storage,
     _: &[u8],
     raw: Record,
@@ -28,7 +26,7 @@ pub fn default_deserializer_v<T: DeserializeOwned>(
     deserialize_v(raw)
 }
 
-pub fn default_deserializer_kv<K: KeyDeserialize, T: DeserializeOwned>(
+pub fn default_deserializer_kv<K: KeyDeserialize, T: prost::Message + Default>(
     _: &dyn Storage,
     _: &[u8],
     raw: Record,
@@ -40,7 +38,7 @@ pub fn default_deserializer_kv<K: KeyDeserialize, T: DeserializeOwned>(
 pub struct Prefix<K, T, B = Vec<u8>>
 where
     K: KeyDeserialize,
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     /// all namespaces prefixes and concatenated with the key
     storage_prefix: Vec<u8>,
@@ -54,7 +52,7 @@ where
 impl<K, T> Debug for Prefix<K, T>
 where
     K: KeyDeserialize,
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Prefix")
@@ -67,7 +65,7 @@ where
 impl<K, T> Deref for Prefix<K, T>
 where
     K: KeyDeserialize,
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     type Target = [u8];
 
@@ -79,7 +77,7 @@ where
 impl<K, T, B> Prefix<K, T, B>
 where
     K: KeyDeserialize,
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     pub fn new(top_name: &[u8], sub_names: &[Key]) -> Self {
         Prefix::with_deserialization_functions(
@@ -113,7 +111,7 @@ impl<'b, K, T, B> Prefix<K, T, B>
 where
     B: PrimaryKey<'b>,
     K: KeyDeserialize,
-    T: Serialize + DeserializeOwned,
+    T: prost::Message + Default,
 {
     pub fn range_raw<'a>(
         &self,
@@ -353,6 +351,7 @@ fn increment_last_byte(input: &[u8]) -> Vec<u8> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use cosmwasm_std::prost::to_vec;
     use cosmwasm_std::testing::MockStorage;
 
     #[test]
@@ -368,12 +367,12 @@ mod test {
         };
 
         // set some data, we care about "foo" prefix
-        store.set(b"foobar", b"1");
-        store.set(b"foora", b"2");
-        store.set(b"foozi", b"3");
+        store.set(b"foobar", &to_vec(&1u64).unwrap());
+        store.set(b"foora", &to_vec(&2u64).unwrap());
+        store.set(b"foozi", &to_vec(&3u64).unwrap());
         // these shouldn't match
-        store.set(b"foply", b"100");
-        store.set(b"font", b"200");
+        store.set(b"foply", &to_vec(&100u64).unwrap());
+        store.set(b"font", &to_vec(&200u64).unwrap());
 
         let expected = vec![
             (b"bar".to_vec(), 1u64),
