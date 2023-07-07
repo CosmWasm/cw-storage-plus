@@ -13,7 +13,7 @@ mod test {
             id: u64,
             #[prost(uint32, tag = "2")]
             id2: u32,
-            #[prost(message, tag = "3")]
+            #[prost(message, required, tag = "3")]
             addr: Addr,
         }
 
@@ -40,7 +40,7 @@ mod test {
             id: u64,
             #[prost(uint32, tag = "2")]
             id2: u32,
-            #[prost(message, tag = "3")]
+            #[prost(message, required, tag = "3")]
             addr: Addr,
         }
 

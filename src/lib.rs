@@ -58,6 +58,7 @@ pub use snapshot::{SnapshotItem, SnapshotMap, Strategy};
 
 // cw_storage_macro reexports
 #[cfg(all(feature = "iterator", feature = "macro"))]
+#[allow(unused_imports)]
 #[macro_use]
 extern crate cw_storage_macro;
 #[cfg(all(feature = "iterator", feature = "macro"))]
@@ -76,7 +77,7 @@ extern crate cw_storage_macro;
 ///     id: u64,
 ///     #[prost(uint32, tag="2")]
 ///     id2: u32,
-///     #[prost(message, tag="3")]
+///     #[prost(message, required, tag="3")]
 ///     addr: Addr,
 /// }
 ///
