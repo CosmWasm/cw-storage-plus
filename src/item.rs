@@ -6,6 +6,8 @@ use cosmwasm_std::{
     to_vec, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage, WasmQuery,
 };
 
+use cosmwasm_std::{deserialize_from_bytes, serialize_to_bytes, SerializeForBasicType};
+
 use crate::helpers::{may_deserialize, must_deserialize};
 
 /// Item stores one typed item at the given key.
@@ -94,6 +96,78 @@ where
             key: self.storage_key.into(),
         };
         querier.query(&request.into())
+    }
+}
+
+pub struct ItemBasicType<'a, T> {
+    storage_key: &'a [u8],
+    data_type: PhantomData<T>,
+}
+
+impl<'a, T> ItemBasicType<'a, T> {
+    pub const fn new(storage_key: &'a str) -> Self {
+        ItemBasicType {
+            storage_key: storage_key.as_bytes(),
+            data_type: PhantomData,
+        }
+    }
+}
+
+impl<'a, T> ItemBasicType<'a, T>
+where
+    T: SerializeForBasicType,
+{
+    // this gets the path of the data to use elsewhere
+    pub fn as_slice(&self) -> &[u8] {
+        self.storage_key
+    }
+
+    /// save will serialize the model and store, returns an error on serialization issues
+    pub fn save(&self, store: &mut dyn Storage, data: &T) -> StdResult<()> {
+        store.set(self.storage_key, serialize_to_bytes(data).as_slice());
+        Ok(())
+    }
+
+    pub fn remove(&self, store: &mut dyn Storage) {
+        store.remove(self.storage_key);
+    }
+
+    /// load will return an error if no data is set at the given key, or on parse error
+    pub fn load(&self, store: &dyn Storage) -> StdResult<T> {
+        let value = store.get(self.storage_key);
+        Ok(deserialize_from_bytes(value.unwrap()).unwrap())
+    }
+
+    /// Loads the data, perform the specified action, and store the result
+    /// in the database. This is shorthand for some common sequences, which may be useful.
+    ///
+    /// It assumes, that data was initialized before, and if it doesn't exist, `Err(StdError::NotFound)`
+    /// is returned.
+    pub fn update<A, E>(&self, store: &mut dyn Storage, action: A) -> Result<T, E>
+    where
+        A: FnOnce(T) -> Result<T, E>,
+        E: From<StdError>,
+    {
+        let input = self.load(store)?;
+        let output = action(input)?;
+        self.save(store, &output)?;
+        Ok(output)
+    }
+
+    /// If you import the proper Item from the remote contract, this will let you read the data
+    /// from a remote contract in a type-safe way using WasmQuery::RawQuery.
+    ///
+    /// Note that we expect an Item to be set, and error if there is no data there
+    pub fn query<Q: CustomQuery>(
+        &self,
+        querier: &QuerierWrapper<Q>,
+        remote_contract: Addr,
+    ) -> StdResult<T> {
+        let request = WasmQuery::Raw {
+            contract_addr: remote_contract.into(),
+            key: self.storage_key.into(),
+        };
+        querier.query_ex(&request.into())
     }
 }
 
@@ -343,5 +417,28 @@ mod test {
         assert_eq!(None, empty);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_item_basic_type() {
+        let mut store = MockStorage::new();
+
+        let test_u32: ItemBasicType<u32> = ItemBasicType::new("u32");
+        let test_data = 123u32;
+        let _ = test_u32.save(&mut store, &test_data);
+        let load_value: u32 = test_u32.load(&store).unwrap();
+        assert_eq!(test_data, load_value);
+
+        let test_u64: ItemBasicType<u64> = ItemBasicType::new("u64");
+        let test_data = 123u64;
+        let _ = test_u64.save(&mut store, &test_data);
+        let load_value: u64 = test_u64.load(&store).unwrap();
+        assert_eq!(test_data, load_value);
+
+        let test_str: ItemBasicType<String> = ItemBasicType::new("String");
+        let test_data = "okt to the moon".to_string();
+        let _ = test_str.save(&mut store, &test_data);
+        let load_value: String = test_str.load(&store).unwrap();
+        assert_eq!(test_data, load_value);
     }
 }

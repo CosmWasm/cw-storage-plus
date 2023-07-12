@@ -47,7 +47,7 @@ pub use indexes::MultiIndex;
 #[cfg(feature = "iterator")]
 pub use indexes::UniqueIndex;
 pub use int_key::IntKey;
-pub use item::Item;
+pub use item::{Item, ItemBasicType};
 pub use keys::{Key, Prefixer, PrimaryKey};
 pub use map::Map;
 pub use path::Path;
