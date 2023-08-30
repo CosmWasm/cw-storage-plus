@@ -640,4 +640,35 @@ mod test {
 
         assert!(!prefix.is_empty(&storage));
     }
+
+    #[test]
+    fn keys_raw_works() {
+        // manually create this - not testing nested prefixes here
+        let prefix: Prefix<Vec<u8>, u64> = Prefix {
+            storage_prefix: b"foo".to_vec(),
+            data: PhantomData::<(u64, _)>,
+            pk_name: vec![],
+            de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
+            de_fn_v: |_, _, kv| deserialize_v(kv),
+        };
+
+        let mut storage = MockStorage::new();
+        storage.set(b"fookey1", b"1");
+        storage.set(b"fookey2", b"2");
+
+        let keys: Vec<_> = prefix
+            .keys_raw(&storage, None, None, Order::Ascending)
+            .collect();
+        assert_eq!(keys, vec![b"key1", b"key2"]);
+
+        let keys: Vec<_> = prefix
+            .keys_raw(
+                &storage,
+                Some(Bound::exclusive("key1")),
+                None,
+                Order::Ascending,
+            )
+            .collect();
+        assert_eq!(keys, vec![b"key2"]);
+    }
 }
