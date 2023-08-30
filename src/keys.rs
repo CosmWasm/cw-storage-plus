@@ -207,7 +207,7 @@ impl<'a> Prefixer<'a> for &'a [u8] {
 impl<'a, T: Prefixer<'a>, U: Prefixer<'a>> Prefixer<'a> for (T, U) {
     fn prefix(&self) -> Vec<Key> {
         let mut res = self.0.prefix();
-        res.extend(self.1.prefix().into_iter());
+        res.extend(self.1.prefix());
         res
     }
 }
@@ -215,8 +215,8 @@ impl<'a, T: Prefixer<'a>, U: Prefixer<'a>> Prefixer<'a> for (T, U) {
 impl<'a, T: Prefixer<'a>, U: Prefixer<'a>, V: Prefixer<'a>> Prefixer<'a> for (T, U, V) {
     fn prefix(&self) -> Vec<Key> {
         let mut res = self.0.prefix();
-        res.extend(self.1.prefix().into_iter());
-        res.extend(self.2.prefix().into_iter());
+        res.extend(self.1.prefix());
+        res.extend(self.2.prefix());
         res
     }
 }
