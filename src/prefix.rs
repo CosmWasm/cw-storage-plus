@@ -145,15 +145,13 @@ where
         max: Option<Bound<'b, B>>,
         order: Order,
     ) -> Box<dyn Iterator<Item = Vec<u8>> + 'a> {
-        let mapped = range_with_prefix(
+        keys_with_prefix(
             store,
             &self.storage_prefix,
             min.map(|b| b.to_raw_bound()),
             max.map(|b| b.to_raw_bound()),
             order,
         )
-        .map(|(k, _)| k);
-        Box::new(mapped)
     }
 
     /// Clears the prefix, removing the first `limit` elements (or all if `limit == None`).
@@ -168,8 +166,7 @@ where
             // but don't take more than we want to clear.
             let take = TAKE.min(left_to_clear);
 
-            let paths = range_full_keys(store, &self.storage_prefix, None, None, Order::Ascending)
-                .map(|(raw_key, _)| raw_key)
+            let paths = keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
                 .take(take)
                 .collect::<Vec<_>>();
 
@@ -184,7 +181,7 @@ where
 
     /// Returns `true` if the prefix is empty.
     pub fn is_empty(&self, store: &dyn Storage) -> bool {
-        range_full_keys(store, &self.storage_prefix, None, None, Order::Ascending)
+        range_full(store, &self.storage_prefix, None, None, Order::Ascending)
             .next()
             .is_none()
     }
@@ -238,6 +235,8 @@ where
     }
 }
 
+/// Returns an iterator through all records in storage with the given prefix and
+/// within the given bounds, yielding the key without prefix and value.
 pub fn range_with_prefix<'a>(
     storage: &'a dyn Storage,
     namespace: &[u8],
@@ -247,12 +246,29 @@ pub fn range_with_prefix<'a>(
 ) -> Box<dyn Iterator<Item = Record> + 'a> {
     // make a copy for the closure to handle lifetimes safely
     let prefix = namespace.to_vec();
-    let mapped = range_full_keys(storage, namespace, start, end, order)
-        .map(move |(k, v)| (trim(&prefix, &k), v));
+    let mapped =
+        range_full(storage, namespace, start, end, order).map(move |(k, v)| (trim(&prefix, &k), v));
     Box::new(mapped)
 }
 
-fn range_full_keys<'a>(
+/// Returns an iterator through all keys in storage with the given prefix and
+/// within the given bounds, yielding the key without the prefix.
+pub fn keys_with_prefix<'a>(
+    storage: &'a dyn Storage,
+    namespace: &[u8],
+    start: Option<RawBound>,
+    end: Option<RawBound>,
+    order: Order,
+) -> Box<dyn Iterator<Item = Vec<u8>> + 'a> {
+    // make a copy for the closure to handle lifetimes safely
+    let prefix = namespace.to_vec();
+    let mapped = keys_full(storage, namespace, start, end, order).map(move |k| trim(&prefix, &k));
+    Box::new(mapped)
+}
+
+/// Returns an iterator through all records in storage within the given bounds,
+/// yielding the full key (including the prefix) and value.
+fn range_full<'a>(
     store: &'a dyn Storage,
     namespace: &[u8],
     start: Option<RawBound>,
@@ -264,6 +280,22 @@ fn range_full_keys<'a>(
 
     // get iterator from storage
     store.range(Some(&start), Some(&end), order)
+}
+
+/// Returns an iterator through all keys in storage within the given bounds,
+/// yielding the full key including the prefix.
+fn keys_full<'a>(
+    store: &'a dyn Storage,
+    namespace: &[u8],
+    start: Option<RawBound>,
+    end: Option<RawBound>,
+    order: Order,
+) -> impl Iterator<Item = Vec<u8>> + 'a {
+    let start = calc_start_bound(namespace, start);
+    let end = calc_end_bound(namespace, end);
+
+    // get iterator from storage
+    store.range_keys(Some(&start), Some(&end), order)
 }
 
 fn calc_start_bound(namespace: &[u8], bound: Option<RawBound>) -> Vec<u8> {
