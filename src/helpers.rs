@@ -1,4 +1,4 @@
-//! This module is an implemention of a namespacing scheme described
+//! This module is an implementation of a namespacing scheme described
 //! in https://github.com/webmaster128/key-namespacing#length-prefixed-keys
 //!
 //! Everything in this file is only responsible for building such keys
@@ -10,8 +10,8 @@ use std::any::type_name;
 use crate::keys::Key;
 
 use cosmwasm_std::{
-    from_slice, to_vec, Addr, Binary, ContractResult, CustomQuery, QuerierWrapper, QueryRequest,
-    StdError, StdResult, SystemResult, WasmQuery,
+    from_json, to_json_vec, Addr, Binary, ContractResult, CustomQuery, QuerierWrapper,
+    QueryRequest, StdError, StdResult, SystemResult, WasmQuery,
 };
 
 /// may_deserialize parses json bytes from storage (Option), returning Ok(None) if no data present
@@ -22,7 +22,7 @@ pub(crate) fn may_deserialize<T: DeserializeOwned>(
     value: &Option<Vec<u8>>,
 ) -> StdResult<Option<T>> {
     match value {
-        Some(vec) => Ok(Some(from_slice(vec)?)),
+        Some(vec) => Ok(Some(from_json(vec)?)),
         None => Ok(None),
     }
 }
@@ -30,7 +30,7 @@ pub(crate) fn may_deserialize<T: DeserializeOwned>(
 /// must_deserialize parses json bytes from storage (Option), returning NotFound error if no data present
 pub(crate) fn must_deserialize<T: DeserializeOwned>(value: &Option<Vec<u8>>) -> StdResult<T> {
     match value {
-        Some(vec) => from_slice(vec),
+        Some(vec) => from_json(vec),
         None => Err(StdError::not_found(type_name::<T>())),
     }
 }
@@ -90,7 +90,7 @@ pub(crate) fn encode_length(namespace: &[u8]) -> [u8; 2] {
 }
 
 /// Use this in Map/SnapshotMap/etc when you want to provide a QueryRaw helper.
-/// This is similar to querier.query(WasmQuery::Raw{}), except it does NOT parse the
+/// This is similar to `querier.query(WasmQuery::Raw {})`, except it does NOT parse the
 /// result, but return a possibly empty Binary to be handled by the calling code.
 /// That is essential to handle b"" as None.
 pub(crate) fn query_raw<Q: CustomQuery>(
@@ -104,7 +104,7 @@ pub(crate) fn query_raw<Q: CustomQuery>(
     }
     .into();
 
-    let raw = to_vec(&request).map_err(|serialize_err| {
+    let raw = to_json_vec(&request).map_err(|serialize_err| {
         StdError::generic_err(format!("Serializing QueryRequest: {}", serialize_err))
     })?;
     match querier.raw_query(&raw) {
@@ -123,7 +123,7 @@ pub(crate) fn query_raw<Q: CustomQuery>(
 #[cfg(test)]
 mod test {
     use super::*;
-    use cosmwasm_std::{to_vec, StdError};
+    use cosmwasm_std::{to_json_vec, StdError};
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -156,7 +156,7 @@ mod test {
             name: "Maria".to_string(),
             age: 42,
         };
-        let value = to_vec(&person).unwrap();
+        let value = to_json_vec(&person).unwrap();
 
         let may_parse: Option<Person> = may_deserialize(&Some(value)).unwrap();
         assert_eq!(may_parse, Some(person));
@@ -174,7 +174,7 @@ mod test {
             name: "Maria".to_string(),
             age: 42,
         };
-        let value = to_vec(&person).unwrap();
+        let value = to_json_vec(&person).unwrap();
         let loaded = Some(value);
 
         let parsed: Person = must_deserialize(&loaded).unwrap();

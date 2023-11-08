@@ -2,8 +2,7 @@
 
 use serde::de::DeserializeOwned;
 
-use cosmwasm_std::Record;
-use cosmwasm_std::{from_slice, StdResult};
+use cosmwasm_std::{from_json, Record, StdResult};
 
 use crate::de::KeyDeserialize;
 use crate::helpers::encode_length;
@@ -11,7 +10,7 @@ use crate::helpers::encode_length;
 #[allow(dead_code)]
 pub(crate) fn deserialize_v<T: DeserializeOwned>(kv: Record) -> StdResult<Record<T>> {
     let (k, v) = kv;
-    let t = from_slice::<T>(&v)?;
+    let t = from_json::<T>(&v)?;
     Ok((k, t))
 }
 
@@ -20,7 +19,7 @@ pub(crate) fn deserialize_kv<K: KeyDeserialize, T: DeserializeOwned>(
 ) -> StdResult<(K::Output, T)> {
     let (k, v) = kv;
     let kt = K::from_vec(k)?;
-    let vt = from_slice::<T>(&v)?;
+    let vt = from_json::<T>(&v)?;
     Ok((kt, vt))
 }
 

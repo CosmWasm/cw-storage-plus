@@ -1,6 +1,6 @@
 use std::{any::type_name, convert::TryInto, marker::PhantomData};
 
-use cosmwasm_std::{to_vec, StdError, StdResult, Storage};
+use cosmwasm_std::{to_json_vec, StdError, StdResult, Storage};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::helpers::{may_deserialize, namespaces_with_key};
@@ -184,7 +184,7 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
     /// Used internally when pushing
     fn set_unchecked(&self, storage: &mut dyn Storage, pos: u32, value: &T) -> StdResult<()> {
         let prefixed_key = namespaces_with_key(&[self.namespace], &pos.to_be_bytes());
-        storage.set(&prefixed_key, &to_vec(value)?);
+        storage.set(&prefixed_key, &to_json_vec(value)?);
 
         Ok(())
     }
