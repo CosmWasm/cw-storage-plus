@@ -3,7 +3,7 @@ use serde::Serialize;
 use std::marker::PhantomData;
 
 use cosmwasm_std::{
-    to_vec, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage, WasmQuery,
+    to_json_vec, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage, WasmQuery,
 };
 
 use crate::helpers::{may_deserialize, must_deserialize};
@@ -38,7 +38,7 @@ where
 
     /// save will serialize the model and store, returns an error on serialization issues
     pub fn save(&self, store: &mut dyn Storage, data: &T) -> StdResult<()> {
-        store.set(self.storage_key, &to_vec(data)?);
+        store.set(self.storage_key, &to_json_vec(data)?);
         Ok(())
     }
 
@@ -103,7 +103,7 @@ mod test {
     use cosmwasm_std::testing::MockStorage;
     use serde::{Deserialize, Serialize};
 
-    use cosmwasm_std::{OverflowError, OverflowOperation, StdError};
+    use cosmwasm_std::{to_json_vec, OverflowError, OverflowOperation, StdError};
 
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct Config {
@@ -287,7 +287,7 @@ mod test {
                 return Err(StdError::generic_err("broken stuff").into()); // Uses Into to convert StdError to MyError
             }
             if c.max_tokens > 10 {
-                to_vec(&c)?; // Uses From to convert StdError to MyError
+                to_json_vec(&c)?; // Uses From to convert StdError to MyError
             }
             c.max_tokens += 20;
             Ok(c)

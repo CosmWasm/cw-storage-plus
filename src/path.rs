@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 
 use crate::helpers::{may_deserialize, must_deserialize, nested_namespaces_with_key};
 use crate::keys::Key;
-use cosmwasm_std::{to_vec, StdError, StdResult, Storage};
+use cosmwasm_std::{to_json_vec, StdError, StdResult, Storage};
 use std::ops::Deref;
 
 #[derive(Debug, Clone)]
@@ -52,7 +52,7 @@ where
 
     /// save will serialize the model and store, returns an error on serialization issues
     pub fn save(&self, store: &mut dyn Storage, data: &T) -> StdResult<()> {
-        store.set(&self.storage_key, &to_vec(data)?);
+        store.set(&self.storage_key, &to_json_vec(data)?);
         Ok(())
     }
 

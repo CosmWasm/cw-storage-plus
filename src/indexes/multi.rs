@@ -4,7 +4,7 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use cosmwasm_std::{from_slice, Order, Record, StdError, StdResult, Storage};
+use cosmwasm_std::{from_json, Order, Record, StdError, StdResult, Storage};
 
 use crate::bound::PrefixBound;
 use crate::de::KeyDeserialize;
@@ -87,7 +87,7 @@ fn deserialize_multi_v<T: DeserializeOwned>(
     let (key, pk_len) = kv;
 
     // Deserialize pk_len
-    let pk_len = from_slice::<u32>(pk_len.as_slice())?;
+    let pk_len = from_json::<u32>(pk_len.as_slice())?;
 
     // Recover pk from last part of k
     let offset = key.len() - pk_len as usize;
@@ -98,7 +98,7 @@ fn deserialize_multi_v<T: DeserializeOwned>(
     let v = store
         .get(&full_key)
         .ok_or_else(|| StdError::generic_err("pk not found"))?;
-    let v = from_slice::<T>(&v)?;
+    let v = from_json::<T>(&v)?;
 
     Ok((pk.to_vec(), v))
 }
@@ -111,7 +111,7 @@ fn deserialize_multi_kv<K: KeyDeserialize, T: DeserializeOwned>(
     let (key, pk_len) = kv;
 
     // Deserialize pk_len
-    let pk_len = from_slice::<u32>(pk_len.as_slice())?;
+    let pk_len = from_json::<u32>(pk_len.as_slice())?;
 
     // Recover pk from last part of k
     let offset = key.len() - pk_len as usize;
@@ -122,7 +122,7 @@ fn deserialize_multi_kv<K: KeyDeserialize, T: DeserializeOwned>(
     let v = store
         .get(&full_key)
         .ok_or_else(|| StdError::generic_err("pk not found"))?;
-    let v = from_slice::<T>(&v)?;
+    let v = from_json::<T>(&v)?;
 
     // We return deserialized `pk` here for consistency
     Ok((K::from_slice(pk)?, v))

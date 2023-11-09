@@ -17,7 +17,7 @@ use crate::path::Path;
 use crate::prefix::{namespaced_prefix_range, Prefix};
 #[cfg(feature = "iterator")]
 use cosmwasm_std::Order;
-use cosmwasm_std::{from_slice, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage};
+use cosmwasm_std::{from_json, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage};
 
 #[derive(Debug, Clone)]
 pub struct Map<'a, K, T> {
@@ -108,7 +108,7 @@ where
         if result.is_empty() {
             Ok(None)
         } else {
-            from_slice(&result).map(Some)
+            from_json(&result).map(Some)
         }
     }
 
@@ -337,7 +337,7 @@ mod test {
     use std::ops::Deref;
 
     use cosmwasm_std::testing::MockStorage;
-    use cosmwasm_std::to_binary;
+    use cosmwasm_std::to_json_binary;
     use cosmwasm_std::StdError::InvalidUtf8;
     #[cfg(feature = "iterator")]
     use cosmwasm_std::{Order, StdResult};
@@ -658,7 +658,7 @@ mod test {
                 b"\xddim",
             ]
             .concat(),
-            &to_binary(&data2).unwrap(),
+            &to_json_binary(&data2).unwrap(),
         );
 
         // Let's try to iterate again!

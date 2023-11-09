@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{from_slice, Binary, Order, Record, StdError, StdResult, Storage};
+use cosmwasm_std::{from_json, Binary, Order, Record, StdError, StdResult, Storage};
 
 use crate::bound::PrefixBound;
 use crate::de::KeyDeserialize;
@@ -91,7 +91,7 @@ where
 
 fn deserialize_unique_v<T: DeserializeOwned>(kv: Record) -> StdResult<Record<T>> {
     let (_, v) = kv;
-    let t = from_slice::<UniqueRef<T>>(&v)?;
+    let t = from_json::<UniqueRef<T>>(&v)?;
     Ok((t.pk.0, t.value))
 }
 
@@ -99,7 +99,7 @@ fn deserialize_unique_kv<K: KeyDeserialize, T: DeserializeOwned>(
     kv: Record,
 ) -> StdResult<(K::Output, T)> {
     let (_, v) = kv;
-    let t = from_slice::<UniqueRef<T>>(&v)?;
+    let t = from_json::<UniqueRef<T>>(&v)?;
     Ok((K::from_vec(t.pk.0)?, t.value))
 }
 
@@ -182,7 +182,7 @@ where
         store: &'c dyn Storage,
         min: Option<PrefixBound<'a, IK::Prefix>>,
         max: Option<PrefixBound<'a, IK::Prefix>>,
-        order: cosmwasm_std::Order,
+        order: Order,
     ) -> Box<dyn Iterator<Item = StdResult<(PK::Output, T)>> + 'c>
     where
         T: 'c,
@@ -201,7 +201,7 @@ where
         store: &'c dyn Storage,
         min: Option<Bound<'a, IK>>,
         max: Option<Bound<'a, IK>>,
-        order: cosmwasm_std::Order,
+        order: Order,
     ) -> Box<dyn Iterator<Item = StdResult<(PK::Output, T)>> + 'c>
     where
         T: 'c,
@@ -215,7 +215,7 @@ where
         store: &'c dyn Storage,
         min: Option<Bound<'a, IK>>,
         max: Option<Bound<'a, IK>>,
-        order: cosmwasm_std::Order,
+        order: Order,
     ) -> Box<dyn Iterator<Item = StdResult<PK::Output>> + 'c>
     where
         T: 'c,
