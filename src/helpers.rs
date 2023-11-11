@@ -81,7 +81,7 @@ pub(crate) fn nested_namespaces_with_key(
 }
 
 /// Encodes the length of a given namespace as a 2 byte big endian encoded integer
-pub(crate) fn encode_length(namespace: &[u8]) -> [u8; 2] {
+fn encode_length(namespace: &[u8]) -> [u8; 2] {
     if namespace.len() > 0xFFFF {
         panic!("only supports namespaces up to length 0xFFFF")
     }
