@@ -2,7 +2,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::marker::PhantomData;
 
-use crate::helpers::{may_deserialize, nested_namespaces_with_key, not_found_object_info};
+use crate::helpers::{nested_namespaces_with_key, not_found_object_info};
 use crate::keys::Key;
 use cosmwasm_std::{from_slice, to_vec, StdError, StdResult, Storage};
 use std::ops::Deref;
@@ -74,7 +74,7 @@ where
     /// returns an error on issues parsing
     pub fn may_load(&self, store: &dyn Storage) -> StdResult<Option<T>> {
         let value = store.get(&self.storage_key);
-        may_deserialize(&value)
+        value.map(|v| from_slice(&v)).transpose()
     }
 
     /// has returns true or false if any data is at this key, without parsing or interpreting the

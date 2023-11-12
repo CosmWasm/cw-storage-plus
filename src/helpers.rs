@@ -4,28 +4,14 @@
 //! Everything in this file is only responsible for building such keys
 //! and is in no way specific to any kind of storage.
 
-use serde::de::DeserializeOwned;
 use std::any::type_name;
 
 use crate::keys::Key;
 
 use cosmwasm_std::{
-    from_slice, to_vec, Addr, Binary, ContractResult, CustomQuery, QuerierWrapper, QueryRequest,
-    StdError, StdResult, SystemResult, WasmQuery,
+    to_vec, Addr, Binary, ContractResult, CustomQuery, QuerierWrapper, QueryRequest, StdError,
+    StdResult, SystemResult, WasmQuery,
 };
-
-/// may_deserialize parses json bytes from storage (Option), returning Ok(None) if no data present
-///
-/// value is an odd type, but this is meant to be easy to use with output from storage.get (Option<Vec<u8>>)
-/// and value.map(|s| s.as_slice()) seems trickier than &value
-pub(crate) fn may_deserialize<T: DeserializeOwned>(
-    value: &Option<Vec<u8>>,
-) -> StdResult<Option<T>> {
-    match value {
-        Some(vec) => Ok(Some(from_slice(vec)?)),
-        None => Ok(None),
-    }
-}
 
 /// This is equivalent concat(to_length_prefixed_nested(namespaces), key)
 /// But more efficient when the intermediate namespaces often must be recalculated
@@ -121,7 +107,7 @@ pub(crate) fn not_found_object_info<T>(key: &[u8]) -> String {
 #[cfg(test)]
 mod test {
     use super::*;
-    use cosmwasm_std::{to_vec, Uint128};
+    use cosmwasm_std::Uint128;
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -146,24 +132,6 @@ mod test {
     #[should_panic(expected = "only supports namespaces up to length 0xFFFF")]
     fn encode_length_panics_for_large_values() {
         encode_length(&vec![1; 65536]);
-    }
-
-    #[test]
-    fn may_deserialize_handles_some() {
-        let person = Person {
-            name: "Maria".to_string(),
-            age: 42,
-        };
-        let value = to_vec(&person).unwrap();
-
-        let may_parse: Option<Person> = may_deserialize(&Some(value)).unwrap();
-        assert_eq!(may_parse, Some(person));
-    }
-
-    #[test]
-    fn may_deserialize_handles_none() {
-        let may_parse = may_deserialize::<Person>(&None).unwrap();
-        assert_eq!(may_parse, None);
     }
 
     #[test]

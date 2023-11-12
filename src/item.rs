@@ -6,7 +6,7 @@ use cosmwasm_std::{
     from_slice, to_vec, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage, WasmQuery,
 };
 
-use crate::helpers::{may_deserialize, not_found_object_info};
+use crate::helpers::not_found_object_info;
 
 /// Item stores one typed item at the given key.
 /// This is an analog of Singleton.
@@ -60,7 +60,7 @@ where
     /// returns an error on issues parsing
     pub fn may_load(&self, store: &dyn Storage) -> StdResult<Option<T>> {
         let value = store.get(self.storage_key);
-        may_deserialize(&value)
+        value.map(|v| from_slice(&v)).transpose()
     }
 
     /// Returns `true` if data is stored at the key, `false` otherwise.
