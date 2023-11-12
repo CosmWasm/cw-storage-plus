@@ -3,10 +3,10 @@ use serde::Serialize;
 use std::marker::PhantomData;
 
 use cosmwasm_std::{
-    to_vec, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage, WasmQuery,
+    from_slice, to_vec, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage, WasmQuery,
 };
 
-use crate::helpers::{may_deserialize, must_deserialize};
+use crate::helpers::{may_deserialize, not_found_object_info};
 
 /// Item stores one typed item at the given key.
 /// This is an analog of Singleton.
@@ -48,8 +48,12 @@ where
 
     /// load will return an error if no data is set at the given key, or on parse error
     pub fn load(&self, store: &dyn Storage) -> StdResult<T> {
-        let value = store.get(self.storage_key);
-        must_deserialize(&value)
+        if let Some(value) = store.get(self.storage_key) {
+            from_slice(&value)
+        } else {
+            let object_info = not_found_object_info::<T>(self.storage_key);
+            Err(StdError::not_found(object_info))
+        }
     }
 
     /// may_load will parse the data stored at the key if present, returns `Ok(None)` if no data there.
