@@ -85,7 +85,7 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
         self.get_unchecked(storage, pos)
     }
 
-    /// Returns the first element of the deque without removing it
+    /// Returns the last element of the deque without removing it
     pub fn back(&self, storage: &dyn Storage) -> StdResult<Option<T>> {
         let pos = self.tail(storage)?.wrapping_sub(1);
         self.get_unchecked(storage, pos)
