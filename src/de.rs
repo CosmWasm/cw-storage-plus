@@ -139,6 +139,11 @@ fn parse_length(value: &[u8]) -> StdResult<usize> {
     .into())
 }
 
+/// Warning: This implementation is buggy in many cases except the most basic ones.
+/// In these cases, it will panic when you try to `range` through your keys.
+/// See [#33] for more information. This will be fixed in version 2.0.
+///
+/// [#33]: https://github.com/CosmWasm/cw-storage-plus/issues/33
 impl<T: KeyDeserialize, U: KeyDeserialize> KeyDeserialize for (T, U) {
     type Output = (T::Output, U::Output);
 
