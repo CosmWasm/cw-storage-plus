@@ -1,9 +1,9 @@
 use std::{any::type_name, convert::TryInto, marker::PhantomData};
 
-use cosmwasm_std::{to_json_vec, StdError, StdResult, Storage};
+use cosmwasm_std::{from_json, to_json_vec, StdError, StdResult, Storage};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::helpers::{may_deserialize, namespaces_with_key};
+use crate::helpers::namespaces_with_key;
 
 // metadata keys need to have different length than the position type (4 bytes) to prevent collisions
 const TAIL_KEY: &[u8] = b"t";
@@ -85,7 +85,7 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
         self.get_unchecked(storage, pos)
     }
 
-    /// Returns the first element of the deque without removing it
+    /// Returns the last element of the deque without removing it
     pub fn back(&self, storage: &dyn Storage) -> StdResult<Option<T>> {
         let pos = self.tail(storage)?.wrapping_sub(1);
         self.get_unchecked(storage, pos)
@@ -170,7 +170,8 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
     /// Used internally
     fn get_unchecked(&self, storage: &dyn Storage, pos: u32) -> StdResult<Option<T>> {
         let prefixed_key = namespaces_with_key(&[self.namespace], &pos.to_be_bytes());
-        may_deserialize(&storage.get(&prefixed_key))
+        let value = storage.get(&prefixed_key);
+        value.map(|v| from_json(v)).transpose()
     }
 
     /// Removes the value at the given position

@@ -2,9 +2,9 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::marker::PhantomData;
 
-use crate::helpers::{may_deserialize, must_deserialize, nested_namespaces_with_key};
+use crate::helpers::{nested_namespaces_with_key, not_found_object_info};
 use crate::keys::Key;
-use cosmwasm_std::{to_json_vec, StdError, StdResult, Storage};
+use cosmwasm_std::{from_json, to_json_vec, StdError, StdResult, Storage};
 use std::ops::Deref;
 
 #[derive(Debug, Clone)]
@@ -62,15 +62,19 @@ where
 
     /// load will return an error if no data is set at the given key, or on parse error
     pub fn load(&self, store: &dyn Storage) -> StdResult<T> {
-        let value = store.get(&self.storage_key);
-        must_deserialize(&value)
+        if let Some(value) = store.get(&self.storage_key) {
+            from_json(value)
+        } else {
+            let object_info = not_found_object_info::<T>(&self.storage_key);
+            Err(StdError::not_found(object_info))
+        }
     }
 
     /// may_load will parse the data stored at the key if present, returns Ok(None) if no data there.
     /// returns an error on issues parsing
     pub fn may_load(&self, store: &dyn Storage) -> StdResult<Option<T>> {
         let value = store.get(&self.storage_key);
-        may_deserialize(&value)
+        value.map(|v| from_json(v)).transpose()
     }
 
     /// has returns true or false if any data is at this key, without parsing or interpreting the

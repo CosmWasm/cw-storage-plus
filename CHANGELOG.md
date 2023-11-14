@@ -1,16 +1,52 @@
-# Changelog
+# CHANGELOG
 
-## [Unreleased](https://github.com/CosmWasm/cw-storage-plus/tree/HEAD)
+Starting at version 1.2.0, the format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-[Full Changelog](https://github.com/CosmWasm/cw-storage-plus/compare/v1.0.1...HEAD)
+## [Unreleased]
 
-**Closed issues:**
+### Changed
 
-- implementation of KeyDeserialize for \(T, U\) is incorrect. [\#33](https://github.com/CosmWasm/cw-storage-plus/issues/33)
+- Update to `cosmwasm-std` 1.5.0 ([#60])
 
-**Merged pull requests:**
+[#60]: https://github.com/CosmWasm/cw-storage-plus/pull/60
 
-- fix for incorrect implementation of KeyDeserialize for \(T, U\) [\#34](https://github.com/CosmWasm/cw-storage-plus/pull/34) ([ewoolsey](https://github.com/ewoolsey))
+### Fixed
+
+- Incorrect implementation of `KeyDeserialize` for `(T, U)`.
+  This required a breaking change to the `KeyDeserialize` trait. See MIGRATING.md. ([#34])
+- Make `UniqueIndex` `PK` type parameter mandatory. See MIGRATING.md. ([#37])
+
+[#34]: https://github.com/CosmWasm/cw-storage-plus/pull/34
+[#37]: https://github.com/CosmWasm/cw-storage-plus/pull/37
+
+## [1.2.0] - 2023-11-14
+
+### Added
+
+- Warning about `KeyDeserialize` bug ([#65])
+
+[#65]: https://github.com/CosmWasm/cw-storage-plus/pull/65
+
+### Fixed
+
+- `Dequeue::back` docs ([#62])
+
+[#62]: https://github.com/CosmWasm/cw-storage-plus/pull/62
+
+### Changed
+
+- Use `range_keys` for `Prefix::keys_raw`.
+  This improves efficiency if you use `cosmwasm-std` with the `cosmwasm_1_4` feature ([#55])
+- Improve error message when deserialization fails ([#63])
+
+[#55]: https://github.com/CosmWasm/cw-storage-plus/pull/55
+[#63]: https://github.com/CosmWasm/cw-storage-plus/pull/63
+
+---
+
+[unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.1.0...v1.2.0
 
 ## [v1.1.0](https://github.com/CosmWasm/cw-storage-plus/tree/v1.1.0) (2023-06-12)
 
@@ -79,7 +115,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Fill out missing high-level docs [\#806](https://github.com/CosmWasm/cw-plus/issues/806)
 - Some multitest bindings for staking are missing such as `BondedDenom` [\#753](https://github.com/CosmWasm/cw-plus/issues/753)
 - Allow burn to have a callback just like Send [\#717](https://github.com/CosmWasm/cw-plus/issues/717)
-- Unable to upload cw20\_base wasm file on terra-station [\#716](https://github.com/CosmWasm/cw-plus/issues/716)
+- Unable to upload cw20_base wasm file on terra-station [\#716](https://github.com/CosmWasm/cw-plus/issues/716)
 - Cannot upload to localterra with cw-storage-plus 0.12.1 [\#666](https://github.com/CosmWasm/cw-plus/issues/666)
 - Is `MAX_LIMIT` a bug? [\#625](https://github.com/CosmWasm/cw-plus/issues/625)
 - Add support for admin migrations to cw-multitest [\#744](https://github.com/CosmWasm/cw-plus/issues/744)
@@ -110,7 +146,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Release 0.15.1 [\#809](https://github.com/CosmWasm/cw-plus/pull/809) ([uint](https://github.com/uint))
 - Add Deque [\#807](https://github.com/CosmWasm/cw-plus/pull/807) ([chipshort](https://github.com/chipshort))
 - Cw1155-base public queries and move tests [\#804](https://github.com/CosmWasm/cw-plus/pull/804) ([ismellike](https://github.com/ismellike))
-- Add clear and is\_empty methods to Map [\#803](https://github.com/CosmWasm/cw-plus/pull/803) ([manu0466](https://github.com/manu0466))
+- Add clear and is_empty methods to Map [\#803](https://github.com/CosmWasm/cw-plus/pull/803) ([manu0466](https://github.com/manu0466))
 - SnapshotItem total, public query methods, and safe math [\#802](https://github.com/CosmWasm/cw-plus/pull/802) ([ismellike](https://github.com/ismellike))
 
 ## [v0.15.0](https://github.com/CosmWasm/cw-plus/tree/v0.15.0) (2022-09-14)
@@ -128,9 +164,9 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 
 **Closed issues:**
 
-- Adapt build\_and\_upload\_schemas CI job to new schema format [\#795](https://github.com/CosmWasm/cw-plus/issues/795)
+- Adapt build_and_upload_schemas CI job to new schema format [\#795](https://github.com/CosmWasm/cw-plus/issues/795)
 - Remove `IntKeyOld` [\#775](https://github.com/CosmWasm/cw-plus/issues/775)
-- Can I cover all tests with cw\_multi\_test? [\#771](https://github.com/CosmWasm/cw-plus/issues/771)
+- Can I cover all tests with cw_multi_test? [\#771](https://github.com/CosmWasm/cw-plus/issues/771)
 - Make cw1155 can add token's url at the first mint [\#764](https://github.com/CosmWasm/cw-plus/issues/764)
 - Expose `Response` from contract in cw-multi-test execute [\#763](https://github.com/CosmWasm/cw-plus/issues/763)
 - Restructure `Index` trait to allow for more extensive `Index` struct implementation. [\#757](https://github.com/CosmWasm/cw-plus/issues/757)
@@ -184,7 +220,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Updated contract versions and links [\#762](https://github.com/CosmWasm/cw-plus/pull/762) ([daniel-farina](https://github.com/daniel-farina))
 - Allowances per spender [\#761](https://github.com/CosmWasm/cw-plus/pull/761) ([maurolacy](https://github.com/maurolacy))
 - Fix broken links, minor typo [\#752](https://github.com/CosmWasm/cw-plus/pull/752) ([mikedotexe](https://github.com/mikedotexe))
-- Use into\_iter\(\) instead of iter\(\).cloned\(\). [\#749](https://github.com/CosmWasm/cw-plus/pull/749) ([ezekiiel](https://github.com/ezekiiel))
+- Use into_iter\(\) instead of iter\(\).cloned\(\). [\#749](https://github.com/CosmWasm/cw-plus/pull/749) ([ezekiiel](https://github.com/ezekiiel))
 - Add ability to unset minter in UpdateMinter message. [\#748](https://github.com/CosmWasm/cw-plus/pull/748) ([ezekiiel](https://github.com/ezekiiel))
 - Fix specification about CW20 Enumerable Queries [\#746](https://github.com/CosmWasm/cw-plus/pull/746) ([lukepark327](https://github.com/lukepark327))
 - Add migrate method to cw20 base. [\#745](https://github.com/CosmWasm/cw-plus/pull/745) ([ezekiiel](https://github.com/ezekiiel))
@@ -195,7 +231,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - add execute msg to update minter [\#729](https://github.com/CosmWasm/cw-plus/pull/729) ([janitachalam](https://github.com/janitachalam))
 - Removed documentation from Cargo.toml [\#711](https://github.com/CosmWasm/cw-plus/pull/711) ([hashedone](https://github.com/hashedone))
 - Move test helpers into a test section [\#709](https://github.com/CosmWasm/cw-plus/pull/709) ([shanev](https://github.com/shanev))
-- add query\_this\_hook to hooks.rs [\#688](https://github.com/CosmWasm/cw-plus/pull/688) ([ishaanh](https://github.com/ishaanh))
+- add query_this_hook to hooks.rs [\#688](https://github.com/CosmWasm/cw-plus/pull/688) ([ishaanh](https://github.com/ishaanh))
 
 ## [v0.13.4](https://github.com/CosmWasm/cw-plus/tree/v0.13.4) (2022-06-02)
 
@@ -232,7 +268,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 **Closed issues:**
 
 - `KeyDeserialize` trait is private making custom keys and generics over keys not possible. [\#691](https://github.com/CosmWasm/cw-plus/issues/691)
-- unresolved import cosmwasm\_std::testing [\#681](https://github.com/CosmWasm/cw-plus/issues/681)
+- unresolved import cosmwasm_std::testing [\#681](https://github.com/CosmWasm/cw-plus/issues/681)
 - Add non-owned `range_de` [\#463](https://github.com/CosmWasm/cw-plus/issues/463)
 
 **Merged pull requests:**
@@ -315,7 +351,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Move all cw20 examples to new repo [\#578](https://github.com/CosmWasm/cw-plus/issues/578)
 - Add more debug output from multi-test [\#575](https://github.com/CosmWasm/cw-plus/issues/575)
 - Make `Bound`s type safe [\#462](https://github.com/CosmWasm/cw-plus/issues/462)
-- Incorrect Cw4ExecuteMsg used during remove\_hook [\#637](https://github.com/CosmWasm/cw-plus/issues/637)
+- Incorrect Cw4ExecuteMsg used during remove_hook [\#637](https://github.com/CosmWasm/cw-plus/issues/637)
 - \[cw3-flex/fixed-multisig\] Status changes after voting and proposal expiration [\#630](https://github.com/CosmWasm/cw-plus/issues/630)
 - Make `Bound`s type safe [\#462](https://github.com/CosmWasm/cw-plus/issues/462)
 - Move all cw20 examples to new repo [\#578](https://github.com/CosmWasm/cw-plus/issues/578)
@@ -327,8 +363,8 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Ics20 same ack handling as ibctransfer [\#653](https://github.com/CosmWasm/cw-plus/pull/653) ([ethanfrey](https://github.com/ethanfrey))
 - packages: support custom queries [\#652](https://github.com/CosmWasm/cw-plus/pull/652) ([uint](https://github.com/uint))
 - CW20 - Fix Docs URL [\#649](https://github.com/CosmWasm/cw-plus/pull/649) ([entrancedjames](https://github.com/entrancedjames))
-- CW3: Add proposal\_id field to VoteInfo structure [\#648](https://github.com/CosmWasm/cw-plus/pull/648) ([ueco-jb](https://github.com/ueco-jb))
-- Use ContractInfoResponse from cosmwasm\_std [\#646](https://github.com/CosmWasm/cw-plus/pull/646) ([webmaster128](https://github.com/webmaster128))
+- CW3: Add proposal_id field to VoteInfo structure [\#648](https://github.com/CosmWasm/cw-plus/pull/648) ([ueco-jb](https://github.com/ueco-jb))
+- Use ContractInfoResponse from cosmwasm_std [\#646](https://github.com/CosmWasm/cw-plus/pull/646) ([webmaster128](https://github.com/webmaster128))
 - Fix status/execution bugs in flex-multisig [\#643](https://github.com/CosmWasm/cw-plus/pull/643) ([uint](https://github.com/uint))
 - Set version: 0.12.0-alpha2 [\#642](https://github.com/CosmWasm/cw-plus/pull/642) ([ethanfrey](https://github.com/ethanfrey))
 - Allow modifying admin of Ics20 contract [\#641](https://github.com/CosmWasm/cw-plus/pull/641) ([ethanfrey](https://github.com/ethanfrey))
@@ -391,7 +427,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 
 - Check \(and possibly fix\) threshold and voting power implementation in `cw3-fixed-multisig` [\#551](https://github.com/CosmWasm/cw-plus/issues/551)
 - Update to cosmwasm 1.0.0-beta3 [\#579](https://github.com/CosmWasm/cw-plus/issues/579)
-- Cannot import non "library" features in dev-dependencies  [\#577](https://github.com/CosmWasm/cw-plus/issues/577)
+- Cannot import non "library" features in dev-dependencies [\#577](https://github.com/CosmWasm/cw-plus/issues/577)
 - `base-helpers.ts` doesn't belong to `contracts` [\#566](https://github.com/CosmWasm/cw-plus/issues/566)
 - handle function [\#563](https://github.com/CosmWasm/cw-plus/issues/563)
 - Migrate from `IntKey` to new naked int key [\#549](https://github.com/CosmWasm/cw-plus/issues/549)
@@ -423,14 +459,14 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Implement display for Balance and Coin [\#565](https://github.com/CosmWasm/cw-plus/pull/565) ([orkunkl](https://github.com/orkunkl))
 - Migrate from `IntKey` to new naked int key [\#564](https://github.com/CosmWasm/cw-plus/pull/564) ([ueco-jb](https://github.com/ueco-jb))
 - Add ParseReplyError to cw0 lib [\#562](https://github.com/CosmWasm/cw-plus/pull/562) ([shanev](https://github.com/shanev))
-- Update cw2 readme - contract\_info key [\#561](https://github.com/CosmWasm/cw-plus/pull/561) ([korzewski](https://github.com/korzewski))
+- Update cw2 readme - contract_info key [\#561](https://github.com/CosmWasm/cw-plus/pull/561) ([korzewski](https://github.com/korzewski))
 - Change pebblenet to uni and update wasm binary to 0.10.2 [\#560](https://github.com/CosmWasm/cw-plus/pull/560) ([findolor](https://github.com/findolor))
 - Update cw1-subkeys/helpers.ts wasm binary version to 0.10.2 from 0.9.1 [\#558](https://github.com/CosmWasm/cw-plus/pull/558) ([findolor](https://github.com/findolor))
 - Update base-helpers.ts options [\#557](https://github.com/CosmWasm/cw-plus/pull/557) ([findolor](https://github.com/findolor))
 - Update cw4-group/helpers.ts to work with base-helpers.ts [\#552](https://github.com/CosmWasm/cw-plus/pull/552) ([findolor](https://github.com/findolor))
 - Update cw3-flex-multisig/helpers.ts to work with cosmjs/cli v0.26 and base-helpers.ts [\#550](https://github.com/CosmWasm/cw-plus/pull/550) ([findolor](https://github.com/findolor))
 - Cw0 rename [\#508](https://github.com/CosmWasm/cw-plus/pull/508) ([maurolacy](https://github.com/maurolacy))
-- UniqueIndex range\_de [\#500](https://github.com/CosmWasm/cw-plus/pull/500) ([uint](https://github.com/uint))
+- UniqueIndex range_de [\#500](https://github.com/CosmWasm/cw-plus/pull/500) ([uint](https://github.com/uint))
 
 ## [v0.10.3](https://github.com/CosmWasm/cw-plus/tree/v0.10.3) (2021-11-16)
 
@@ -496,8 +532,8 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - cw1-subkeys-ng: Additional follow up improvements [\#506](https://github.com/CosmWasm/cw-plus/pull/506) ([hashedone](https://github.com/hashedone))
 - Parse reply helpers [\#502](https://github.com/CosmWasm/cw-plus/pull/502) ([maurolacy](https://github.com/maurolacy))
 - cw1-whitelist-ng: Contract implementation in terms of semantical structures [\#499](https://github.com/CosmWasm/cw-plus/pull/499) ([hashedone](https://github.com/hashedone))
-- range\_de for IndexMap [\#498](https://github.com/CosmWasm/cw-plus/pull/498) ([uint](https://github.com/uint))
-- Implement range\_de for SnapshotMap [\#497](https://github.com/CosmWasm/cw-plus/pull/497) ([uint](https://github.com/uint))
+- range_de for IndexMap [\#498](https://github.com/CosmWasm/cw-plus/pull/498) ([uint](https://github.com/uint))
+- Implement range_de for SnapshotMap [\#497](https://github.com/CosmWasm/cw-plus/pull/497) ([uint](https://github.com/uint))
 - Fix publish script [\#486](https://github.com/CosmWasm/cw-plus/pull/486) ([ethanfrey](https://github.com/ethanfrey))
 - Implement cw4-group typescript helper [\#476](https://github.com/CosmWasm/cw-plus/pull/476) ([orkunkl](https://github.com/orkunkl))
 
@@ -530,7 +566,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 
 **Fixed bugs:**
 
-- Fix improper assert\_matches usage [\#459](https://github.com/CosmWasm/cw-plus/pull/459) ([ueco-jb](https://github.com/ueco-jb))
+- Fix improper assert_matches usage [\#459](https://github.com/CosmWasm/cw-plus/pull/459) ([ueco-jb](https://github.com/ueco-jb))
 
 **Closed issues:**
 
@@ -541,8 +577,8 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 **Merged pull requests:**
 
 - Release v0.10.0-soon4 [\#477](https://github.com/CosmWasm/cw-plus/pull/477) ([ethanfrey](https://github.com/ethanfrey))
-- Update to CosmWasm 1.0.0-soon2  [\#475](https://github.com/CosmWasm/cw-plus/pull/475) ([ethanfrey](https://github.com/ethanfrey))
-- Allow error type conversions in ensure! and ensure\_eq! [\#474](https://github.com/CosmWasm/cw-plus/pull/474) ([webmaster128](https://github.com/webmaster128))
+- Update to CosmWasm 1.0.0-soon2 [\#475](https://github.com/CosmWasm/cw-plus/pull/475) ([ethanfrey](https://github.com/ethanfrey))
+- Allow error type conversions in ensure! and ensure_eq! [\#474](https://github.com/CosmWasm/cw-plus/pull/474) ([webmaster128](https://github.com/webmaster128))
 - Improve error handling / remove FIXMEs [\#470](https://github.com/CosmWasm/cw-plus/pull/470) ([maurolacy](https://github.com/maurolacy))
 - Add ensure [\#469](https://github.com/CosmWasm/cw-plus/pull/469) ([ethanfrey](https://github.com/ethanfrey))
 - Key deserializer improvements [\#467](https://github.com/CosmWasm/cw-plus/pull/467) ([maurolacy](https://github.com/maurolacy))
@@ -594,13 +630,13 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - storage-plus: Improve in-code documentation of map primitives, in particular `MultiIndex` [\#407](https://github.com/CosmWasm/cw-plus/issues/407)
 - Remove use of dyn in multitest Router [\#404](https://github.com/CosmWasm/cw-plus/issues/404)
 - Define generic multitest module [\#387](https://github.com/CosmWasm/cw-plus/issues/387)
-- Cw20 state key compatibity with previous versions  [\#346](https://github.com/CosmWasm/cw-plus/issues/346)
+- Cw20 state key compatibity with previous versions [\#346](https://github.com/CosmWasm/cw-plus/issues/346)
 - Refactor cw20-base to use controller pattern [\#205](https://github.com/CosmWasm/cw-plus/issues/205)
 
 **Merged pull requests:**
 
 - Release 0.10.0-soon [\#448](https://github.com/CosmWasm/cw-plus/pull/448) ([ethanfrey](https://github.com/ethanfrey))
-- Add proper prefix\_range helper when you want to iterate over the prefix space [\#446](https://github.com/CosmWasm/cw-plus/pull/446) ([ethanfrey](https://github.com/ethanfrey))
+- Add proper prefix_range helper when you want to iterate over the prefix space [\#446](https://github.com/CosmWasm/cw-plus/pull/446) ([ethanfrey](https://github.com/ethanfrey))
 - Improve in-code documentation of map primitives [\#443](https://github.com/CosmWasm/cw-plus/pull/443) ([ueco-jb](https://github.com/ueco-jb))
 - Small storage-plus docs update [\#442](https://github.com/CosmWasm/cw-plus/pull/442) ([hashedone](https://github.com/hashedone))
 - Upgrade to cosmwasm 1.0.0-soon [\#441](https://github.com/CosmWasm/cw-plus/pull/441) ([ethanfrey](https://github.com/ethanfrey))
@@ -774,7 +810,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 
 - multi-test: Proper protobuf-encoded data for init [\#330](https://github.com/CosmWasm/cw-plus/issues/330)
 - Proper event/data handling on reply in multitest [\#326](https://github.com/CosmWasm/cw-plus/issues/326)
-- Messages differ for cw20 & cw20\_base [\#320](https://github.com/CosmWasm/cw-plus/issues/320)
+- Messages differ for cw20 & cw20_base [\#320](https://github.com/CosmWasm/cw-plus/issues/320)
 - Upgrade cw20-staking to cw 15 [\#312](https://github.com/CosmWasm/cw-plus/issues/312)
 - Uprade cw20-ics20 to cw 0.15 [\#311](https://github.com/CosmWasm/cw-plus/issues/311)
 - Upgrade cw20-escrow to 0.15 [\#309](https://github.com/CosmWasm/cw-plus/issues/309)
@@ -804,7 +840,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - cw1155-base: upgrade cosmwasm-std to 0.15 [\#314](https://github.com/CosmWasm/cw-plus/pull/314) ([uint](https://github.com/uint))
 - cw20-staking: Upgrade cw 0.15 [\#313](https://github.com/CosmWasm/cw-plus/pull/313) ([orkunkl](https://github.com/orkunkl))
 - cw20-escrow: Upgrade to 0.15 [\#310](https://github.com/CosmWasm/cw-plus/pull/310) ([orkunkl](https://github.com/orkunkl))
-- cw20-bonding: Upgrade to 0.15  [\#308](https://github.com/CosmWasm/cw-plus/pull/308) ([orkunkl](https://github.com/orkunkl))
+- cw20-bonding: Upgrade to 0.15 [\#308](https://github.com/CosmWasm/cw-plus/pull/308) ([orkunkl](https://github.com/orkunkl))
 - Update package schemas; fix linting errors [\#306](https://github.com/CosmWasm/cw-plus/pull/306) ([orkunkl](https://github.com/orkunkl))
 - cw20-base: Upgrade to cw 0.15 [\#304](https://github.com/CosmWasm/cw-plus/pull/304) ([orkunkl](https://github.com/orkunkl))
 - Upgrade cw1 contracts [\#303](https://github.com/CosmWasm/cw-plus/pull/303) ([uint](https://github.com/uint))
@@ -845,7 +881,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 
 **Merged pull requests:**
 
-- Clarify index\_key\(\) range\(\) vs prefix\(\) behaviour [\#291](https://github.com/CosmWasm/cw-plus/pull/291) ([maurolacy](https://github.com/maurolacy))
+- Clarify index_key\(\) range\(\) vs prefix\(\) behaviour [\#291](https://github.com/CosmWasm/cw-plus/pull/291) ([maurolacy](https://github.com/maurolacy))
 - Pkowned to vec u8 [\#290](https://github.com/CosmWasm/cw-plus/pull/290) ([maurolacy](https://github.com/maurolacy))
 - Update to CosmWasm v0.14.0 [\#289](https://github.com/CosmWasm/cw-plus/pull/289) ([ethanfrey](https://github.com/ethanfrey))
 - Primary key / index key helpers [\#288](https://github.com/CosmWasm/cw-plus/pull/288) ([maurolacy](https://github.com/maurolacy))
@@ -858,7 +894,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 
 - Make message required in Cw20ReceiveMsg [\#283](https://github.com/CosmWasm/cw-plus/issues/283)
 - `Sudo` over no `new_with_sudo` contract wrapper error message [\#278](https://github.com/CosmWasm/cw-plus/issues/278)
-- build\_and\_upload\_contract CI job fails [\#273](https://github.com/CosmWasm/cw-plus/issues/273)
+- build_and_upload_contract CI job fails [\#273](https://github.com/CosmWasm/cw-plus/issues/273)
 - Add cw20 support to token-weighted group [\#143](https://github.com/CosmWasm/cw-plus/issues/143)
 
 **Merged pull requests:**
@@ -897,7 +933,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 **Merged pull requests:**
 
 - Bump dependency to cosmasm v0.14.0-beta3 [\#269](https://github.com/CosmWasm/cw-plus/pull/269) ([ethanfrey](https://github.com/ethanfrey))
-- Remove unused PrimaryKey::parse\_key [\#267](https://github.com/CosmWasm/cw-plus/pull/267) ([webmaster128](https://github.com/webmaster128))
+- Remove unused PrimaryKey::parse_key [\#267](https://github.com/CosmWasm/cw-plus/pull/267) ([webmaster128](https://github.com/webmaster128))
 - Use workspace-optimizer:0.11.0 [\#262](https://github.com/CosmWasm/cw-plus/pull/262) ([webmaster128](https://github.com/webmaster128))
 - Update cosmwasm-std [\#260](https://github.com/CosmWasm/cw-plus/pull/260) ([yihuang](https://github.com/yihuang))
 - implement demo cw1155 contract [\#251](https://github.com/CosmWasm/cw-plus/pull/251) ([yihuang](https://github.com/yihuang))
@@ -916,10 +952,10 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 
 **Closed issues:**
 
-- Re-enable field\_reassign\_with\_default [\#252](https://github.com/CosmWasm/cw-plus/issues/252)
+- Re-enable field_reassign_with_default [\#252](https://github.com/CosmWasm/cw-plus/issues/252)
 - No equivalent of ERC1155 standard [\#246](https://github.com/CosmWasm/cw-plus/issues/246)
 - Rename HandleMsg to ExecuteMsg [\#236](https://github.com/CosmWasm/cw-plus/issues/236)
-- Use \#\[entry\_point\] macro in contracts [\#230](https://github.com/CosmWasm/cw-plus/issues/230)
+- Use \#\[entry_point\] macro in contracts [\#230](https://github.com/CosmWasm/cw-plus/issues/230)
 - Support PartialEq on error [\#179](https://github.com/CosmWasm/cw-plus/issues/179)
 
 **Merged pull requests:**
@@ -928,7 +964,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Update to Rust v1.51.0 [\#254](https://github.com/CosmWasm/cw-plus/pull/254) ([maurolacy](https://github.com/maurolacy))
 - PartialEq for errors [\#253](https://github.com/CosmWasm/cw-plus/pull/253) ([maurolacy](https://github.com/maurolacy))
 - Handle msg to execute msg [\#250](https://github.com/CosmWasm/cw-plus/pull/250) ([maurolacy](https://github.com/maurolacy))
-- Migrate to entry\_point macro [\#249](https://github.com/CosmWasm/cw-plus/pull/249) ([maurolacy](https://github.com/maurolacy))
+- Migrate to entry_point macro [\#249](https://github.com/CosmWasm/cw-plus/pull/249) ([maurolacy](https://github.com/maurolacy))
 - Add cw1155 specification [\#247](https://github.com/CosmWasm/cw-plus/pull/247) ([yihuang](https://github.com/yihuang))
 
 ## [v0.6.0-alpha1](https://github.com/CosmWasm/cw-plus/tree/v0.6.0-alpha1) (2021-03-12)
@@ -948,7 +984,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Fix / remove cw20-bonding floating point instructions [\#227](https://github.com/CosmWasm/cw-plus/issues/227)
 - Add cw20-ics20 contract [\#226](https://github.com/CosmWasm/cw-plus/issues/226)
 - Upgrade to CosmWasm 0.14 [\#225](https://github.com/CosmWasm/cw-plus/issues/225)
-- Use entry\_point macro for contract entry-points [\#224](https://github.com/CosmWasm/cw-plus/issues/224)
+- Use entry_point macro for contract entry-points [\#224](https://github.com/CosmWasm/cw-plus/issues/224)
 - Upgrade Contracts to storage-plus [\#203](https://github.com/CosmWasm/cw-plus/issues/203)
 - Support composite keys on secondary indexes \(multi-index\) [\#163](https://github.com/CosmWasm/cw-plus/issues/163)
 
@@ -959,7 +995,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Upgrade cw1 to storage plus [\#241](https://github.com/CosmWasm/cw-plus/pull/241) ([ethanfrey](https://github.com/ethanfrey))
 - Contract sanity checking [\#240](https://github.com/CosmWasm/cw-plus/pull/240) ([maurolacy](https://github.com/maurolacy))
 - Converting cw20-\* contracts to use storage-plus [\#239](https://github.com/CosmWasm/cw-plus/pull/239) ([ethanfrey](https://github.com/ethanfrey))
-- Create Contract to send cw20 tokens over ics20  [\#238](https://github.com/CosmWasm/cw-plus/pull/238) ([ethanfrey](https://github.com/ethanfrey))
+- Create Contract to send cw20 tokens over ics20 [\#238](https://github.com/CosmWasm/cw-plus/pull/238) ([ethanfrey](https://github.com/ethanfrey))
 - Cw20 bonding deterministic [\#237](https://github.com/CosmWasm/cw-plus/pull/237) ([maurolacy](https://github.com/maurolacy))
 - Upgrade to 0.14.0 alpha2 [\#235](https://github.com/CosmWasm/cw-plus/pull/235) ([maurolacy](https://github.com/maurolacy))
 - cw3-fixed-multisig: write cw20 multi-contract mint test [\#223](https://github.com/CosmWasm/cw-plus/pull/223) ([orkunkl](https://github.com/orkunkl))
@@ -973,7 +1009,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 
 **Closed issues:**
 
-- Fix const\_item\_mutation warnings [\#217](https://github.com/CosmWasm/cw-plus/issues/217)
+- Fix const_item_mutation warnings [\#217](https://github.com/CosmWasm/cw-plus/issues/217)
 - Add Prefixer sub-prefixes support [\#214](https://github.com/CosmWasm/cw-plus/issues/214)
 - Support composite keys on secondary indexes \(unique-index\) [\#209](https://github.com/CosmWasm/cw-plus/issues/209)
 - Update README, helpers [\#208](https://github.com/CosmWasm/cw-plus/issues/208)
@@ -1073,7 +1109,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 **Closed issues:**
 
 - Update to CosmWasm 0.11.1 [\#127](https://github.com/CosmWasm/cw-plus/issues/127)
-- Fix compiler warning \(const\_item\_mutation\) [\#123](https://github.com/CosmWasm/cw-plus/issues/123)
+- Fix compiler warning \(const_item_mutation\) [\#123](https://github.com/CosmWasm/cw-plus/issues/123)
 - Implement TokensByOwner on base NFT contract [\#81](https://github.com/CosmWasm/cw-plus/issues/81)
 
 **Merged pull requests:**
@@ -1092,7 +1128,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 **Closed issues:**
 
 - Building contracts failed [\#117](https://github.com/CosmWasm/cw-plus/issues/117)
-- Remove dependency between cw20\_escrow and cw20\_atomic\_swap [\#115](https://github.com/CosmWasm/cw-plus/issues/115)
+- Remove dependency between cw20_escrow and cw20_atomic_swap [\#115](https://github.com/CosmWasm/cw-plus/issues/115)
 - Fix Claims handling in cw20-staking [\#110](https://github.com/CosmWasm/cw-plus/issues/110)
 - Migrate contracts to v0.11 [\#96](https://github.com/CosmWasm/cw-plus/issues/96)
 
@@ -1128,7 +1164,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 
 **Closed issues:**
 
-- calc\_range\_start to cw0 [\#101](https://github.com/CosmWasm/cw-plus/issues/101)
+- calc_range_start to cw0 [\#101](https://github.com/CosmWasm/cw-plus/issues/101)
 - Avoid sending zero amount cw20 tokens [\#89](https://github.com/CosmWasm/cw-plus/issues/89)
 - Unify handling of native and cw20 coins in contracts [\#88](https://github.com/CosmWasm/cw-plus/issues/88)
 - Define cw3 spec for multisigs [\#79](https://github.com/CosmWasm/cw-plus/issues/79)
@@ -1266,6 +1302,4 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Define all Message and Query types [\#11](https://github.com/CosmWasm/cw-plus/pull/11) ([ethanfrey](https://github.com/ethanfrey))
 - Set up basic CI script [\#10](https://github.com/CosmWasm/cw-plus/pull/10) ([ethanfrey](https://github.com/ethanfrey))
 
-
-
-\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*
+\* _This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)_
