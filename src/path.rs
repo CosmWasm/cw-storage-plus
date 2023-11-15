@@ -38,10 +38,11 @@ where
 
         // Combine namespace and all but last keys.
         // This is a single vector allocation with references as elements.
-        let mut combined: Vec<&[u8]> = Vec::with_capacity(1 + keys.len() - 1);
+        let calculated_len = 1 + keys.len() - 1;
+        let mut combined: Vec<&[u8]> = Vec::with_capacity(calculated_len);
         combined.push(namespace);
         combined.extend(keys[0..l - 1].iter());
-        debug_assert_eq!(combined.capacity(), combined.len()); // ensure no reallocation needed
+        debug_assert_eq!(calculated_len, combined.len()); // as long as we calculate correctly, we don't need to reallocate
         let storage_key = namespace_with_key(&combined, keys[l - 1]);
         Path {
             storage_key,

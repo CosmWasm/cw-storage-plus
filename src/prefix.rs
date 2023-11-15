@@ -98,10 +98,11 @@ where
         de_fn_kv: DeserializeKvFn<K, T>,
         de_fn_v: DeserializeVFn<T>,
     ) -> Self {
-        let mut combined: Vec<&[u8]> = Vec::with_capacity(1 + sub_names.len());
+        let calculated_len = 1 + sub_names.len();
+        let mut combined: Vec<&[u8]> = Vec::with_capacity(calculated_len);
         combined.push(top_name);
         combined.extend(sub_names.iter().map(|sub_name| sub_name.as_ref()));
-        debug_assert_eq!(combined.capacity(), combined.len()); // ensure no reallocation needed
+        debug_assert_eq!(calculated_len, combined.len()); // as long as we calculate correctly, we don't need to reallocate
         let storage_prefix = to_length_prefixed_nested(&combined);
         Prefix {
             storage_prefix,
