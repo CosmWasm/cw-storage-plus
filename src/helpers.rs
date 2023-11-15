@@ -11,15 +11,6 @@ use cosmwasm_std::{
     StdResult, SystemResult, WasmQuery,
 };
 
-/// Encodes the length of a given namespace as a 2 byte big endian encoded integer
-fn encode_length(namespace: &[u8]) -> [u8; 2] {
-    if namespace.len() > 0xFFFF {
-        panic!("only supports namespaces up to length 0xFFFF")
-    }
-    let length_bytes = (namespace.len() as u32).to_be_bytes();
-    [length_bytes[2], length_bytes[3]]
-}
-
 /// Use this in Map/SnapshotMap/etc when you want to provide a QueryRaw helper.
 /// This is similar to `querier.query(WasmQuery::Raw {})`, except it does NOT parse the
 /// result, but return a possibly empty Binary to be handled by the calling code.
@@ -67,24 +58,6 @@ mod test {
     struct Person {
         pub name: String,
         pub age: i32,
-    }
-
-    #[test]
-    fn encode_length_works() {
-        assert_eq!(encode_length(b""), *b"\x00\x00");
-        assert_eq!(encode_length(b"a"), *b"\x00\x01");
-        assert_eq!(encode_length(b"aa"), *b"\x00\x02");
-        assert_eq!(encode_length(b"aaa"), *b"\x00\x03");
-        assert_eq!(encode_length(&vec![1; 255]), *b"\x00\xff");
-        assert_eq!(encode_length(&vec![1; 256]), *b"\x01\x00");
-        assert_eq!(encode_length(&vec![1; 12345]), *b"\x30\x39");
-        assert_eq!(encode_length(&vec![1; 65535]), *b"\xff\xff");
-    }
-
-    #[test]
-    #[should_panic(expected = "only supports namespaces up to length 0xFFFF")]
-    fn encode_length_panics_for_large_values() {
-        encode_length(&vec![1; 65536]);
     }
 
     #[test]
