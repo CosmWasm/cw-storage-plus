@@ -1,9 +1,9 @@
 use std::{any::type_name, convert::TryInto, marker::PhantomData};
 
-use cosmwasm_std::{from_json, to_json_vec, StdError, StdResult, Storage};
+use cosmwasm_std::{
+    from_json, storage_keys::namespace_with_key, to_json_vec, StdError, StdResult, Storage,
+};
 use serde::{de::DeserializeOwned, Serialize};
-
-use crate::helpers::namespaces_with_key;
 
 // metadata keys need to have different length than the position type (4 bytes) to prevent collisions
 const TAIL_KEY: &[u8] = b"t";
@@ -130,7 +130,7 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
 
     /// Helper method for `tail` and `head` methods to handle reading the value from storage
     fn read_meta_key(&self, storage: &dyn Storage, key: &[u8]) -> StdResult<u32> {
-        let full_key = namespaces_with_key(&[self.namespace], key);
+        let full_key = namespace_with_key(&[self.namespace], key);
         storage
             .get(&full_key)
             .map(|vec| {
@@ -146,7 +146,7 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
     /// Helper method for `set_tail` and `set_head` methods to write to storage
     #[inline]
     fn set_meta_key(&self, storage: &mut dyn Storage, key: &[u8], value: u32) {
-        let full_key = namespaces_with_key(&[self.namespace], key);
+        let full_key = namespace_with_key(&[self.namespace], key);
         storage.set(&full_key, &value.to_be_bytes());
     }
 
@@ -169,7 +169,7 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
     /// Tries to get the value at the given position
     /// Used internally
     fn get_unchecked(&self, storage: &dyn Storage, pos: u32) -> StdResult<Option<T>> {
-        let prefixed_key = namespaces_with_key(&[self.namespace], &pos.to_be_bytes());
+        let prefixed_key = namespace_with_key(&[self.namespace], &pos.to_be_bytes());
         let value = storage.get(&prefixed_key);
         value.map(|v| from_json(v)).transpose()
     }
@@ -177,14 +177,14 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
     /// Removes the value at the given position
     /// Used internally
     fn remove_unchecked(&self, storage: &mut dyn Storage, pos: u32) {
-        let prefixed_key = namespaces_with_key(&[self.namespace], &pos.to_be_bytes());
+        let prefixed_key = namespace_with_key(&[self.namespace], &pos.to_be_bytes());
         storage.remove(&prefixed_key);
     }
 
     /// Tries to set the value at the given position
     /// Used internally when pushing
     fn set_unchecked(&self, storage: &mut dyn Storage, pos: u32, value: &T) -> StdResult<()> {
-        let prefixed_key = namespaces_with_key(&[self.namespace], &pos.to_be_bytes());
+        let prefixed_key = namespace_with_key(&[self.namespace], &pos.to_be_bytes());
         storage.set(&prefixed_key, &to_json_vec(value)?);
 
         Ok(())
