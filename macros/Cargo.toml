@@ -1,6 +1,6 @@
 [package]
 name = "cw-storage-macro"
-version = "1.1.0"
+version = "1.2.0"
 authors = ["yoisha <48324733+y-pakorn@users.noreply.github.com>"]
 edition = "2018"
 description = "Macro helpers for storage-plus"

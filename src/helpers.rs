@@ -4,36 +4,14 @@
 //! Everything in this file is only responsible for building such keys
 //! and is in no way specific to any kind of storage.
 
-use serde::de::DeserializeOwned;
 use std::any::type_name;
 
 use crate::keys::Key;
 
 use cosmwasm_std::{
-    from_json, to_json_vec, Addr, Binary, ContractResult, CustomQuery, QuerierWrapper,
-    QueryRequest, StdError, StdResult, SystemResult, WasmQuery,
+    to_json_vec, Addr, Binary, ContractResult, CustomQuery, QuerierWrapper, QueryRequest, StdError,
+    StdResult, SystemResult, WasmQuery,
 };
-
-/// may_deserialize parses json bytes from storage (Option), returning Ok(None) if no data present
-///
-/// value is an odd type, but this is meant to be easy to use with output from storage.get (Option<Vec<u8>>)
-/// and value.map(|s| s.as_slice()) seems trickier than &value
-pub(crate) fn may_deserialize<T: DeserializeOwned>(
-    value: &Option<Vec<u8>>,
-) -> StdResult<Option<T>> {
-    match value {
-        Some(vec) => Ok(Some(from_json(vec)?)),
-        None => Ok(None),
-    }
-}
-
-/// must_deserialize parses json bytes from storage (Option), returning NotFound error if no data present
-pub(crate) fn must_deserialize<T: DeserializeOwned>(value: &Option<Vec<u8>>) -> StdResult<T> {
-    match value {
-        Some(vec) => from_json(vec),
-        None => Err(StdError::not_found(type_name::<T>())),
-    }
-}
 
 /// This is equivalent concat(to_length_prefixed_nested(namespaces), key)
 /// But more efficient when the intermediate namespaces often must be recalculated
@@ -81,7 +59,7 @@ pub(crate) fn nested_namespaces_with_key(
 }
 
 /// Encodes the length of a given namespace as a 2 byte big endian encoded integer
-pub(crate) fn encode_length(namespace: &[u8]) -> [u8; 2] {
+fn encode_length(namespace: &[u8]) -> [u8; 2] {
     if namespace.len() > 0xFFFF {
         panic!("only supports namespaces up to length 0xFFFF")
     }
@@ -120,10 +98,16 @@ pub(crate) fn query_raw<Q: CustomQuery>(
     }
 }
 
+/// Returns a debug identifier to explain what was not found
+pub(crate) fn not_found_object_info<T>(key: &[u8]) -> String {
+    let type_name = type_name::<T>();
+    format!("type: {type_name}; key: {:02X?}", key)
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
-    use cosmwasm_std::{to_json_vec, StdError};
+    use cosmwasm_std::Uint128;
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -151,44 +135,18 @@ mod test {
     }
 
     #[test]
-    fn may_deserialize_handles_some() {
-        let person = Person {
-            name: "Maria".to_string(),
-            age: 42,
-        };
-        let value = to_json_vec(&person).unwrap();
-
-        let may_parse: Option<Person> = may_deserialize(&Some(value)).unwrap();
-        assert_eq!(may_parse, Some(person));
-    }
-
-    #[test]
-    fn may_deserialize_handles_none() {
-        let may_parse = may_deserialize::<Person>(&None).unwrap();
-        assert_eq!(may_parse, None);
-    }
-
-    #[test]
-    fn must_deserialize_handles_some() {
-        let person = Person {
-            name: "Maria".to_string(),
-            age: 42,
-        };
-        let value = to_json_vec(&person).unwrap();
-        let loaded = Some(value);
-
-        let parsed: Person = must_deserialize(&loaded).unwrap();
-        assert_eq!(parsed, person);
-    }
-
-    #[test]
-    fn must_deserialize_handles_none() {
-        let parsed = must_deserialize::<Person>(&None);
-        match parsed.unwrap_err() {
-            StdError::NotFound { kind, .. } => {
-                assert_eq!(kind, "cw_storage_plus::helpers::test::Person")
-            }
-            e => panic!("Unexpected error {}", e),
-        }
+    fn not_found_object_info_works() {
+        assert_eq!(
+            not_found_object_info::<Person>(&[0xaa, 0xBB]),
+            "type: cw_storage_plus::helpers::test::Person; key: [AA, BB]"
+        );
+        assert_eq!(
+            not_found_object_info::<Person>(&[]),
+            "type: cw_storage_plus::helpers::test::Person; key: []"
+        );
+        assert_eq!(
+            not_found_object_info::<Uint128>(b"foo"),
+            "type: cosmwasm_std::math::uint128::Uint128; key: [66, 6F, 6F]"
+        );
     }
 }
