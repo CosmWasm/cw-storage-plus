@@ -1,6 +1,7 @@
 // this module requires iterator to be useful at all
 #![cfg(feature = "iterator")]
 
+use cosmwasm_std::storage_keys::namespace_with_key;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -8,7 +9,6 @@ use cosmwasm_std::{from_json, Order, Record, StdError, StdResult, Storage};
 
 use crate::bound::PrefixBound;
 use crate::de::KeyDeserialize;
-use crate::helpers::namespaces_with_key;
 use crate::iter_helpers::deserialize_kv;
 use crate::map::Map;
 use crate::prefix::namespaced_prefix_range;
@@ -93,7 +93,7 @@ fn deserialize_multi_v<T: DeserializeOwned>(
     let offset = key.len() - pk_len as usize;
     let pk = &key[offset..];
 
-    let full_key = namespaces_with_key(&[pk_namespace], pk);
+    let full_key = namespace_with_key(&[pk_namespace], pk);
 
     let v = store
         .get(&full_key)
@@ -117,7 +117,7 @@ fn deserialize_multi_kv<K: KeyDeserialize, T: DeserializeOwned>(
     let offset = key.len() - pk_len as usize;
     let pk = &key[offset..];
 
-    let full_key = namespaces_with_key(&[pk_namespace], pk);
+    let full_key = namespace_with_key(&[pk_namespace], pk);
 
     let v = store
         .get(&full_key)

@@ -1,7 +1,6 @@
-use cosmwasm_std::Addr;
+use cosmwasm_std::{storage_keys::namespace_with_key, Addr};
 
 use crate::de::KeyDeserialize;
-use crate::helpers::namespaces_with_key;
 use crate::int_key::IntKey;
 
 #[derive(Debug)]
@@ -69,7 +68,7 @@ pub trait PrimaryKey<'a>: Clone {
     fn joined_key(&self) -> Vec<u8> {
         let keys = self.key();
         let l = keys.len();
-        namespaces_with_key(
+        namespace_with_key(
             &keys[0..l - 1].iter().map(Key::as_ref).collect::<Vec<_>>(),
             keys[l - 1].as_ref(),
         )
@@ -77,7 +76,7 @@ pub trait PrimaryKey<'a>: Clone {
 
     fn joined_extra_key(&self, key: &[u8]) -> Vec<u8> {
         let keys = self.key();
-        namespaces_with_key(&keys.iter().map(Key::as_ref).collect::<Vec<_>>(), key)
+        namespace_with_key(&keys.iter().map(Key::as_ref).collect::<Vec<_>>(), key)
     }
 }
 
@@ -188,7 +187,7 @@ pub trait Prefixer<'a> {
 
     fn joined_prefix(&self) -> Vec<u8> {
         let prefixes = self.prefix();
-        namespaces_with_key(&prefixes.iter().map(Key::as_ref).collect::<Vec<_>>(), &[])
+        namespace_with_key(&prefixes.iter().map(Key::as_ref).collect::<Vec<_>>(), &[])
     }
 }
 

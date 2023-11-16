@@ -1,9 +1,9 @@
+use cosmwasm_std::storage_keys::namespace_with_key;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::marker::PhantomData;
 
-use crate::helpers::{nested_namespaces_with_key, not_found_object_info};
-use crate::keys::Key;
+use crate::helpers::not_found_object_info;
 use cosmwasm_std::{from_json, to_json_vec, StdError, StdResult, Storage};
 use std::ops::Deref;
 
@@ -35,15 +35,15 @@ where
 {
     pub fn new(namespace: &[u8], keys: &[&[u8]]) -> Self {
         let l = keys.len();
-        // FIXME: make this more efficient
-        let storage_key = nested_namespaces_with_key(
-            &[namespace],
-            &keys[0..l - 1]
-                .iter()
-                .map(|k| Key::Ref(k))
-                .collect::<Vec<Key>>(),
-            keys[l - 1],
-        );
+
+        // Combine namespace and all but last keys.
+        // This is a single vector allocation with references as elements.
+        let calculated_len = 1 + keys.len() - 1;
+        let mut combined: Vec<&[u8]> = Vec::with_capacity(calculated_len);
+        combined.push(namespace);
+        combined.extend(keys[0..l - 1].iter());
+        debug_assert_eq!(calculated_len, combined.len()); // as long as we calculate correctly, we don't need to reallocate
+        let storage_key = namespace_with_key(&combined, keys[l - 1]);
         Path {
             storage_key,
             data: PhantomData,

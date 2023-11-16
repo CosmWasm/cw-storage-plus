@@ -1,5 +1,6 @@
 #![cfg(feature = "iterator")]
 use core::fmt;
+use cosmwasm_std::storage_keys::to_length_prefixed_nested;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
@@ -10,7 +11,6 @@ use std::ops::Deref;
 
 use crate::bound::{PrefixBound, RawBound};
 use crate::de::KeyDeserialize;
-use crate::helpers::{namespaces_with_key, nested_namespaces_with_key};
 use crate::iter_helpers::{concat, deserialize_kv, deserialize_v, trim};
 use crate::keys::Key;
 use crate::{Bound, Prefixer, PrimaryKey};
@@ -98,7 +98,12 @@ where
         de_fn_kv: DeserializeKvFn<K, T>,
         de_fn_v: DeserializeVFn<T>,
     ) -> Self {
-        let storage_prefix = nested_namespaces_with_key(&[top_name], sub_names, b"");
+        let calculated_len = 1 + sub_names.len();
+        let mut combined: Vec<&[u8]> = Vec::with_capacity(calculated_len);
+        combined.push(top_name);
+        combined.extend(sub_names.iter().map(|sub_name| sub_name.as_ref()));
+        debug_assert_eq!(calculated_len, combined.len()); // as long as we calculate correctly, we don't need to reallocate
+        let storage_prefix = to_length_prefixed_nested(&combined);
         Prefix {
             storage_prefix,
             data: PhantomData,
@@ -323,7 +328,7 @@ pub fn namespaced_prefix_range<'a, 'c, K: Prefixer<'a>>(
     end: Option<PrefixBound<'a, K>>,
     order: Order,
 ) -> Box<dyn Iterator<Item = Record> + 'c> {
-    let prefix = namespaces_with_key(&[namespace], &[]);
+    let prefix = to_length_prefixed_nested(&[namespace]);
     let start = calc_prefix_start_bound(&prefix, start);
     let end = calc_prefix_end_bound(&prefix, end);
 
