@@ -23,6 +23,10 @@ pub struct SnapshotMap<K, T> {
 }
 
 impl<K, T> SnapshotMap<K, T> {
+    /// Creates a new [`SnapshotMap`] with the given storage keys and strategy.
+    /// This is a const fn only suitable when all the storage keys provided are
+    /// static strings.
+    ///
     /// Example:
     ///
     /// ```rust
@@ -47,6 +51,9 @@ impl<K, T> SnapshotMap<K, T> {
         }
     }
 
+    /// Creates a new [`SnapshotMap`] with the given storage keys and strategy.
+    /// Use this if you might need to handle dynamic strings. Otherwise, you might
+    /// prefer [`SnapshotMap::new`].
     pub fn new_generic(
         pk: impl Into<Ns>,
         checkpoints: impl Into<Ns>,

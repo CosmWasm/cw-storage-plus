@@ -17,6 +17,10 @@ pub struct SnapshotItem<T> {
 }
 
 impl<T> SnapshotItem<T> {
+    /// Creates a new [`SnapshotItem`] with the given storage keys and strategy.
+    /// This is a const fn only suitable when all the storage keys provided are
+    /// static strings.
+    ///
     /// Example:
     ///
     /// ```rust
@@ -41,6 +45,9 @@ impl<T> SnapshotItem<T> {
         }
     }
 
+    /// Creates a new [`SnapshotItem`] with the given storage keys and strategy.
+    /// Use this if you might need to handle dynamic strings. Otherwise, you might
+    /// prefer [`SnapshotItem::new`].
     pub fn new_generic(
         storage_key: impl Into<Ns>,
         checkpoints: impl Into<Ns>,

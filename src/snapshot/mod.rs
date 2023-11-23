@@ -30,6 +30,9 @@ pub(crate) struct Snapshot<K, T> {
 }
 
 impl<K, T> Snapshot<K, T> {
+    /// Creates a new [`Snapshot`] with the given storage keys and strategy.
+    /// This is a const fn only suitable when all the storage keys provided are
+    /// static strings.
     pub const fn new(
         checkpoints: &'static str,
         changelog: &'static str,
@@ -42,6 +45,9 @@ impl<K, T> Snapshot<K, T> {
         }
     }
 
+    /// Creates a new [`Snapshot`] with the given storage keys and strategy.
+    /// Use this if you might need to handle dynamic strings. Otherwise, you might
+    /// prefer [`Snapshot::new`].
     pub fn new_generic(
         checkpoints: impl Into<Ns>,
         changelog: impl Into<Ns>,

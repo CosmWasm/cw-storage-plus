@@ -24,6 +24,8 @@ pub struct Deque<T> {
 }
 
 impl<T> Deque<T> {
+    /// Creates a new [`Deque`] with the given storage key. This is a constant function only suitable
+    /// when you have a prefix in the form of a static string slice.
     pub const fn new(prefix: &'static str) -> Self {
         Self {
             namespace: Ns::from_static_str(prefix),
@@ -31,6 +33,8 @@ impl<T> Deque<T> {
         }
     }
 
+    /// Creates a new [`Deque`] with the given storage key. Use this if you might need to handle
+    /// a dynamic string. Otherwise, you should probably prefer [`Deque::new`].
     pub fn new_generic(prefix: impl Into<Ns>) -> Self {
         Self {
             namespace: prefix.into(),

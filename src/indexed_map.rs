@@ -34,6 +34,8 @@ where
     T: Serialize + DeserializeOwned + Clone,
     I: IndexList<T>,
 {
+    /// Creates a new [`IndexedMap`] with the given storage key. This is a constant function only suitable
+    /// when you have a prefix in the form of a static string slice.
     pub const fn new(pk_namespace: &'static str, indexes: I) -> Self {
         IndexedMap {
             pk_namespace: Ns::from_static_str(pk_namespace),
@@ -42,6 +44,8 @@ where
         }
     }
 
+    /// Creates a new [`IndexedMap`] with the given storage key. Use this if you might need to handle
+    /// a dynamic string. Otherwise, you should probably prefer [`IndexedMap::new`].
     pub fn new_generic(pk_namespace: impl Into<Ns>, indexes: I) -> Self {
         let pk_namespace = pk_namespace.into();
 

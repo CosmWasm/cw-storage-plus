@@ -20,7 +20,7 @@ pub struct Item<T> {
 }
 
 impl<T> Item<T> {
-    /// Creates a new Item with the given storage key. This is a const fn only suitable
+    /// Creates a new [`Item`] with the given storage key. This is a const fn only suitable
     /// when you have a static string slice.
     pub const fn new(storage_key: &'static str) -> Self {
         Item {
@@ -29,8 +29,8 @@ impl<T> Item<T> {
         }
     }
 
-    /// Creates a new Item with the given storage key. Use this if you might need to handle
-    /// a dynamic string. Otherwise, you might like to prefer the const constructor.
+    /// Creates a new [`Item`] with the given storage key. Use this if you might need to handle
+    /// a dynamic string. Otherwise, you might prefer [`Item::new`].
     pub fn new_generic(storage_key: impl Into<Ns>) -> Self {
         Item {
             storage_key: storage_key.into(),
