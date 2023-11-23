@@ -16,7 +16,7 @@ use crate::{Bound, IndexList, Map, Path, Strategy};
 /// `IndexedSnapshotMap` works like a `SnapshotMap` but has a secondary index
 pub struct IndexedSnapshotMap<'a, K, T, I> {
     pk_namespace: &'a [u8],
-    primary: SnapshotMap<'a, K, T>,
+    primary: SnapshotMap<K, T>,
     /// This is meant to be read directly to get the proper types, like:
     /// map.idx.owner.items(...)
     pub idx: I,
@@ -45,9 +45,9 @@ impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I> {
     /// );
     /// ```
     pub fn new(
-        pk_namespace: &'a str,
-        checkpoints: &'a str,
-        changelog: &'a str,
+        pk_namespace: &'static str,
+        checkpoints: &'static str,
+        changelog: &'static str,
         strategy: Strategy,
         indexes: I,
     ) -> Self {
@@ -58,7 +58,7 @@ impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I> {
         }
     }
 
-    pub fn changelog(&self) -> &Map<'a, (K, u64), ChangeSet<T>> {
+    pub fn changelog(&self) -> &Map<(K, u64), ChangeSet<T>> {
         self.primary.changelog()
     }
 }

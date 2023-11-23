@@ -26,7 +26,7 @@ where
     I: IndexList<T>,
 {
     pk_namespace: &'a [u8],
-    primary: Map<'a, K, T>,
+    primary: Map<K, T>,
     /// This is meant to be read directly to get the proper types, like:
     /// map.idx.owner.items(...)
     pub idx: I,
@@ -38,7 +38,7 @@ where
     T: Serialize + DeserializeOwned + Clone,
     I: IndexList<T>,
 {
-    pub const fn new(pk_namespace: &'a str, indexes: I) -> Self {
+    pub const fn new(pk_namespace: &'static str, indexes: I) -> Self {
         IndexedMap {
             pk_namespace: pk_namespace.as_bytes(),
             primary: Map::new(pk_namespace),

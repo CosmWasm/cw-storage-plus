@@ -12,15 +12,15 @@ use crate::helpers::not_found_object_info;
 /// Item stores one typed item at the given key.
 /// This is an analog of Singleton.
 /// It functions the same way as Path does but doesn't use a Vec and thus has a const fn constructor.
-pub struct Item<'a, T> {
+pub struct Item<T> {
     // this is full key - no need to length-prefix it, we only store one item
-    storage_key: &'a [u8],
+    storage_key: &'static [u8],
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
     data_type: PhantomData<T>,
 }
 
-impl<'a, T> Item<'a, T> {
-    pub const fn new(storage_key: &'a str) -> Self {
+impl<T> Item<T> {
+    pub const fn new(storage_key: &'static str) -> Self {
         Item {
             storage_key: storage_key.as_bytes(),
             data_type: PhantomData,
@@ -28,7 +28,7 @@ impl<'a, T> Item<'a, T> {
     }
 }
 
-impl<'a, T> Item<'a, T>
+impl<T> Item<T>
 where
     T: Serialize + DeserializeOwned,
 {

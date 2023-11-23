@@ -20,15 +20,15 @@ use cosmwasm_std::Order;
 use cosmwasm_std::{from_json, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage};
 
 #[derive(Debug, Clone)]
-pub struct Map<'a, K, T> {
-    namespace: &'a [u8],
+pub struct Map<K, T> {
+    namespace: &'static [u8],
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
     key_type: PhantomData<K>,
     data_type: PhantomData<T>,
 }
 
-impl<'a, K, T> Map<'a, K, T> {
-    pub const fn new(namespace: &'a str) -> Self {
+impl<K, T> Map<K, T> {
+    pub const fn new(namespace: &'static str) -> Self {
         Map {
             namespace: namespace.as_bytes(),
             data_type: PhantomData,
@@ -36,12 +36,12 @@ impl<'a, K, T> Map<'a, K, T> {
         }
     }
 
-    pub fn namespace(&self) -> &'a [u8] {
+    pub fn namespace(&self) -> &'static [u8] {
         self.namespace
     }
 }
 
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a>,
@@ -126,7 +126,7 @@ where
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a>,
@@ -142,7 +142,7 @@ where
 
 // short-cut for simple keys, rather than .prefix(()).range_raw(...)
 #[cfg(feature = "iterator")]
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     // TODO: this should only be when K::Prefix == ()
@@ -172,7 +172,7 @@ where
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a> + KeyDeserialize,
@@ -207,7 +207,7 @@ where
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a>,
@@ -240,7 +240,7 @@ where
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a> + KeyDeserialize,

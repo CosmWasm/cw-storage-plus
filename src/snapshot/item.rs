@@ -9,13 +9,13 @@ use crate::{Item, Map, Strategy};
 /// Item that maintains a snapshot of one or more checkpoints.
 /// We can query historical data as well as current state.
 /// What data is snapshotted depends on the Strategy.
-pub struct SnapshotItem<'a, T> {
-    primary: Item<'a, T>,
-    changelog_namespace: &'a str,
-    snapshots: Snapshot<'a, (), T>,
+pub struct SnapshotItem<T> {
+    primary: Item<T>,
+    changelog_namespace: &'static str,
+    snapshots: Snapshot<(), T>,
 }
 
-impl<'a, T> SnapshotItem<'a, T> {
+impl<T> SnapshotItem<T> {
     /// Example:
     ///
     /// ```rust
@@ -28,9 +28,9 @@ impl<'a, T> SnapshotItem<'a, T> {
     ///     Strategy::EveryBlock);
     /// ```
     pub const fn new(
-        storage_key: &'a str,
-        checkpoints: &'a str,
-        changelog: &'a str,
+        storage_key: &'static str,
+        checkpoints: &'static str,
+        changelog: &'static str,
         strategy: Strategy,
     ) -> Self {
         SnapshotItem {
@@ -54,7 +54,7 @@ impl<'a, T> SnapshotItem<'a, T> {
     }
 }
 
-impl<'a, T> SnapshotItem<'a, T>
+impl<T> SnapshotItem<T>
 where
     T: Serialize + DeserializeOwned + Clone,
 {
@@ -135,7 +135,7 @@ mod tests {
     use crate::bound::Bound;
     use cosmwasm_std::testing::MockStorage;
 
-    type TestItem = SnapshotItem<'static, u64>;
+    type TestItem = SnapshotItem<u64>;
 
     const NEVER: TestItem =
         SnapshotItem::new("never", "never__check", "never__change", Strategy::Never);

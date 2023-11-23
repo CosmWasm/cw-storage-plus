@@ -28,7 +28,7 @@ pub(crate) struct UniqueRef<T> {
 /// The PK type defines the type of Primary Key deserialization.
 pub struct UniqueIndex<'a, IK, T, PK> {
     index: fn(&T) -> IK,
-    idx_map: Map<'a, IK, UniqueRef<T>>,
+    idx_map: Map<IK, UniqueRef<T>>,
     idx_namespace: &'a [u8],
     phantom: PhantomData<PK>,
 }
@@ -51,7 +51,7 @@ impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK> {
     ///
     /// UniqueIndex::<_, _, ()>::new(|d: &Data| d.age, "data__age");
     /// ```
-    pub const fn new(idx_fn: fn(&T) -> IK, idx_namespace: &'a str) -> Self {
+    pub const fn new(idx_fn: fn(&T) -> IK, idx_namespace: &'static str) -> Self {
         UniqueIndex {
             index: idx_fn,
             idx_map: Map::new(idx_namespace),

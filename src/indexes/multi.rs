@@ -31,7 +31,7 @@ pub struct MultiIndex<'a, IK, T, PK> {
     index: fn(&[u8], &T) -> IK,
     idx_namespace: &'a [u8],
     // note, we collapse the ik - combining everything under the namespace - and concatenating the pk
-    idx_map: Map<'a, Vec<u8>, u32>,
+    idx_map: Map<Vec<u8>, u32>,
     pk_namespace: &'a [u8],
     phantom: PhantomData<PK>,
 }
@@ -67,7 +67,7 @@ where
     pub const fn new(
         idx_fn: fn(&[u8], &T) -> IK,
         pk_namespace: &'a str,
-        idx_namespace: &'a str,
+        idx_namespace: &'static str,
     ) -> Self {
         MultiIndex {
             index: idx_fn,

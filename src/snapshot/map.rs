@@ -16,12 +16,12 @@ use crate::{Bound, Prefixer, Strategy};
 /// Map that maintains a snapshots of one or more checkpoints.
 /// We can query historical data as well as current state.
 /// What data is snapshotted depends on the Strategy.
-pub struct SnapshotMap<'a, K, T> {
-    primary: Map<'a, K, T>,
-    snapshots: Snapshot<'a, K, T>,
+pub struct SnapshotMap<K, T> {
+    primary: Map<K, T>,
+    snapshots: Snapshot<K, T>,
 }
 
-impl<'a, K, T> SnapshotMap<'a, K, T> {
+impl<K, T> SnapshotMap<K, T> {
     /// Example:
     ///
     /// ```rust
@@ -35,9 +35,9 @@ impl<'a, K, T> SnapshotMap<'a, K, T> {
     /// );
     /// ```
     pub const fn new(
-        pk: &'a str,
-        checkpoints: &'a str,
-        changelog: &'a str,
+        pk: &'static str,
+        checkpoints: &'static str,
+        changelog: &'static str,
         strategy: Strategy,
     ) -> Self {
         SnapshotMap {
@@ -46,12 +46,12 @@ impl<'a, K, T> SnapshotMap<'a, K, T> {
         }
     }
 
-    pub fn changelog(&self) -> &Map<'a, (K, u64), ChangeSet<T>> {
+    pub fn changelog(&self) -> &Map<(K, u64), ChangeSet<T>> {
         &self.snapshots.changelog
     }
 }
 
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T> SnapshotMap<K, T>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a>,
@@ -65,7 +65,7 @@ where
     }
 }
 
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T> SnapshotMap<K, T>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
@@ -162,7 +162,7 @@ where
 }
 
 // short-cut for simple keys, rather than .prefix(()).range_raw(...)
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T> SnapshotMap<K, T>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
@@ -197,7 +197,7 @@ where
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T> SnapshotMap<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a> + KeyDeserialize,
@@ -272,8 +272,8 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::MockStorage;
 
-    type TestMap = SnapshotMap<'static, &'static str, u64>;
-    type TestMapCompositeKey = SnapshotMap<'static, (&'static str, &'static str), u64>;
+    type TestMap = SnapshotMap<&'static str, u64>;
+    type TestMapCompositeKey = SnapshotMap<(&'static str, &'static str), u64>;
 
     const NEVER: TestMap =
         SnapshotMap::new("never", "never__check", "never__change", Strategy::Never);

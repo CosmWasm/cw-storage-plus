@@ -14,15 +14,15 @@ const HEAD_KEY: &[u8] = b"h";
 ///
 /// It has a maximum capacity of `u32::MAX - 1`. Make sure to never exceed that number when using this type.
 /// If you do, the methods won't work as intended anymore.
-pub struct Deque<'a, T> {
+pub struct Deque<T> {
     // prefix of the deque items
-    namespace: &'a [u8],
+    namespace: &'static [u8],
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
     item_type: PhantomData<T>,
 }
 
-impl<'a, T> Deque<'a, T> {
-    pub const fn new(prefix: &'a str) -> Self {
+impl<T> Deque<T> {
+    pub const fn new(prefix: &'static str) -> Self {
         Self {
             namespace: prefix.as_bytes(),
             item_type: PhantomData,
@@ -30,7 +30,7 @@ impl<'a, T> Deque<'a, T> {
     }
 }
 
-impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
+impl<T: Serialize + DeserializeOwned> Deque<T> {
     /// Adds the given value to the end of the deque
     pub fn push_back(&self, storage: &mut dyn Storage, value: &T) -> StdResult<()> {
         // save value
@@ -197,8 +197,8 @@ fn calc_len(head: u32, tail: u32) -> u32 {
     tail.wrapping_sub(head)
 }
 
-impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
-    pub fn iter(&self, storage: &'a dyn Storage) -> StdResult<DequeIter<T>> {
+impl<T: Serialize + DeserializeOwned> Deque<T> {
+    pub fn iter<'a>(&'a self, storage: &'a dyn Storage) -> StdResult<DequeIter<'a, T>> {
         Ok(DequeIter {
             deque: self,
             storage,
@@ -212,7 +212,7 @@ pub struct DequeIter<'a, T>
 where
     T: Serialize + DeserializeOwned,
 {
-    deque: &'a Deque<'a, T>,
+    deque: &'a Deque<T>,
     storage: &'a dyn Storage,
     start: u32,
     end: u32,
