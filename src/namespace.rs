@@ -1,5 +1,7 @@
 use std::{borrow::Cow, ops::Deref};
 
+/// The namespace of a storage container. This is just convenience internal type
+/// to remove a little recurrent boilerplate.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Ns(Cow<'static, [u8]>);
 

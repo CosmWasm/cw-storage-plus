@@ -5,6 +5,8 @@ use cosmwasm_std::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
+use crate::namespace::Ns;
+
 // metadata keys need to have different length than the position type (4 bytes) to prevent collisions
 const TAIL_KEY: &[u8] = b"t";
 const HEAD_KEY: &[u8] = b"h";
@@ -16,7 +18,7 @@ const HEAD_KEY: &[u8] = b"h";
 /// If you do, the methods won't work as intended anymore.
 pub struct Deque<T> {
     // prefix of the deque items
-    namespace: &'static [u8],
+    namespace: Ns,
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
     item_type: PhantomData<T>,
 }
@@ -24,7 +26,14 @@ pub struct Deque<T> {
 impl<T> Deque<T> {
     pub const fn new(prefix: &'static str) -> Self {
         Self {
-            namespace: prefix.as_bytes(),
+            namespace: Ns::from_static_str(prefix),
+            item_type: PhantomData,
+        }
+    }
+
+    pub fn new_generic(prefix: impl Into<Ns>) -> Self {
+        Self {
+            namespace: prefix.into(),
             item_type: PhantomData,
         }
     }
@@ -130,7 +139,7 @@ impl<T: Serialize + DeserializeOwned> Deque<T> {
 
     /// Helper method for `tail` and `head` methods to handle reading the value from storage
     fn read_meta_key(&self, storage: &dyn Storage, key: &[u8]) -> StdResult<u32> {
-        let full_key = namespace_with_key(&[self.namespace], key);
+        let full_key = namespace_with_key(&[&self.namespace], key);
         storage
             .get(&full_key)
             .map(|vec| {
@@ -146,7 +155,7 @@ impl<T: Serialize + DeserializeOwned> Deque<T> {
     /// Helper method for `set_tail` and `set_head` methods to write to storage
     #[inline]
     fn set_meta_key(&self, storage: &mut dyn Storage, key: &[u8], value: u32) {
-        let full_key = namespace_with_key(&[self.namespace], key);
+        let full_key = namespace_with_key(&[&self.namespace], key);
         storage.set(&full_key, &value.to_be_bytes());
     }
 
@@ -169,7 +178,7 @@ impl<T: Serialize + DeserializeOwned> Deque<T> {
     /// Tries to get the value at the given position
     /// Used internally
     fn get_unchecked(&self, storage: &dyn Storage, pos: u32) -> StdResult<Option<T>> {
-        let prefixed_key = namespace_with_key(&[self.namespace], &pos.to_be_bytes());
+        let prefixed_key = namespace_with_key(&[&self.namespace], &pos.to_be_bytes());
         let value = storage.get(&prefixed_key);
         value.map(|v| from_json(v)).transpose()
     }
@@ -177,14 +186,14 @@ impl<T: Serialize + DeserializeOwned> Deque<T> {
     /// Removes the value at the given position
     /// Used internally
     fn remove_unchecked(&self, storage: &mut dyn Storage, pos: u32) {
-        let prefixed_key = namespace_with_key(&[self.namespace], &pos.to_be_bytes());
+        let prefixed_key = namespace_with_key(&[&self.namespace], &pos.to_be_bytes());
         storage.remove(&prefixed_key);
     }
 
     /// Tries to set the value at the given position
     /// Used internally when pushing
     fn set_unchecked(&self, storage: &mut dyn Storage, pos: u32, value: &T) -> StdResult<()> {
-        let prefixed_key = namespace_with_key(&[self.namespace], &pos.to_be_bytes());
+        let prefixed_key = namespace_with_key(&[&self.namespace], &pos.to_be_bytes());
         storage.set(&prefixed_key, &to_json_vec(value)?);
 
         Ok(())
