@@ -8,6 +8,7 @@ use crate::de::KeyDeserialize;
 use crate::iter_helpers::deserialize_kv;
 use crate::keys::PrimaryKey;
 use crate::map::Map;
+use crate::namespace::Ns;
 use crate::path::Path;
 use crate::prefix::{namespaced_prefix_range, Prefix};
 use crate::snapshot::{ChangeSet, Snapshot};
@@ -43,6 +44,18 @@ impl<K, T> SnapshotMap<K, T> {
         SnapshotMap {
             primary: Map::new(pk),
             snapshots: Snapshot::new(checkpoints, changelog, strategy),
+        }
+    }
+
+    pub fn new_generic(
+        pk: impl Into<Ns>,
+        checkpoints: impl Into<Ns>,
+        changelog: impl Into<Ns>,
+        strategy: Strategy,
+    ) -> Self {
+        SnapshotMap {
+            primary: Map::new_generic(pk),
+            snapshots: Snapshot::new_generic(checkpoints, changelog, strategy),
         }
     }
 

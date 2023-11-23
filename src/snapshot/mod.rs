@@ -7,6 +7,7 @@ pub use map::SnapshotMap;
 
 use crate::bound::Bound;
 use crate::de::KeyDeserialize;
+use crate::namespace::Ns;
 use crate::{Map, Prefixer, PrimaryKey};
 use cosmwasm_std::{Order, StdError, StdResult, Storage};
 use serde::de::DeserializeOwned;
@@ -28,7 +29,7 @@ pub(crate) struct Snapshot<K, T> {
     strategy: Strategy,
 }
 
-impl<'a, K, T> Snapshot<K, T> {
+impl<K, T> Snapshot<K, T> {
     pub const fn new(
         checkpoints: &'static str,
         changelog: &'static str,
@@ -37,6 +38,18 @@ impl<'a, K, T> Snapshot<K, T> {
         Snapshot {
             checkpoints: Map::new(checkpoints),
             changelog: Map::new(changelog),
+            strategy,
+        }
+    }
+
+    pub fn new_generic(
+        checkpoints: impl Into<Ns>,
+        changelog: impl Into<Ns>,
+        strategy: Strategy,
+    ) -> Snapshot<K, T> {
+        Snapshot {
+            checkpoints: Map::new_generic(checkpoints),
+            changelog: Map::new_generic(changelog),
             strategy,
         }
     }

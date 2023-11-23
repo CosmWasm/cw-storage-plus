@@ -12,6 +12,7 @@ use crate::iter_helpers::{deserialize_kv, deserialize_v};
 #[cfg(feature = "iterator")]
 use crate::keys::Prefixer;
 use crate::keys::{Key, PrimaryKey};
+use crate::namespace::Ns;
 use crate::path::Path;
 #[cfg(feature = "iterator")]
 use crate::prefix::{namespaced_prefix_range, Prefix};
@@ -21,7 +22,7 @@ use cosmwasm_std::{from_json, Addr, CustomQuery, QuerierWrapper, StdError, StdRe
 
 #[derive(Debug, Clone)]
 pub struct Map<K, T> {
-    namespace: &'static [u8],
+    namespace: Ns,
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
     key_type: PhantomData<K>,
     data_type: PhantomData<T>,
@@ -30,14 +31,22 @@ pub struct Map<K, T> {
 impl<K, T> Map<K, T> {
     pub const fn new(namespace: &'static str) -> Self {
         Map {
-            namespace: namespace.as_bytes(),
+            namespace: Ns::from_static_str(namespace),
             data_type: PhantomData,
             key_type: PhantomData,
         }
     }
 
-    pub fn namespace(&self) -> &'static [u8] {
-        self.namespace
+    pub fn new_generic(namespace: impl Into<Ns>) -> Self {
+        Map {
+            namespace: namespace.into(),
+            data_type: PhantomData,
+            key_type: PhantomData,
+        }
+    }
+
+    pub fn namespace(&self) -> &[u8] {
+        &self.namespace
     }
 }
 
@@ -48,14 +57,14 @@ where
 {
     pub fn key(&self, k: K) -> Path<T> {
         Path::new(
-            self.namespace,
+            &self.namespace,
             &k.key().iter().map(Key::as_ref).collect::<Vec<_>>(),
         )
     }
 
     #[cfg(feature = "iterator")]
     pub(crate) fn no_prefix_raw(&self) -> Prefix<Vec<u8>, T, K> {
-        Prefix::new(self.namespace, &[])
+        Prefix::new(&self.namespace, &[])
     }
 
     pub fn save(&self, store: &mut dyn Storage, k: K, data: &T) -> StdResult<()> {
@@ -132,11 +141,11 @@ where
     K: PrimaryKey<'a>,
 {
     pub fn sub_prefix(&self, p: K::SubPrefix) -> Prefix<K::SuperSuffix, T, K::SuperSuffix> {
-        Prefix::new(self.namespace, &p.prefix())
+        Prefix::new(&self.namespace, &p.prefix())
     }
 
     pub fn prefix(&self, p: K::Prefix) -> Prefix<K::Suffix, T, K::Suffix> {
-        Prefix::new(self.namespace, &p.prefix())
+        Prefix::new(&self.namespace, &p.prefix())
     }
 }
 
@@ -166,7 +175,7 @@ where
         'a: 'c,
     {
         let mapped =
-            namespaced_prefix_range(store, self.namespace, min, max, order).map(deserialize_v);
+            namespaced_prefix_range(store, &self.namespace, min, max, order).map(deserialize_v);
         Box::new(mapped)
     }
 }
@@ -196,13 +205,13 @@ where
         K: 'c,
         K::Output: 'static,
     {
-        let mapped = namespaced_prefix_range(store, self.namespace, min, max, order)
+        let mapped = namespaced_prefix_range(store, &self.namespace, min, max, order)
             .map(deserialize_kv::<K, T>);
         Box::new(mapped)
     }
 
     fn no_prefix(&self) -> Prefix<K, T, K> {
-        Prefix::new(self.namespace, &[])
+        Prefix::new(&self.namespace, &[])
     }
 }
 

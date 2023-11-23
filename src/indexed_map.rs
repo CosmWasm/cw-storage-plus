@@ -1,6 +1,7 @@
 // this module requires iterator to be useful at all
 #![cfg(feature = "iterator")]
 
+use crate::namespace::Ns;
 use crate::PrefixBound;
 use cosmwasm_std::{StdError, StdResult, Storage};
 use serde::de::DeserializeOwned;
@@ -19,20 +20,15 @@ pub trait IndexList<T> {
 }
 
 /// `IndexedMap` works like a `Map` but has a secondary index
-pub struct IndexedMap<'a, K, T, I>
-where
-    K: PrimaryKey<'a>,
-    T: Serialize + DeserializeOwned + Clone,
-    I: IndexList<T>,
-{
-    pk_namespace: &'a [u8],
+pub struct IndexedMap<K, T, I> {
+    pk_namespace: Ns,
     primary: Map<K, T>,
     /// This is meant to be read directly to get the proper types, like:
     /// map.idx.owner.items(...)
     pub idx: I,
 }
 
-impl<'a, K, T, I> IndexedMap<'a, K, T, I>
+impl<'a, K, T, I> IndexedMap<K, T, I>
 where
     K: PrimaryKey<'a>,
     T: Serialize + DeserializeOwned + Clone,
@@ -40,8 +36,18 @@ where
 {
     pub const fn new(pk_namespace: &'static str, indexes: I) -> Self {
         IndexedMap {
-            pk_namespace: pk_namespace.as_bytes(),
+            pk_namespace: Ns::from_static_str(pk_namespace),
             primary: Map::new(pk_namespace),
+            idx: indexes,
+        }
+    }
+
+    pub fn new_generic(pk_namespace: impl Into<Ns>, indexes: I) -> Self {
+        let pk_namespace = pk_namespace.into();
+
+        IndexedMap {
+            pk_namespace: pk_namespace.clone(),
+            primary: Map::new_generic(pk_namespace),
             idx: indexes,
         }
     }
@@ -51,7 +57,7 @@ where
     }
 }
 
-impl<'a, K, T, I> IndexedMap<'a, K, T, I>
+impl<'a, K, T, I> IndexedMap<K, T, I>
 where
     K: PrimaryKey<'a>,
     T: Serialize + DeserializeOwned + Clone,
@@ -135,7 +141,7 @@ where
 
     // use no_prefix to scan -> range
     fn no_prefix_raw(&self) -> Prefix<Vec<u8>, T, K> {
-        Prefix::new(self.pk_namespace, &[])
+        Prefix::new(&self.pk_namespace, &[])
     }
 
     /// Clears the map, removing all elements.
@@ -147,7 +153,7 @@ where
             let paths = self
                 .no_prefix_raw()
                 .keys_raw(store, None, None, cosmwasm_std::Order::Ascending)
-                .map(|raw_key| Path::<T>::new(self.pk_namespace, &[raw_key.as_slice()]))
+                .map(|raw_key| Path::<T>::new(&self.pk_namespace, &[raw_key.as_slice()]))
                 // Take just TAKE elements to prevent possible heap overflow if the Map is big.
                 .take(TAKE)
                 .collect::<Vec<_>>();
@@ -168,7 +174,7 @@ where
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T, I> IndexedMap<'a, K, T, I>
+impl<'a, K, T, I> IndexedMap<K, T, I>
 where
     K: PrimaryKey<'a>,
     T: Serialize + DeserializeOwned + Clone,
@@ -191,29 +197,29 @@ where
         'a: 'c,
     {
         let mapped =
-            namespaced_prefix_range(store, self.pk_namespace, min, max, order).map(deserialize_v);
+            namespaced_prefix_range(store, &self.pk_namespace, min, max, order).map(deserialize_v);
         Box::new(mapped)
     }
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T, I> IndexedMap<'a, K, T, I>
+impl<'a, K, T, I> IndexedMap<K, T, I>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a>,
     I: IndexList<T>,
 {
     pub fn sub_prefix(&self, p: K::SubPrefix) -> Prefix<K::SuperSuffix, T, K::SuperSuffix> {
-        Prefix::new(self.pk_namespace, &p.prefix())
+        Prefix::new(&self.pk_namespace, &p.prefix())
     }
 
     pub fn prefix(&self, p: K::Prefix) -> Prefix<K::Suffix, T, K::Suffix> {
-        Prefix::new(self.pk_namespace, &p.prefix())
+        Prefix::new(&self.pk_namespace, &p.prefix())
     }
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T, I> IndexedMap<'a, K, T, I>
+impl<'a, K, T, I> IndexedMap<K, T, I>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + KeyDeserialize,
@@ -238,7 +244,7 @@ where
         K: 'c,
         K::Output: 'static,
     {
-        let mapped = namespaced_prefix_range(store, self.pk_namespace, min, max, order)
+        let mapped = namespaced_prefix_range(store, &self.pk_namespace, min, max, order)
             .map(deserialize_kv::<K, T>);
         Box::new(mapped)
     }
@@ -295,7 +301,7 @@ where
     }
 
     fn no_prefix(&self) -> Prefix<K, T, K> {
-        Prefix::new(self.pk_namespace, &[])
+        Prefix::new(&self.pk_namespace, &[])
     }
 }
 

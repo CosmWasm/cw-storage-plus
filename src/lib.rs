@@ -26,6 +26,7 @@ mod item;
 mod iter_helpers;
 mod keys;
 mod map;
+mod namespace;
 mod path;
 mod prefix;
 mod snapshot;
