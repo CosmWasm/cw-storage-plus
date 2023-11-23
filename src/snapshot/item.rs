@@ -21,7 +21,7 @@ impl<T> SnapshotItem<T> {
     /// ```rust
     /// use cw_storage_plus::{SnapshotItem, Strategy};
     ///
-    /// SnapshotItem::<'static, u64>::new(
+    /// SnapshotItem::<u64>::new(
     ///     "every",
     ///     "every__check",
     ///     "every__change",
