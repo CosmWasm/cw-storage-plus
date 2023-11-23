@@ -3,6 +3,7 @@ use serde::Serialize;
 
 use cosmwasm_std::{StdError, StdResult, Storage};
 
+use crate::namespace::Ns;
 use crate::snapshot::{ChangeSet, Snapshot};
 use crate::{Item, Map, Strategy};
 
@@ -11,7 +12,7 @@ use crate::{Item, Map, Strategy};
 /// What data is snapshotted depends on the Strategy.
 pub struct SnapshotItem<T> {
     primary: Item<T>,
-    changelog_namespace: &'static str,
+    changelog_namespace: Ns,
     snapshots: Snapshot<(), T>,
 }
 
@@ -35,8 +36,22 @@ impl<T> SnapshotItem<T> {
     ) -> Self {
         SnapshotItem {
             primary: Item::new(storage_key),
-            changelog_namespace: changelog,
+            changelog_namespace: Ns::from_static_str(changelog),
             snapshots: Snapshot::new(checkpoints, changelog, strategy),
+        }
+    }
+
+    pub fn new_generic(
+        storage_key: impl Into<Ns>,
+        checkpoints: impl Into<Ns>,
+        changelog: impl Into<Ns>,
+        strategy: Strategy,
+    ) -> Self {
+        let changelog = changelog.into();
+        SnapshotItem {
+            primary: Item::new_generic(storage_key),
+            changelog_namespace: changelog.clone(),
+            snapshots: Snapshot::new_generic(checkpoints, changelog, strategy),
         }
     }
 
@@ -50,7 +65,7 @@ impl<T> SnapshotItem<T> {
 
     pub fn changelog(&self) -> Map<u64, ChangeSet<T>> {
         // Build and return a compatible Map with the proper key type
-        Map::new(self.changelog_namespace)
+        Map::new_generic(self.changelog_namespace.clone())
     }
 }
 
