@@ -147,6 +147,21 @@ mod test {
     }
 
     #[test]
+    fn owned_key_works() {
+        let mut store = MockStorage::new();
+
+        for i in 0..3 {
+            let key = format!("key{}", i);
+            let item = Item::new_generic(key);
+            item.save(&mut store, &i).unwrap();
+        }
+
+        assert_eq!(store.get(b"key0").unwrap(), b"0");
+        assert_eq!(store.get(b"key1").unwrap(), b"1");
+        assert_eq!(store.get(b"key2").unwrap(), b"2");
+    }
+
+    #[test]
     fn exists_works() {
         let mut store = MockStorage::new();
 

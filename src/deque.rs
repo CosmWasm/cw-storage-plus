@@ -311,6 +311,44 @@ mod tests {
     use serde::{Deserialize, Serialize};
 
     #[test]
+    fn owned_key() {
+        let mut store = MockStorage::new();
+
+        for i in 1..4 {
+            let key = format!("key{}", i);
+            let item = Deque::new_generic(key);
+            for i in 0..i {
+                item.push_back(&mut store, &i).unwrap();
+            }
+        }
+
+        assert_eq!(
+            Deque::<u32>::new("key1")
+                .iter(&store)
+                .unwrap()
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap(),
+            vec![0]
+        );
+        assert_eq!(
+            Deque::<u32>::new("key2")
+                .iter(&store)
+                .unwrap()
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap(),
+            vec![0, 1]
+        );
+        assert_eq!(
+            Deque::<u32>::new("key3")
+                .iter(&store)
+                .unwrap()
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap(),
+            vec![0, 1, 2]
+        );
+    }
+
+    #[test]
     fn push_and_pop() {
         const PEOPLE: Deque<String> = Deque::new("people");
         let mut store = MockStorage::new();
