@@ -14,7 +14,13 @@ use crate::snapshot::{ChangeSet, SnapshotMap};
 use crate::PrefixBound;
 use crate::{Bound, IndexList, Map, Path, Strategy};
 
-/// `IndexedSnapshotMap` works like a `SnapshotMap` but has a secondary index
+/// `IndexdSnapshotMap` combines the features of `SnapshotMap` with secondary indexing.
+/// # Functionality
+/// - `SnapshotMap`: Stores data at various time points, allowing access to historical data states.
+/// - Secondary Indexing: Enhances data retrieval by organizing it based on non-primary key criteria.
+/// # Use in Blockchain
+/// In blockchain environments, where data constantly changes, `IndexedSnapshotMap` is vital for tracking
+/// historical data efficiently, aiding in analysis, auditing, and transparency in decentralized applications.
 pub struct IndexedSnapshotMap<K, T, I> {
     pk_namespace: Namespace,
     primary: SnapshotMap<K, T>,

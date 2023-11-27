@@ -15,6 +15,7 @@ use crate::iter_helpers::{concat, deserialize_kv, deserialize_v, trim};
 use crate::keys::Key;
 use crate::{Bound, Prefixer, PrimaryKey};
 
+/// Prefix: Utilities for path and prefix operations in storage.
 #[derive(Clone)]
 pub struct Prefix<K, T, B = Vec<u8>>
 where

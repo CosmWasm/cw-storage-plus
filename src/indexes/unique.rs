@@ -24,9 +24,21 @@ pub(crate) struct UniqueRef<T> {
     value: T,
 }
 
-/// UniqueIndex stores (namespace, index_name, idx_value) -> {key, value}
-/// Allows one value per index (i.e. unique) and copies pk and data
-/// The PK type defines the type of Primary Key deserialization.
+/// `UniqueIndex` manages distinct key-value associations, enforces uniqueness in index values,
+///  and stores both key and value for quick retrieval.
+/// It organizes data as (namespace, index_name, idx_value) -> {key, value}, ensuring each index maintains a unique entry.
+///
+/// # Key Features
+/// - Uniqueness: Guarantees that each index has a unique value, preventing data duplication.
+/// - Efficiency: By storing both the key and value, it allows for faster access and retrieval of data.
+///
+/// # Primary Key (PK) Role
+/// - The PK type is critical for the format and deserialization of the primary key, 
+/// ensuring data consistency and integrity.
+///
+/// This design is particularly valuable in scenarios where unique identification and 
+/// efficient data access are paramount, making `UniqueIndex` a key component in the Cosmos ecosystem
+///  for managing unique data sets.
 pub struct UniqueIndex<'a, IK, T, PK> {
     index: fn(&T) -> IK,
     idx_map: Map<IK, UniqueRef<T>>,

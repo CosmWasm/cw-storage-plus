@@ -19,7 +19,7 @@ pub trait IndexList<T> {
     fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<T>> + '_>;
 }
 
-/// `IndexedMap` works like a `Map` but has a secondary index
+/// IndexedMap` works like a [`Map`] but has a secondary index.
 pub struct IndexedMap<K, T, I> {
     pk_namespace: Namespace,
     primary: Map<K, T>,
