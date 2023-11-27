@@ -26,7 +26,7 @@ pub struct Map<'a, K, T> {
     key_type: PhantomData<K>,
     data_type: PhantomData<T>,
 }
-
+///`Map`: A basic storage map. 
 impl<'a, K, T> Map<'a, K, T> {
     pub const fn new(namespace: &'a str) -> Self {
         Map {
