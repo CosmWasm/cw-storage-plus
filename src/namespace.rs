@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-/// Types that can be used as namespace designators for storage.
+/// Types that can be used as top-level storage keys for storage items and collections.
 pub trait Namespace {
     fn namespace(self) -> Ns;
 }
