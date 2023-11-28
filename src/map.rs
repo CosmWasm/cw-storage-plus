@@ -50,7 +50,7 @@ impl<K, T> Map<K, T> {
     }
 
     pub fn namespace(&self) -> &[u8] {
-        &self.namespace
+        self.namespace.as_slice()
     }
 }
 
@@ -61,14 +61,14 @@ where
 {
     pub fn key(&self, k: K) -> Path<T> {
         Path::new(
-            &self.namespace,
+            self.namespace.as_slice(),
             &k.key().iter().map(Key::as_ref).collect::<Vec<_>>(),
         )
     }
 
     #[cfg(feature = "iterator")]
     pub(crate) fn no_prefix_raw(&self) -> Prefix<Vec<u8>, T, K> {
-        Prefix::new(&self.namespace, &[])
+        Prefix::new(self.namespace.as_slice(), &[])
     }
 
     pub fn save(&self, store: &mut dyn Storage, k: K, data: &T) -> StdResult<()> {
@@ -145,11 +145,11 @@ where
     K: PrimaryKey<'a>,
 {
     pub fn sub_prefix(&self, p: K::SubPrefix) -> Prefix<K::SuperSuffix, T, K::SuperSuffix> {
-        Prefix::new(&self.namespace, &p.prefix())
+        Prefix::new(self.namespace.as_slice(), &p.prefix())
     }
 
     pub fn prefix(&self, p: K::Prefix) -> Prefix<K::Suffix, T, K::Suffix> {
-        Prefix::new(&self.namespace, &p.prefix())
+        Prefix::new(self.namespace.as_slice(), &p.prefix())
     }
 }
 
@@ -178,8 +178,8 @@ where
         T: 'c,
         'a: 'c,
     {
-        let mapped =
-            namespaced_prefix_range(store, &self.namespace, min, max, order).map(deserialize_v);
+        let mapped = namespaced_prefix_range(store, self.namespace.as_slice(), min, max, order)
+            .map(deserialize_v);
         Box::new(mapped)
     }
 }
@@ -209,13 +209,13 @@ where
         K: 'c,
         K::Output: 'static,
     {
-        let mapped = namespaced_prefix_range(store, &self.namespace, min, max, order)
+        let mapped = namespaced_prefix_range(store, self.namespace.as_slice(), min, max, order)
             .map(deserialize_kv::<K, T>);
         Box::new(mapped)
     }
 
     fn no_prefix(&self) -> Prefix<K, T, K> {
-        Prefix::new(&self.namespace, &[])
+        Prefix::new(self.namespace.as_slice(), &[])
     }
 }
 

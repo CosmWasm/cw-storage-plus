@@ -183,7 +183,7 @@ where
 
     // use no_prefix to scan -> range
     pub fn no_prefix_raw(&self) -> Prefix<Vec<u8>, T, K> {
-        Prefix::new(&self.pk_namespace, &[])
+        Prefix::new(self.pk_namespace.as_slice(), &[])
     }
 }
 
@@ -228,11 +228,11 @@ where
     I: IndexList<T>,
 {
     pub fn sub_prefix(&self, p: K::SubPrefix) -> Prefix<K::SuperSuffix, T, K::SuperSuffix> {
-        Prefix::new(&self.pk_namespace, &p.prefix())
+        Prefix::new(self.pk_namespace.as_slice(), &p.prefix())
     }
 
     pub fn prefix(&self, p: K::Prefix) -> Prefix<K::Suffix, T, K::Suffix> {
-        Prefix::new(&self.pk_namespace, &p.prefix())
+        Prefix::new(self.pk_namespace.as_slice(), &p.prefix())
     }
 }
 
@@ -262,7 +262,7 @@ where
         K: 'c,
         K::Output: 'static,
     {
-        let mapped = namespaced_prefix_range(store, &self.pk_namespace, min, max, order)
+        let mapped = namespaced_prefix_range(store, self.pk_namespace.as_slice(), min, max, order)
             .map(deserialize_kv::<K, T>);
         Box::new(mapped)
     }
@@ -296,7 +296,7 @@ where
     }
 
     fn no_prefix(&self) -> Prefix<K, T, K> {
-        Prefix::new(&self.pk_namespace, &[])
+        Prefix::new(self.pk_namespace.as_slice(), &[])
     }
 }
 

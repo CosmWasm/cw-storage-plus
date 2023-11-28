@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ops::Deref};
+use std::borrow::Cow;
 
 /// The namespace of a storage container. Meant to be constructed from "stringy" types.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -7,6 +7,10 @@ pub struct Ns(Cow<'static, [u8]>);
 impl Ns {
     pub const fn from_static_str(s: &'static str) -> Ns {
         Ns(Cow::Borrowed(s.as_bytes()))
+    }
+
+    pub fn as_slice(&self) -> &[u8] {
+        self.0.as_ref()
     }
 }
 
@@ -25,13 +29,5 @@ impl From<String> for Ns {
 impl From<Cow<'static, [u8]>> for Ns {
     fn from(s: Cow<'static, [u8]>) -> Self {
         Ns(s)
-    }
-}
-
-impl Deref for Ns {
-    type Target = [u8];
-
-    fn deref(&self) -> &[u8] {
-        &self.0
     }
 }

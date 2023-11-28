@@ -145,7 +145,7 @@ where
 
     // use no_prefix to scan -> range
     fn no_prefix_raw(&self) -> Prefix<Vec<u8>, T, K> {
-        Prefix::new(&self.pk_namespace, &[])
+        Prefix::new(self.pk_namespace.as_slice(), &[])
     }
 
     /// Clears the map, removing all elements.
@@ -157,7 +157,7 @@ where
             let paths = self
                 .no_prefix_raw()
                 .keys_raw(store, None, None, cosmwasm_std::Order::Ascending)
-                .map(|raw_key| Path::<T>::new(&self.pk_namespace, &[raw_key.as_slice()]))
+                .map(|raw_key| Path::<T>::new(self.pk_namespace.as_slice(), &[raw_key.as_slice()]))
                 // Take just TAKE elements to prevent possible heap overflow if the Map is big.
                 .take(TAKE)
                 .collect::<Vec<_>>();
@@ -200,8 +200,8 @@ where
         T: 'c,
         'a: 'c,
     {
-        let mapped =
-            namespaced_prefix_range(store, &self.pk_namespace, min, max, order).map(deserialize_v);
+        let mapped = namespaced_prefix_range(store, self.pk_namespace.as_slice(), min, max, order)
+            .map(deserialize_v);
         Box::new(mapped)
     }
 }
@@ -214,11 +214,11 @@ where
     I: IndexList<T>,
 {
     pub fn sub_prefix(&self, p: K::SubPrefix) -> Prefix<K::SuperSuffix, T, K::SuperSuffix> {
-        Prefix::new(&self.pk_namespace, &p.prefix())
+        Prefix::new(self.pk_namespace.as_slice(), &p.prefix())
     }
 
     pub fn prefix(&self, p: K::Prefix) -> Prefix<K::Suffix, T, K::Suffix> {
-        Prefix::new(&self.pk_namespace, &p.prefix())
+        Prefix::new(self.pk_namespace.as_slice(), &p.prefix())
     }
 }
 
@@ -248,7 +248,7 @@ where
         K: 'c,
         K::Output: 'static,
     {
-        let mapped = namespaced_prefix_range(store, &self.pk_namespace, min, max, order)
+        let mapped = namespaced_prefix_range(store, self.pk_namespace.as_slice(), min, max, order)
             .map(deserialize_kv::<K, T>);
         Box::new(mapped)
     }
@@ -305,7 +305,7 @@ where
     }
 
     fn no_prefix(&self) -> Prefix<K, T, K> {
-        Prefix::new(&self.pk_namespace, &[])
+        Prefix::new(self.pk_namespace.as_slice(), &[])
     }
 }
 
