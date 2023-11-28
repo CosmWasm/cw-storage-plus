@@ -2,7 +2,7 @@
 #![cfg(feature = "iterator")]
 
 use crate::namespace::Ns;
-use crate::PrefixBound;
+use crate::{Namespace, PrefixBound};
 use cosmwasm_std::{StdError, StdResult, Storage};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -46,8 +46,8 @@ where
 
     /// Creates a new [`IndexedMap`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you should probably prefer [`IndexedMap::new`].
-    pub fn new_dyn(pk_namespace: impl Into<Ns>, indexes: I) -> Self {
-        let pk_namespace = pk_namespace.into();
+    pub fn new_dyn(pk_namespace: impl Namespace, indexes: I) -> Self {
+        let pk_namespace = pk_namespace.namespace();
 
         IndexedMap {
             pk_namespace: pk_namespace.clone(),

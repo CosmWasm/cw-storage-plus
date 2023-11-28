@@ -11,8 +11,8 @@ use crate::keys::{Prefixer, PrimaryKey};
 use crate::namespace::Ns;
 use crate::prefix::{namespaced_prefix_range, Prefix};
 use crate::snapshot::{ChangeSet, SnapshotMap};
-use crate::PrefixBound;
 use crate::{Bound, IndexList, Map, Path, Strategy};
+use crate::{Namespace, PrefixBound};
 
 /// `IndexedSnapshotMap` works like a `SnapshotMap` but has a secondary index
 pub struct IndexedSnapshotMap<K, T, I> {
@@ -46,13 +46,13 @@ impl<K, T, I> IndexedSnapshotMap<K, T, I> {
     /// );
     /// ```
     pub fn new(
-        pk_namespace: impl Into<Ns>,
-        checkpoints: impl Into<Ns>,
-        changelog: impl Into<Ns>,
+        pk_namespace: impl Namespace,
+        checkpoints: impl Namespace,
+        changelog: impl Namespace,
         strategy: Strategy,
         indexes: I,
     ) -> Self {
-        let pk_namespace = pk_namespace.into();
+        let pk_namespace = pk_namespace.namespace();
         IndexedSnapshotMap {
             pk_namespace: pk_namespace.clone(),
             primary: SnapshotMap::new_dyn(pk_namespace, checkpoints, changelog, strategy),

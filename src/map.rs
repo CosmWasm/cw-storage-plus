@@ -16,6 +16,7 @@ use crate::namespace::Ns;
 use crate::path::Path;
 #[cfg(feature = "iterator")]
 use crate::prefix::{namespaced_prefix_range, Prefix};
+use crate::Namespace;
 #[cfg(feature = "iterator")]
 use cosmwasm_std::Order;
 use cosmwasm_std::{from_json, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage};
@@ -41,9 +42,9 @@ impl<K, T> Map<K, T> {
 
     /// Creates a new [`Map`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you might prefer [`Map::new`].
-    pub fn new_dyn(namespace: impl Into<Ns>) -> Self {
+    pub fn new_dyn(namespace: impl Namespace) -> Self {
         Map {
-            namespace: namespace.into(),
+            namespace: namespace.namespace(),
             data_type: PhantomData,
             key_type: PhantomData,
         }

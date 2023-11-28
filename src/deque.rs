@@ -5,7 +5,7 @@ use cosmwasm_std::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::namespace::Ns;
+use crate::{namespace::Ns, Namespace};
 
 // metadata keys need to have different length than the position type (4 bytes) to prevent collisions
 const TAIL_KEY: &[u8] = b"t";
@@ -35,9 +35,9 @@ impl<T> Deque<T> {
 
     /// Creates a new [`Deque`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you should probably prefer [`Deque::new`].
-    pub fn new_dyn(prefix: impl Into<Ns>) -> Self {
+    pub fn new_dyn(prefix: impl Namespace) -> Self {
         Self {
-            namespace: prefix.into(),
+            namespace: prefix.namespace(),
             item_type: PhantomData,
         }
     }

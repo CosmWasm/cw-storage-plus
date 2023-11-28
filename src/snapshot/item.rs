@@ -5,7 +5,7 @@ use cosmwasm_std::{StdError, StdResult, Storage};
 
 use crate::namespace::Ns;
 use crate::snapshot::{ChangeSet, Snapshot};
-use crate::{Item, Map, Strategy};
+use crate::{Item, Map, Namespace, Strategy};
 
 /// Item that maintains a snapshot of one or more checkpoints.
 /// We can query historical data as well as current state.
@@ -49,16 +49,16 @@ impl<T> SnapshotItem<T> {
     /// Use this if you might need to handle dynamic strings. Otherwise, you might
     /// prefer [`SnapshotItem::new`].
     pub fn new_dyn(
-        storage_key: impl Into<Ns>,
-        checkpoints: impl Into<Ns>,
-        changelog: impl Into<Ns>,
+        storage_key: impl Namespace,
+        checkpoints: impl Namespace,
+        changelog: impl Namespace,
         strategy: Strategy,
     ) -> Self {
-        let changelog = changelog.into();
+        let changelog = changelog.namespace();
         SnapshotItem {
             primary: Item::new_dyn(storage_key),
             changelog_namespace: changelog.clone(),
-            snapshots: Snapshot::new_generic(checkpoints, changelog, strategy),
+            snapshots: Snapshot::new_dyn(checkpoints, changelog, strategy),
         }
     }
 
