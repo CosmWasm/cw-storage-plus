@@ -35,7 +35,7 @@ impl<T> Deque<T> {
 
     /// Creates a new [`Deque`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you should probably prefer [`Deque::new`].
-    pub fn new_generic(prefix: impl Into<Ns>) -> Self {
+    pub fn new_dyn(prefix: impl Into<Ns>) -> Self {
         Self {
             namespace: prefix.into(),
             item_type: PhantomData,
@@ -316,7 +316,7 @@ mod tests {
 
         for i in 1..4 {
             let key = format!("key{}", i);
-            let item = Deque::new_generic(key);
+            let item = Deque::new_dyn(key);
             for i in 0..i {
                 item.push_back(&mut store, &i).unwrap();
             }

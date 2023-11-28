@@ -54,14 +54,14 @@ impl<K, T> SnapshotMap<K, T> {
     /// Creates a new [`SnapshotMap`] with the given storage keys and strategy.
     /// Use this if you might need to handle dynamic strings. Otherwise, you might
     /// prefer [`SnapshotMap::new`].
-    pub fn new_generic(
+    pub fn new_dyn(
         pk: impl Into<Ns>,
         checkpoints: impl Into<Ns>,
         changelog: impl Into<Ns>,
         strategy: Strategy,
     ) -> Self {
         SnapshotMap {
-            primary: Map::new_generic(pk),
+            primary: Map::new_dyn(pk),
             snapshots: Snapshot::new_generic(checkpoints, changelog, strategy),
         }
     }

@@ -55,7 +55,7 @@ impl<K, T, I> IndexedSnapshotMap<K, T, I> {
         let pk_namespace = pk_namespace.into();
         IndexedSnapshotMap {
             pk_namespace: pk_namespace.clone(),
-            primary: SnapshotMap::new_generic(pk_namespace, checkpoints, changelog, strategy),
+            primary: SnapshotMap::new_dyn(pk_namespace, checkpoints, changelog, strategy),
             idx: indexes,
         }
     }

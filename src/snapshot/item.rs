@@ -48,7 +48,7 @@ impl<T> SnapshotItem<T> {
     /// Creates a new [`SnapshotItem`] with the given storage keys and strategy.
     /// Use this if you might need to handle dynamic strings. Otherwise, you might
     /// prefer [`SnapshotItem::new`].
-    pub fn new_generic(
+    pub fn new_dyn(
         storage_key: impl Into<Ns>,
         checkpoints: impl Into<Ns>,
         changelog: impl Into<Ns>,
@@ -56,7 +56,7 @@ impl<T> SnapshotItem<T> {
     ) -> Self {
         let changelog = changelog.into();
         SnapshotItem {
-            primary: Item::new_generic(storage_key),
+            primary: Item::new_dyn(storage_key),
             changelog_namespace: changelog.clone(),
             snapshots: Snapshot::new_generic(checkpoints, changelog, strategy),
         }
@@ -72,7 +72,7 @@ impl<T> SnapshotItem<T> {
 
     pub fn changelog(&self) -> Map<u64, ChangeSet<T>> {
         // Build and return a compatible Map with the proper key type
-        Map::new_generic(self.changelog_namespace.clone())
+        Map::new_dyn(self.changelog_namespace.clone())
     }
 }
 

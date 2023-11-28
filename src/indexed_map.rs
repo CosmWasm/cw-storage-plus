@@ -46,12 +46,12 @@ where
 
     /// Creates a new [`IndexedMap`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you should probably prefer [`IndexedMap::new`].
-    pub fn new_generic(pk_namespace: impl Into<Ns>, indexes: I) -> Self {
+    pub fn new_dyn(pk_namespace: impl Into<Ns>, indexes: I) -> Self {
         let pk_namespace = pk_namespace.into();
 
         IndexedMap {
             pk_namespace: pk_namespace.clone(),
-            primary: Map::new_generic(pk_namespace),
+            primary: Map::new_dyn(pk_namespace),
             idx: indexes,
         }
     }

@@ -54,8 +54,8 @@ impl<K, T> Snapshot<K, T> {
         strategy: Strategy,
     ) -> Snapshot<K, T> {
         Snapshot {
-            checkpoints: Map::new_generic(checkpoints),
-            changelog: Map::new_generic(changelog),
+            checkpoints: Map::new_dyn(checkpoints),
+            changelog: Map::new_dyn(changelog),
             strategy,
         }
     }

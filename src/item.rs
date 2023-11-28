@@ -31,7 +31,7 @@ impl<T> Item<T> {
 
     /// Creates a new [`Item`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you might prefer [`Item::new`].
-    pub fn new_generic(storage_key: impl Into<Ns>) -> Self {
+    pub fn new_dyn(storage_key: impl Into<Ns>) -> Self {
         Item {
             storage_key: storage_key.into(),
             data_type: PhantomData,
@@ -152,7 +152,7 @@ mod test {
 
         for i in 0..3 {
             let key = format!("key{}", i);
-            let item = Item::new_generic(key);
+            let item = Item::new_dyn(key);
             item.save(&mut store, &i).unwrap();
         }
 

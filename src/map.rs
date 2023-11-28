@@ -41,7 +41,7 @@ impl<K, T> Map<K, T> {
 
     /// Creates a new [`Map`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you might prefer [`Map::new`].
-    pub fn new_generic(namespace: impl Into<Ns>) -> Self {
+    pub fn new_dyn(namespace: impl Into<Ns>) -> Self {
         Map {
             namespace: namespace.into(),
             data_type: PhantomData,
