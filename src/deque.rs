@@ -5,6 +5,8 @@ use cosmwasm_std::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
+use crate::namespace::Namespace;
+
 // metadata keys need to have different length than the position type (4 bytes) to prevent collisions
 const TAIL_KEY: &[u8] = b"t";
 const HEAD_KEY: &[u8] = b"h";
@@ -14,23 +16,34 @@ const HEAD_KEY: &[u8] = b"h";
 ///
 /// It has a maximum capacity of `u32::MAX - 1`. Make sure to never exceed that number when using this type.
 /// If you do, the methods won't work as intended anymore.
-pub struct Deque<'a, T> {
+pub struct Deque<T> {
     // prefix of the deque items
-    namespace: &'a [u8],
+    namespace: Namespace,
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
     item_type: PhantomData<T>,
 }
 
-impl<'a, T> Deque<'a, T> {
-    pub const fn new(prefix: &'a str) -> Self {
+impl<T> Deque<T> {
+    /// Creates a new [`Deque`] with the given storage key. This is a constant function only suitable
+    /// when you have a prefix in the form of a static string slice.
+    pub const fn new(prefix: &'static str) -> Self {
         Self {
-            namespace: prefix.as_bytes(),
+            namespace: Namespace::from_static_str(prefix),
+            item_type: PhantomData,
+        }
+    }
+
+    /// Creates a new [`Deque`] with the given storage key. Use this if you might need to handle
+    /// a dynamic string. Otherwise, you should probably prefer [`Deque::new`].
+    pub fn new_dyn(prefix: impl Into<Namespace>) -> Self {
+        Self {
+            namespace: prefix.into(),
             item_type: PhantomData,
         }
     }
 }
 
-impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
+impl<T: Serialize + DeserializeOwned> Deque<T> {
     /// Adds the given value to the end of the deque
     pub fn push_back(&self, storage: &mut dyn Storage, value: &T) -> StdResult<()> {
         // save value
@@ -130,7 +143,7 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
 
     /// Helper method for `tail` and `head` methods to handle reading the value from storage
     fn read_meta_key(&self, storage: &dyn Storage, key: &[u8]) -> StdResult<u32> {
-        let full_key = namespace_with_key(&[self.namespace], key);
+        let full_key = namespace_with_key(&[self.namespace.as_slice()], key);
         storage
             .get(&full_key)
             .map(|vec| {
@@ -146,7 +159,7 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
     /// Helper method for `set_tail` and `set_head` methods to write to storage
     #[inline]
     fn set_meta_key(&self, storage: &mut dyn Storage, key: &[u8], value: u32) {
-        let full_key = namespace_with_key(&[self.namespace], key);
+        let full_key = namespace_with_key(&[self.namespace.as_slice()], key);
         storage.set(&full_key, &value.to_be_bytes());
     }
 
@@ -169,7 +182,7 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
     /// Tries to get the value at the given position
     /// Used internally
     fn get_unchecked(&self, storage: &dyn Storage, pos: u32) -> StdResult<Option<T>> {
-        let prefixed_key = namespace_with_key(&[self.namespace], &pos.to_be_bytes());
+        let prefixed_key = namespace_with_key(&[self.namespace.as_slice()], &pos.to_be_bytes());
         let value = storage.get(&prefixed_key);
         value.map(|v| from_json(v)).transpose()
     }
@@ -177,14 +190,14 @@ impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
     /// Removes the value at the given position
     /// Used internally
     fn remove_unchecked(&self, storage: &mut dyn Storage, pos: u32) {
-        let prefixed_key = namespace_with_key(&[self.namespace], &pos.to_be_bytes());
+        let prefixed_key = namespace_with_key(&[self.namespace.as_slice()], &pos.to_be_bytes());
         storage.remove(&prefixed_key);
     }
 
     /// Tries to set the value at the given position
     /// Used internally when pushing
     fn set_unchecked(&self, storage: &mut dyn Storage, pos: u32, value: &T) -> StdResult<()> {
-        let prefixed_key = namespace_with_key(&[self.namespace], &pos.to_be_bytes());
+        let prefixed_key = namespace_with_key(&[self.namespace.as_slice()], &pos.to_be_bytes());
         storage.set(&prefixed_key, &to_json_vec(value)?);
 
         Ok(())
@@ -197,8 +210,8 @@ fn calc_len(head: u32, tail: u32) -> u32 {
     tail.wrapping_sub(head)
 }
 
-impl<'a, T: Serialize + DeserializeOwned> Deque<'a, T> {
-    pub fn iter(&self, storage: &'a dyn Storage) -> StdResult<DequeIter<T>> {
+impl<T: Serialize + DeserializeOwned> Deque<T> {
+    pub fn iter<'a>(&'a self, storage: &'a dyn Storage) -> StdResult<DequeIter<'a, T>> {
         Ok(DequeIter {
             deque: self,
             storage,
@@ -212,7 +225,7 @@ pub struct DequeIter<'a, T>
 where
     T: Serialize + DeserializeOwned,
 {
-    deque: &'a Deque<'a, T>,
+    deque: &'a Deque<T>,
     storage: &'a dyn Storage,
     start: u32,
     end: u32,
@@ -296,6 +309,44 @@ mod tests {
     use cosmwasm_std::testing::MockStorage;
     use cosmwasm_std::{StdError, StdResult};
     use serde::{Deserialize, Serialize};
+
+    #[test]
+    fn owned_key() {
+        let mut store = MockStorage::new();
+
+        for i in 1..4 {
+            let key = format!("key{}", i);
+            let item = Deque::new_dyn(key);
+            for i in 0..i {
+                item.push_back(&mut store, &i).unwrap();
+            }
+        }
+
+        assert_eq!(
+            Deque::<u32>::new("key1")
+                .iter(&store)
+                .unwrap()
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap(),
+            vec![0]
+        );
+        assert_eq!(
+            Deque::<u32>::new("key2")
+                .iter(&store)
+                .unwrap()
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap(),
+            vec![0, 1]
+        );
+        assert_eq!(
+            Deque::<u32>::new("key3")
+                .iter(&store)
+                .unwrap()
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap(),
+            vec![0, 1, 2]
+        );
+    }
 
     #[test]
     fn push_and_pop() {

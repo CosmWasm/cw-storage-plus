@@ -7,52 +7,63 @@ use cosmwasm_std::{
     WasmQuery,
 };
 
-use crate::helpers::not_found_object_info;
+use crate::{helpers::not_found_object_info, namespace::Namespace};
 
 /// Item stores one typed item at the given key.
 /// This is an analog of Singleton.
 /// It functions the same way as Path does but doesn't use a Vec and thus has a const fn constructor.
-pub struct Item<'a, T> {
+pub struct Item<T> {
     // this is full key - no need to length-prefix it, we only store one item
-    storage_key: &'a [u8],
+    storage_key: Namespace,
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
     data_type: PhantomData<T>,
 }
 
-impl<'a, T> Item<'a, T> {
-    pub const fn new(storage_key: &'a str) -> Self {
+impl<T> Item<T> {
+    /// Creates a new [`Item`] with the given storage key. This is a const fn only suitable
+    /// when you have a static string slice.
+    pub const fn new(storage_key: &'static str) -> Self {
         Item {
-            storage_key: storage_key.as_bytes(),
+            storage_key: Namespace::from_static_str(storage_key),
+            data_type: PhantomData,
+        }
+    }
+
+    /// Creates a new [`Item`] with the given storage key. Use this if you might need to handle
+    /// a dynamic string. Otherwise, you might prefer [`Item::new`].
+    pub fn new_dyn(storage_key: impl Into<Namespace>) -> Self {
+        Item {
+            storage_key: storage_key.into(),
             data_type: PhantomData,
         }
     }
 }
 
-impl<'a, T> Item<'a, T>
+impl<T> Item<T>
 where
     T: Serialize + DeserializeOwned,
 {
     // this gets the path of the data to use elsewhere
     pub fn as_slice(&self) -> &[u8] {
-        self.storage_key
+        self.storage_key.as_slice()
     }
 
     /// save will serialize the model and store, returns an error on serialization issues
     pub fn save(&self, store: &mut dyn Storage, data: &T) -> StdResult<()> {
-        store.set(self.storage_key, &to_json_vec(data)?);
+        store.set(self.storage_key.as_slice(), &to_json_vec(data)?);
         Ok(())
     }
 
     pub fn remove(&self, store: &mut dyn Storage) {
-        store.remove(self.storage_key);
+        store.remove(self.storage_key.as_slice());
     }
 
     /// load will return an error if no data is set at the given key, or on parse error
     pub fn load(&self, store: &dyn Storage) -> StdResult<T> {
-        if let Some(value) = store.get(self.storage_key) {
+        if let Some(value) = store.get(self.storage_key.as_slice()) {
             from_json(value)
         } else {
-            let object_info = not_found_object_info::<T>(self.storage_key);
+            let object_info = not_found_object_info::<T>(self.storage_key.as_slice());
             Err(StdError::not_found(object_info))
         }
     }
@@ -60,13 +71,13 @@ where
     /// may_load will parse the data stored at the key if present, returns `Ok(None)` if no data there.
     /// returns an error on issues parsing
     pub fn may_load(&self, store: &dyn Storage) -> StdResult<Option<T>> {
-        let value = store.get(self.storage_key);
+        let value = store.get(self.storage_key.as_slice());
         value.map(|v| from_json(v)).transpose()
     }
 
     /// Returns `true` if data is stored at the key, `false` otherwise.
     pub fn exists(&self, store: &dyn Storage) -> bool {
-        store.get(self.storage_key).is_some()
+        store.get(self.storage_key.as_slice()).is_some()
     }
 
     /// Loads the data, perform the specified action, and store the result
@@ -96,7 +107,7 @@ where
     ) -> StdResult<T> {
         let request = WasmQuery::Raw {
             contract_addr: remote_contract.into(),
-            key: self.storage_key.into(),
+            key: (self.storage_key.as_slice()).into(),
         };
         querier.query(&request.into())
     }
@@ -133,6 +144,21 @@ mod test {
         CONFIG.save(&mut store, &cfg).unwrap();
 
         assert_eq!(cfg, CONFIG.load(&store).unwrap());
+    }
+
+    #[test]
+    fn owned_key_works() {
+        let mut store = MockStorage::new();
+
+        for i in 0..3 {
+            let key = format!("key{}", i);
+            let item = Item::new_dyn(key);
+            item.save(&mut store, &i).unwrap();
+        }
+
+        assert_eq!(store.get(b"key0").unwrap(), b"0");
+        assert_eq!(store.get(b"key1").unwrap(), b"1");
+        assert_eq!(store.get(b"key2").unwrap(), b"2");
     }
 
     #[test]

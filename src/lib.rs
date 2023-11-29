@@ -26,6 +26,7 @@ mod item;
 mod iter_helpers;
 mod keys;
 mod map;
+mod namespace;
 mod path;
 mod prefix;
 mod snapshot;
@@ -50,6 +51,7 @@ pub use int_key::IntKey;
 pub use item::Item;
 pub use keys::{Key, Prefixer, PrimaryKey};
 pub use map::Map;
+pub use namespace::Namespace;
 pub use path::Path;
 #[cfg(feature = "iterator")]
 pub use prefix::{range_with_prefix, Prefix};

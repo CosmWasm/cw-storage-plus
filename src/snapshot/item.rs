@@ -3,40 +3,78 @@ use serde::Serialize;
 
 use cosmwasm_std::{StdError, StdResult, Storage};
 
+use crate::namespace::Namespace;
 use crate::snapshot::{ChangeSet, Snapshot};
 use crate::{Item, Map, Strategy};
 
 /// Item that maintains a snapshot of one or more checkpoints.
 /// We can query historical data as well as current state.
 /// What data is snapshotted depends on the Strategy.
-pub struct SnapshotItem<'a, T> {
-    primary: Item<'a, T>,
-    changelog_namespace: &'a str,
-    snapshots: Snapshot<'a, (), T>,
+pub struct SnapshotItem<T> {
+    primary: Item<T>,
+    changelog_namespace: Namespace,
+    snapshots: Snapshot<(), T>,
 }
 
-impl<'a, T> SnapshotItem<'a, T> {
+impl<T> SnapshotItem<T> {
+    /// Creates a new [`SnapshotItem`] with the given storage keys and strategy.
+    /// This is a const fn only suitable when all the storage keys provided are
+    /// static strings.
+    ///
     /// Example:
     ///
     /// ```rust
     /// use cw_storage_plus::{SnapshotItem, Strategy};
     ///
-    /// SnapshotItem::<'static, u64>::new(
+    /// SnapshotItem::<u64>::new(
     ///     "every",
     ///     "every__check",
     ///     "every__change",
     ///     Strategy::EveryBlock);
     /// ```
     pub const fn new(
-        storage_key: &'a str,
-        checkpoints: &'a str,
-        changelog: &'a str,
+        storage_key: &'static str,
+        checkpoints: &'static str,
+        changelog: &'static str,
         strategy: Strategy,
     ) -> Self {
         SnapshotItem {
             primary: Item::new(storage_key),
-            changelog_namespace: changelog,
+            changelog_namespace: Namespace::from_static_str(changelog),
             snapshots: Snapshot::new(checkpoints, changelog, strategy),
+        }
+    }
+
+    /// Creates a new [`SnapshotItem`] with the given storage keys and strategy.
+    /// Use this if you might need to handle dynamic strings. Otherwise, you might
+    /// prefer [`SnapshotItem::new`].
+    ///
+    /// Example:
+    ///
+    /// ```rust
+    /// use cw_storage_plus::{SnapshotItem, Strategy};
+    ///
+    /// let key = "every";
+    /// let checkpoints_key = format!("{}_check", key);
+    /// let changelog_key = format!("{}_change", key);
+    ///
+    /// SnapshotItem::<u64>::new_dyn(
+    ///     key,
+    ///     checkpoints_key,
+    ///     changelog_key,
+    ///     Strategy::EveryBlock);
+    /// ```
+    pub fn new_dyn(
+        storage_key: impl Into<Namespace>,
+        checkpoints: impl Into<Namespace>,
+        changelog: impl Into<Namespace>,
+        strategy: Strategy,
+    ) -> Self {
+        let changelog = changelog.into();
+        SnapshotItem {
+            primary: Item::new_dyn(storage_key),
+            changelog_namespace: changelog.clone(),
+            snapshots: Snapshot::new_dyn(checkpoints, changelog, strategy),
         }
     }
 
@@ -50,11 +88,11 @@ impl<'a, T> SnapshotItem<'a, T> {
 
     pub fn changelog(&self) -> Map<u64, ChangeSet<T>> {
         // Build and return a compatible Map with the proper key type
-        Map::new(self.changelog_namespace)
+        Map::new_dyn(self.changelog_namespace.clone())
     }
 }
 
-impl<'a, T> SnapshotItem<'a, T>
+impl<T> SnapshotItem<T>
 where
     T: Serialize + DeserializeOwned + Clone,
 {
@@ -135,7 +173,7 @@ mod tests {
     use crate::bound::Bound;
     use cosmwasm_std::testing::MockStorage;
 
-    type TestItem = SnapshotItem<'static, u64>;
+    type TestItem = SnapshotItem<u64>;
 
     const NEVER: TestItem =
         SnapshotItem::new("never", "never__check", "never__change", Strategy::Never);

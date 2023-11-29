@@ -8,6 +8,7 @@ use crate::de::KeyDeserialize;
 use crate::iter_helpers::deserialize_kv;
 use crate::keys::PrimaryKey;
 use crate::map::Map;
+use crate::namespace::Namespace;
 use crate::path::Path;
 use crate::prefix::{namespaced_prefix_range, Prefix};
 use crate::snapshot::{ChangeSet, Snapshot};
@@ -16,12 +17,16 @@ use crate::{Bound, Prefixer, Strategy};
 /// Map that maintains a snapshots of one or more checkpoints.
 /// We can query historical data as well as current state.
 /// What data is snapshotted depends on the Strategy.
-pub struct SnapshotMap<'a, K, T> {
-    primary: Map<'a, K, T>,
-    snapshots: Snapshot<'a, K, T>,
+pub struct SnapshotMap<K, T> {
+    primary: Map<K, T>,
+    snapshots: Snapshot<K, T>,
 }
 
-impl<'a, K, T> SnapshotMap<'a, K, T> {
+impl<K, T> SnapshotMap<K, T> {
+    /// Creates a new [`SnapshotMap`] with the given storage keys and strategy.
+    /// This is a const fn only suitable when all the storage keys provided are
+    /// static strings.
+    ///
     /// Example:
     ///
     /// ```rust
@@ -35,9 +40,9 @@ impl<'a, K, T> SnapshotMap<'a, K, T> {
     /// );
     /// ```
     pub const fn new(
-        pk: &'a str,
-        checkpoints: &'a str,
-        changelog: &'a str,
+        pk: &'static str,
+        checkpoints: &'static str,
+        changelog: &'static str,
         strategy: Strategy,
     ) -> Self {
         SnapshotMap {
@@ -46,12 +51,43 @@ impl<'a, K, T> SnapshotMap<'a, K, T> {
         }
     }
 
-    pub fn changelog(&self) -> &Map<'a, (K, u64), ChangeSet<T>> {
+    /// Creates a new [`SnapshotMap`] with the given storage keys and strategy.
+    /// Use this if you might need to handle dynamic strings. Otherwise, you might
+    /// prefer [`SnapshotMap::new`].
+    ///
+    /// Example:
+    ///
+    /// ```rust
+    /// use cw_storage_plus::{SnapshotMap, Strategy};
+    ///
+    /// let key = "every";
+    /// let checkpoints_key = format!("{}_check", key);
+    /// let changelog_key = format!("{}_change", key);
+    ///
+    /// SnapshotMap::<&[u8], &str>::new_dyn(
+    ///     key,
+    ///     checkpoints_key,
+    ///     changelog_key,
+    ///     Strategy::EveryBlock);
+    /// ```
+    pub fn new_dyn(
+        pk: impl Into<Namespace>,
+        checkpoints: impl Into<Namespace>,
+        changelog: impl Into<Namespace>,
+        strategy: Strategy,
+    ) -> Self {
+        SnapshotMap {
+            primary: Map::new_dyn(pk),
+            snapshots: Snapshot::new_dyn(checkpoints, changelog, strategy),
+        }
+    }
+
+    pub fn changelog(&self) -> &Map<(K, u64), ChangeSet<T>> {
         &self.snapshots.changelog
     }
 }
 
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T> SnapshotMap<K, T>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a>,
@@ -65,7 +101,7 @@ where
     }
 }
 
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T> SnapshotMap<K, T>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
@@ -162,7 +198,7 @@ where
 }
 
 // short-cut for simple keys, rather than .prefix(()).range_raw(...)
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T> SnapshotMap<K, T>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
@@ -197,7 +233,7 @@ where
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T> SnapshotMap<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a> + KeyDeserialize,
@@ -221,8 +257,9 @@ where
         K: 'c,
         K::Output: 'static,
     {
-        let mapped = namespaced_prefix_range(store, self.primary.namespace(), min, max, order)
-            .map(deserialize_kv::<K, T>);
+        let mapped =
+            namespaced_prefix_range(store, self.primary.namespace_bytes(), min, max, order)
+                .map(deserialize_kv::<K, T>);
         Box::new(mapped)
     }
 
@@ -255,15 +292,15 @@ where
     }
 
     pub fn prefix(&self, p: K::Prefix) -> Prefix<K::Suffix, T, K::Suffix> {
-        Prefix::new(self.primary.namespace(), &p.prefix())
+        Prefix::new(self.primary.namespace_bytes(), &p.prefix())
     }
 
     pub fn sub_prefix(&self, p: K::SubPrefix) -> Prefix<K::SuperSuffix, T, K::SuperSuffix> {
-        Prefix::new(self.primary.namespace(), &p.prefix())
+        Prefix::new(self.primary.namespace_bytes(), &p.prefix())
     }
 
     fn no_prefix(&self) -> Prefix<K, T, K> {
-        Prefix::new(self.primary.namespace(), &[])
+        Prefix::new(self.primary.namespace_bytes(), &[])
     }
 }
 
@@ -272,8 +309,8 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::MockStorage;
 
-    type TestMap = SnapshotMap<'static, &'static str, u64>;
-    type TestMapCompositeKey = SnapshotMap<'static, (&'static str, &'static str), u64>;
+    type TestMap = SnapshotMap<&'static str, u64>;
+    type TestMapCompositeKey = SnapshotMap<(&'static str, &'static str), u64>;
 
     const NEVER: TestMap =
         SnapshotMap::new("never", "never__check", "never__change", Strategy::Never);

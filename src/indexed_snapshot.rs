@@ -8,21 +8,22 @@ use serde::Serialize;
 use crate::de::KeyDeserialize;
 use crate::iter_helpers::deserialize_kv;
 use crate::keys::{Prefixer, PrimaryKey};
+use crate::namespace::Namespace;
 use crate::prefix::{namespaced_prefix_range, Prefix};
 use crate::snapshot::{ChangeSet, SnapshotMap};
 use crate::PrefixBound;
 use crate::{Bound, IndexList, Map, Path, Strategy};
 
 /// `IndexedSnapshotMap` works like a `SnapshotMap` but has a secondary index
-pub struct IndexedSnapshotMap<'a, K, T, I> {
-    pk_namespace: &'a [u8],
-    primary: SnapshotMap<'a, K, T>,
+pub struct IndexedSnapshotMap<K, T, I> {
+    pk_namespace: Namespace,
+    primary: SnapshotMap<K, T>,
     /// This is meant to be read directly to get the proper types, like:
     /// map.idx.owner.items(...)
     pub idx: I,
 }
 
-impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I> {
+impl<K, T, I> IndexedSnapshotMap<K, T, I> {
     /// Examples:
     ///
     /// ```rust
@@ -45,25 +46,26 @@ impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I> {
     /// );
     /// ```
     pub fn new(
-        pk_namespace: &'a str,
-        checkpoints: &'a str,
-        changelog: &'a str,
+        pk_namespace: impl Into<Namespace>,
+        checkpoints: impl Into<Namespace>,
+        changelog: impl Into<Namespace>,
         strategy: Strategy,
         indexes: I,
     ) -> Self {
+        let pk_namespace = pk_namespace.into();
         IndexedSnapshotMap {
-            pk_namespace: pk_namespace.as_bytes(),
-            primary: SnapshotMap::new(pk_namespace, checkpoints, changelog, strategy),
+            pk_namespace: pk_namespace.clone(),
+            primary: SnapshotMap::new_dyn(pk_namespace, checkpoints, changelog, strategy),
             idx: indexes,
         }
     }
 
-    pub fn changelog(&self) -> &Map<'a, (K, u64), ChangeSet<T>> {
+    pub fn changelog(&self) -> &Map<(K, u64), ChangeSet<T>> {
         self.primary.changelog()
     }
 }
 
-impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I>
+impl<'a, K, T, I> IndexedSnapshotMap<K, T, I>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
@@ -95,7 +97,7 @@ where
     }
 }
 
-impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I>
+impl<'a, K, T, I> IndexedSnapshotMap<K, T, I>
 where
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
     T: Serialize + DeserializeOwned + Clone,
@@ -181,12 +183,12 @@ where
 
     // use no_prefix to scan -> range
     pub fn no_prefix_raw(&self) -> Prefix<Vec<u8>, T, K> {
-        Prefix::new(self.pk_namespace, &[])
+        Prefix::new(self.pk_namespace.as_slice(), &[])
     }
 }
 
 // short-cut for simple keys, rather than .prefix(()).range_raw(...)
-impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I>
+impl<'a, K, T, I> IndexedSnapshotMap<K, T, I>
 where
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
     T: Serialize + DeserializeOwned + Clone,
@@ -219,23 +221,23 @@ where
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I>
+impl<'a, K, T, I> IndexedSnapshotMap<K, T, I>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a>,
     I: IndexList<T>,
 {
     pub fn sub_prefix(&self, p: K::SubPrefix) -> Prefix<K::SuperSuffix, T, K::SuperSuffix> {
-        Prefix::new(self.pk_namespace, &p.prefix())
+        Prefix::new(self.pk_namespace.as_slice(), &p.prefix())
     }
 
     pub fn prefix(&self, p: K::Prefix) -> Prefix<K::Suffix, T, K::Suffix> {
-        Prefix::new(self.pk_namespace, &p.prefix())
+        Prefix::new(self.pk_namespace.as_slice(), &p.prefix())
     }
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I>
+impl<'a, K, T, I> IndexedSnapshotMap<K, T, I>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + KeyDeserialize,
@@ -260,7 +262,7 @@ where
         K: 'c,
         K::Output: 'static,
     {
-        let mapped = namespaced_prefix_range(store, self.pk_namespace, min, max, order)
+        let mapped = namespaced_prefix_range(store, self.pk_namespace.as_slice(), min, max, order)
             .map(deserialize_kv::<K, T>);
         Box::new(mapped)
     }
@@ -294,7 +296,7 @@ where
     }
 
     fn no_prefix(&self) -> Prefix<K, T, K> {
-        Prefix::new(self.pk_namespace, &[])
+        Prefix::new(self.pk_namespace.as_slice(), &[])
     }
 }
 
@@ -345,7 +347,7 @@ mod test {
     }
 
     // Can we make it easier to define this? (less wordy generic)
-    fn build_snapshot_map<'a>() -> IndexedSnapshotMap<'a, &'a str, Data, DataIndexes<'a>> {
+    fn build_snapshot_map<'a>() -> IndexedSnapshotMap<&'a str, Data, DataIndexes<'a>> {
         let indexes = DataIndexes {
             name: MultiIndex::new(|_pk, d| d.name.as_bytes().to_vec(), "data", "data__name"),
             age: UniqueIndex::new(|d| d.age, "data__age"),
@@ -365,7 +367,7 @@ mod test {
 
     fn save_data<'a>(
         store: &mut MockStorage,
-        map: &IndexedSnapshotMap<'a, &'a str, Data, DataIndexes<'a>>,
+        map: &IndexedSnapshotMap<&'a str, Data, DataIndexes<'a>>,
     ) -> (Vec<&'a str>, Vec<Data>) {
         let mut pks = vec![];
         let mut datas = vec![];

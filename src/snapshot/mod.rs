@@ -7,6 +7,7 @@ pub use map::SnapshotMap;
 
 use crate::bound::Bound;
 use crate::de::KeyDeserialize;
+use crate::namespace::Namespace;
 use crate::{Map, Prefixer, PrimaryKey};
 use cosmwasm_std::{Order, StdError, StdResult, Storage};
 use serde::de::DeserializeOwned;
@@ -17,26 +18,44 @@ use serde::{Deserialize, Serialize};
 /// been checkpointed (as u32).
 /// Stores all changes in changelog.
 #[derive(Debug, Clone)]
-pub(crate) struct Snapshot<'a, K, T> {
-    checkpoints: Map<'a, u64, u32>,
+pub(crate) struct Snapshot<K, T> {
+    checkpoints: Map<u64, u32>,
 
     // this stores all changes (key, height). Must differentiate between no data written,
     // and explicit None (just inserted)
-    pub changelog: Map<'a, (K, u64), ChangeSet<T>>,
+    pub changelog: Map<(K, u64), ChangeSet<T>>,
 
     // How aggressive we are about checkpointing all data
     strategy: Strategy,
 }
 
-impl<'a, K, T> Snapshot<'a, K, T> {
+impl<K, T> Snapshot<K, T> {
+    /// Creates a new [`Snapshot`] with the given storage keys and strategy.
+    /// This is a const fn only suitable when all the storage keys provided are
+    /// static strings.
     pub const fn new(
-        checkpoints: &'a str,
-        changelog: &'a str,
+        checkpoints: &'static str,
+        changelog: &'static str,
         strategy: Strategy,
-    ) -> Snapshot<'a, K, T> {
+    ) -> Snapshot<K, T> {
         Snapshot {
             checkpoints: Map::new(checkpoints),
             changelog: Map::new(changelog),
+            strategy,
+        }
+    }
+
+    /// Creates a new [`Snapshot`] with the given storage keys and strategy.
+    /// Use this if you might need to handle dynamic strings. Otherwise, you might
+    /// prefer [`Snapshot::new`].
+    pub fn new_dyn(
+        checkpoints: impl Into<Namespace>,
+        changelog: impl Into<Namespace>,
+        strategy: Strategy,
+    ) -> Snapshot<K, T> {
+        Snapshot {
+            checkpoints: Map::new_dyn(checkpoints),
+            changelog: Map::new_dyn(changelog),
             strategy,
         }
     }
@@ -61,7 +80,7 @@ impl<'a, K, T> Snapshot<'a, K, T> {
     }
 }
 
-impl<'a, K, T> Snapshot<'a, K, T>
+impl<'a, K, T> Snapshot<K, T>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
@@ -182,7 +201,7 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::MockStorage;
 
-    type TestSnapshot = Snapshot<'static, &'static str, u64>;
+    type TestSnapshot = Snapshot<&'static str, u64>;
 
     const NEVER: TestSnapshot = Snapshot::new("never__check", "never__change", Strategy::Never);
     const EVERY: TestSnapshot =

@@ -12,6 +12,7 @@ use crate::iter_helpers::{deserialize_kv, deserialize_v};
 #[cfg(feature = "iterator")]
 use crate::keys::Prefixer;
 use crate::keys::{Key, PrimaryKey};
+use crate::namespace::Namespace;
 use crate::path::Path;
 #[cfg(feature = "iterator")]
 use crate::prefix::{namespaced_prefix_range, Prefix};
@@ -20,42 +21,54 @@ use cosmwasm_std::Order;
 use cosmwasm_std::{from_json, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage};
 
 #[derive(Debug, Clone)]
-pub struct Map<'a, K, T> {
-    namespace: &'a [u8],
+pub struct Map<K, T> {
+    namespace: Namespace,
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
     key_type: PhantomData<K>,
     data_type: PhantomData<T>,
 }
 
-impl<'a, K, T> Map<'a, K, T> {
-    pub const fn new(namespace: &'a str) -> Self {
+impl<K, T> Map<K, T> {
+    /// Creates a new [`Map`] with the given storage key. This is a const fn only suitable
+    /// when you have the storage key in the form of a static string slice.
+    pub const fn new(namespace: &'static str) -> Self {
         Map {
-            namespace: namespace.as_bytes(),
+            namespace: Namespace::from_static_str(namespace),
             data_type: PhantomData,
             key_type: PhantomData,
         }
     }
 
-    pub fn namespace(&self) -> &'a [u8] {
-        self.namespace
+    /// Creates a new [`Map`] with the given storage key. Use this if you might need to handle
+    /// a dynamic string. Otherwise, you might prefer [`Map::new`].
+    pub fn new_dyn(namespace: impl Into<Namespace>) -> Self {
+        Map {
+            namespace: namespace.into(),
+            data_type: PhantomData,
+            key_type: PhantomData,
+        }
+    }
+
+    pub fn namespace_bytes(&self) -> &[u8] {
+        self.namespace.as_slice()
     }
 }
 
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a>,
 {
     pub fn key(&self, k: K) -> Path<T> {
         Path::new(
-            self.namespace,
+            self.namespace.as_slice(),
             &k.key().iter().map(Key::as_ref).collect::<Vec<_>>(),
         )
     }
 
     #[cfg(feature = "iterator")]
     pub(crate) fn no_prefix_raw(&self) -> Prefix<Vec<u8>, T, K> {
-        Prefix::new(self.namespace, &[])
+        Prefix::new(self.namespace.as_slice(), &[])
     }
 
     pub fn save(&self, store: &mut dyn Storage, k: K, data: &T) -> StdResult<()> {
@@ -126,23 +139,23 @@ where
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a>,
 {
     pub fn sub_prefix(&self, p: K::SubPrefix) -> Prefix<K::SuperSuffix, T, K::SuperSuffix> {
-        Prefix::new(self.namespace, &p.prefix())
+        Prefix::new(self.namespace.as_slice(), &p.prefix())
     }
 
     pub fn prefix(&self, p: K::Prefix) -> Prefix<K::Suffix, T, K::Suffix> {
-        Prefix::new(self.namespace, &p.prefix())
+        Prefix::new(self.namespace.as_slice(), &p.prefix())
     }
 }
 
 // short-cut for simple keys, rather than .prefix(()).range_raw(...)
 #[cfg(feature = "iterator")]
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     // TODO: this should only be when K::Prefix == ()
@@ -165,14 +178,14 @@ where
         T: 'c,
         'a: 'c,
     {
-        let mapped =
-            namespaced_prefix_range(store, self.namespace, min, max, order).map(deserialize_v);
+        let mapped = namespaced_prefix_range(store, self.namespace.as_slice(), min, max, order)
+            .map(deserialize_v);
         Box::new(mapped)
     }
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a> + KeyDeserialize,
@@ -196,18 +209,18 @@ where
         K: 'c,
         K::Output: 'static,
     {
-        let mapped = namespaced_prefix_range(store, self.namespace, min, max, order)
+        let mapped = namespaced_prefix_range(store, self.namespace.as_slice(), min, max, order)
             .map(deserialize_kv::<K, T>);
         Box::new(mapped)
     }
 
     fn no_prefix(&self) -> Prefix<K, T, K> {
-        Prefix::new(self.namespace, &[])
+        Prefix::new(self.namespace.as_slice(), &[])
     }
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a>,
@@ -240,7 +253,7 @@ where
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T> Map<'a, K, T>
+impl<'a, K, T> Map<K, T>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a> + KeyDeserialize,
