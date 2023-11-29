@@ -54,6 +54,22 @@ impl<K, T> SnapshotMap<K, T> {
     /// Creates a new [`SnapshotMap`] with the given storage keys and strategy.
     /// Use this if you might need to handle dynamic strings. Otherwise, you might
     /// prefer [`SnapshotMap::new`].
+    ///
+    /// Example:
+    ///
+    /// ```rust
+    /// use cw_storage_plus::{SnapshotMap, Strategy};
+    ///
+    /// let key = "every";
+    /// let checkpoints_key = format!("{}_check", key);
+    /// let changelog_key = format!("{}_change", key);
+    ///
+    /// SnapshotMap::<&[u8], &str>::new_dyn(
+    ///     key,
+    ///     checkpoints_key,
+    ///     changelog_key,
+    ///     Strategy::EveryBlock);
+    /// ```
     pub fn new_dyn(
         pk: impl Into<Namespace>,
         checkpoints: impl Into<Namespace>,
@@ -62,7 +78,7 @@ impl<K, T> SnapshotMap<K, T> {
     ) -> Self {
         SnapshotMap {
             primary: Map::new_dyn(pk),
-            snapshots: Snapshot::new_generic(checkpoints, changelog, strategy),
+            snapshots: Snapshot::new_dyn(checkpoints, changelog, strategy),
         }
     }
 

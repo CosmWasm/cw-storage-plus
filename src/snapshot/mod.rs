@@ -48,7 +48,7 @@ impl<K, T> Snapshot<K, T> {
     /// Creates a new [`Snapshot`] with the given storage keys and strategy.
     /// Use this if you might need to handle dynamic strings. Otherwise, you might
     /// prefer [`Snapshot::new`].
-    pub fn new_generic(
+    pub fn new_dyn(
         checkpoints: impl Into<Namespace>,
         changelog: impl Into<Namespace>,
         strategy: Strategy,

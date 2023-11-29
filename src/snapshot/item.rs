@@ -48,6 +48,22 @@ impl<T> SnapshotItem<T> {
     /// Creates a new [`SnapshotItem`] with the given storage keys and strategy.
     /// Use this if you might need to handle dynamic strings. Otherwise, you might
     /// prefer [`SnapshotItem::new`].
+    ///
+    /// Example:
+    ///
+    /// ```rust
+    /// use cw_storage_plus::{SnapshotItem, Strategy};
+    ///
+    /// let key = "every";
+    /// let checkpoints_key = format!("{}_check", key);
+    /// let changelog_key = format!("{}_change", key);
+    ///
+    /// SnapshotItem::<u64>::new_dyn(
+    ///     key,
+    ///     checkpoints_key,
+    ///     changelog_key,
+    ///     Strategy::EveryBlock);
+    /// ```
     pub fn new_dyn(
         storage_key: impl Into<Namespace>,
         checkpoints: impl Into<Namespace>,
@@ -58,7 +74,7 @@ impl<T> SnapshotItem<T> {
         SnapshotItem {
             primary: Item::new_dyn(storage_key),
             changelog_namespace: changelog.clone(),
-            snapshots: Snapshot::new_generic(checkpoints, changelog, strategy),
+            snapshots: Snapshot::new_dyn(checkpoints, changelog, strategy),
         }
     }
 
