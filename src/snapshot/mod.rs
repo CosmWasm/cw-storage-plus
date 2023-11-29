@@ -7,7 +7,7 @@ pub use map::SnapshotMap;
 
 use crate::bound::Bound;
 use crate::de::KeyDeserialize;
-use crate::namespace::Ns;
+use crate::namespace::Namespace;
 use crate::{Map, Prefixer, PrimaryKey};
 use cosmwasm_std::{Order, StdError, StdResult, Storage};
 use serde::de::DeserializeOwned;
@@ -49,8 +49,8 @@ impl<K, T> Snapshot<K, T> {
     /// Use this if you might need to handle dynamic strings. Otherwise, you might
     /// prefer [`Snapshot::new`].
     pub fn new_generic(
-        checkpoints: impl Into<Ns>,
-        changelog: impl Into<Ns>,
+        checkpoints: impl Into<Namespace>,
+        changelog: impl Into<Namespace>,
         strategy: Strategy,
     ) -> Snapshot<K, T> {
         Snapshot {

@@ -3,7 +3,7 @@ use serde::Serialize;
 
 use cosmwasm_std::{StdError, StdResult, Storage};
 
-use crate::namespace::Ns;
+use crate::namespace::Namespace;
 use crate::snapshot::{ChangeSet, Snapshot};
 use crate::{Item, Map, Strategy};
 
@@ -12,7 +12,7 @@ use crate::{Item, Map, Strategy};
 /// What data is snapshotted depends on the Strategy.
 pub struct SnapshotItem<T> {
     primary: Item<T>,
-    changelog_namespace: Ns,
+    changelog_namespace: Namespace,
     snapshots: Snapshot<(), T>,
 }
 
@@ -40,7 +40,7 @@ impl<T> SnapshotItem<T> {
     ) -> Self {
         SnapshotItem {
             primary: Item::new(storage_key),
-            changelog_namespace: Ns::from_static_str(changelog),
+            changelog_namespace: Namespace::from_static_str(changelog),
             snapshots: Snapshot::new(checkpoints, changelog, strategy),
         }
     }
@@ -49,9 +49,9 @@ impl<T> SnapshotItem<T> {
     /// Use this if you might need to handle dynamic strings. Otherwise, you might
     /// prefer [`SnapshotItem::new`].
     pub fn new_dyn(
-        storage_key: impl Into<Ns>,
-        checkpoints: impl Into<Ns>,
-        changelog: impl Into<Ns>,
+        storage_key: impl Into<Namespace>,
+        checkpoints: impl Into<Namespace>,
+        changelog: impl Into<Namespace>,
         strategy: Strategy,
     ) -> Self {
         let changelog = changelog.into();

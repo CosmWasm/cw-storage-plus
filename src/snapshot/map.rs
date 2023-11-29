@@ -8,7 +8,7 @@ use crate::de::KeyDeserialize;
 use crate::iter_helpers::deserialize_kv;
 use crate::keys::PrimaryKey;
 use crate::map::Map;
-use crate::namespace::Ns;
+use crate::namespace::Namespace;
 use crate::path::Path;
 use crate::prefix::{namespaced_prefix_range, Prefix};
 use crate::snapshot::{ChangeSet, Snapshot};
@@ -55,9 +55,9 @@ impl<K, T> SnapshotMap<K, T> {
     /// Use this if you might need to handle dynamic strings. Otherwise, you might
     /// prefer [`SnapshotMap::new`].
     pub fn new_dyn(
-        pk: impl Into<Ns>,
-        checkpoints: impl Into<Ns>,
-        changelog: impl Into<Ns>,
+        pk: impl Into<Namespace>,
+        checkpoints: impl Into<Namespace>,
+        changelog: impl Into<Namespace>,
         strategy: Strategy,
     ) -> Self {
         SnapshotMap {

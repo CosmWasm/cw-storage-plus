@@ -5,7 +5,7 @@ use cosmwasm_std::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::namespace::Ns;
+use crate::namespace::Namespace;
 
 // metadata keys need to have different length than the position type (4 bytes) to prevent collisions
 const TAIL_KEY: &[u8] = b"t";
@@ -18,7 +18,7 @@ const HEAD_KEY: &[u8] = b"h";
 /// If you do, the methods won't work as intended anymore.
 pub struct Deque<T> {
     // prefix of the deque items
-    namespace: Ns,
+    namespace: Namespace,
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
     item_type: PhantomData<T>,
 }
@@ -28,14 +28,14 @@ impl<T> Deque<T> {
     /// when you have a prefix in the form of a static string slice.
     pub const fn new(prefix: &'static str) -> Self {
         Self {
-            namespace: Ns::from_static_str(prefix),
+            namespace: Namespace::from_static_str(prefix),
             item_type: PhantomData,
         }
     }
 
     /// Creates a new [`Deque`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you should probably prefer [`Deque::new`].
-    pub fn new_dyn(prefix: impl Into<Ns>) -> Self {
+    pub fn new_dyn(prefix: impl Into<Namespace>) -> Self {
         Self {
             namespace: prefix.into(),
             item_type: PhantomData,

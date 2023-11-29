@@ -1,7 +1,7 @@
 // this module requires iterator to be useful at all
 #![cfg(feature = "iterator")]
 
-use crate::namespace::Ns;
+use crate::namespace::Namespace;
 use crate::PrefixBound;
 use cosmwasm_std::{StdError, StdResult, Storage};
 use serde::de::DeserializeOwned;
@@ -21,7 +21,7 @@ pub trait IndexList<T> {
 
 /// `IndexedMap` works like a `Map` but has a secondary index
 pub struct IndexedMap<K, T, I> {
-    pk_namespace: Ns,
+    pk_namespace: Namespace,
     primary: Map<K, T>,
     /// This is meant to be read directly to get the proper types, like:
     /// map.idx.owner.items(...)
@@ -38,7 +38,7 @@ where
     /// when you have a prefix in the form of a static string slice.
     pub const fn new(pk_namespace: &'static str, indexes: I) -> Self {
         IndexedMap {
-            pk_namespace: Ns::from_static_str(pk_namespace),
+            pk_namespace: Namespace::from_static_str(pk_namespace),
             primary: Map::new(pk_namespace),
             idx: indexes,
         }
@@ -46,7 +46,7 @@ where
 
     /// Creates a new [`IndexedMap`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you should probably prefer [`IndexedMap::new`].
-    pub fn new_dyn(pk_namespace: impl Into<Ns>, indexes: I) -> Self {
+    pub fn new_dyn(pk_namespace: impl Into<Namespace>, indexes: I) -> Self {
         let pk_namespace = pk_namespace.into();
 
         IndexedMap {

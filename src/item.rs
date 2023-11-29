@@ -7,14 +7,14 @@ use cosmwasm_std::{
     WasmQuery,
 };
 
-use crate::{helpers::not_found_object_info, namespace::Ns};
+use crate::{helpers::not_found_object_info, namespace::Namespace};
 
 /// Item stores one typed item at the given key.
 /// This is an analog of Singleton.
 /// It functions the same way as Path does but doesn't use a Vec and thus has a const fn constructor.
 pub struct Item<T> {
     // this is full key - no need to length-prefix it, we only store one item
-    storage_key: Ns,
+    storage_key: Namespace,
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
     data_type: PhantomData<T>,
 }
@@ -24,14 +24,14 @@ impl<T> Item<T> {
     /// when you have a static string slice.
     pub const fn new(storage_key: &'static str) -> Self {
         Item {
-            storage_key: Ns::from_static_str(storage_key),
+            storage_key: Namespace::from_static_str(storage_key),
             data_type: PhantomData,
         }
     }
 
     /// Creates a new [`Item`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you might prefer [`Item::new`].
-    pub fn new_dyn(storage_key: impl Into<Ns>) -> Self {
+    pub fn new_dyn(storage_key: impl Into<Namespace>) -> Self {
         Item {
             storage_key: storage_key.into(),
             data_type: PhantomData,

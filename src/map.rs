@@ -12,7 +12,7 @@ use crate::iter_helpers::{deserialize_kv, deserialize_v};
 #[cfg(feature = "iterator")]
 use crate::keys::Prefixer;
 use crate::keys::{Key, PrimaryKey};
-use crate::namespace::Ns;
+use crate::namespace::Namespace;
 use crate::path::Path;
 #[cfg(feature = "iterator")]
 use crate::prefix::{namespaced_prefix_range, Prefix};
@@ -22,7 +22,7 @@ use cosmwasm_std::{from_json, Addr, CustomQuery, QuerierWrapper, StdError, StdRe
 
 #[derive(Debug, Clone)]
 pub struct Map<K, T> {
-    namespace: Ns,
+    namespace: Namespace,
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
     key_type: PhantomData<K>,
     data_type: PhantomData<T>,
@@ -33,7 +33,7 @@ impl<K, T> Map<K, T> {
     /// when you have the storage key in the form of a static string slice.
     pub const fn new(namespace: &'static str) -> Self {
         Map {
-            namespace: Ns::from_static_str(namespace),
+            namespace: Namespace::from_static_str(namespace),
             data_type: PhantomData,
             key_type: PhantomData,
         }
@@ -41,7 +41,7 @@ impl<K, T> Map<K, T> {
 
     /// Creates a new [`Map`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you might prefer [`Map::new`].
-    pub fn new_dyn(namespace: impl Into<Ns>) -> Self {
+    pub fn new_dyn(namespace: impl Into<Namespace>) -> Self {
         Map {
             namespace: namespace.into(),
             data_type: PhantomData,

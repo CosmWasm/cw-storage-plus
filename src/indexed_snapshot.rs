@@ -8,7 +8,7 @@ use serde::Serialize;
 use crate::de::KeyDeserialize;
 use crate::iter_helpers::deserialize_kv;
 use crate::keys::{Prefixer, PrimaryKey};
-use crate::namespace::Ns;
+use crate::namespace::Namespace;
 use crate::prefix::{namespaced_prefix_range, Prefix};
 use crate::snapshot::{ChangeSet, SnapshotMap};
 use crate::PrefixBound;
@@ -16,7 +16,7 @@ use crate::{Bound, IndexList, Map, Path, Strategy};
 
 /// `IndexedSnapshotMap` works like a `SnapshotMap` but has a secondary index
 pub struct IndexedSnapshotMap<K, T, I> {
-    pk_namespace: Ns,
+    pk_namespace: Namespace,
     primary: SnapshotMap<K, T>,
     /// This is meant to be read directly to get the proper types, like:
     /// map.idx.owner.items(...)
@@ -46,9 +46,9 @@ impl<K, T, I> IndexedSnapshotMap<K, T, I> {
     /// );
     /// ```
     pub fn new(
-        pk_namespace: impl Into<Ns>,
-        checkpoints: impl Into<Ns>,
-        changelog: impl Into<Ns>,
+        pk_namespace: impl Into<Namespace>,
+        checkpoints: impl Into<Namespace>,
+        changelog: impl Into<Namespace>,
         strategy: Strategy,
         indexes: I,
     ) -> Self {
