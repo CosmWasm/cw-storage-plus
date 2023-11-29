@@ -8,10 +8,11 @@ use crate::de::KeyDeserialize;
 use crate::iter_helpers::deserialize_kv;
 use crate::keys::PrimaryKey;
 use crate::map::Map;
+use crate::namespace::Ns;
 use crate::path::Path;
 use crate::prefix::{namespaced_prefix_range, Prefix};
 use crate::snapshot::{ChangeSet, Snapshot};
-use crate::{Bound, Namespace, Prefixer, Strategy};
+use crate::{Bound, Prefixer, Strategy};
 
 /// Map that maintains a snapshots of one or more checkpoints.
 /// We can query historical data as well as current state.
@@ -54,14 +55,14 @@ impl<K, T> SnapshotMap<K, T> {
     /// Use this if you might need to handle dynamic strings. Otherwise, you might
     /// prefer [`SnapshotMap::new`].
     pub fn new_dyn(
-        pk: impl Namespace,
-        checkpoints: impl Namespace,
-        changelog: impl Namespace,
+        pk: impl Into<Ns>,
+        checkpoints: impl Into<Ns>,
+        changelog: impl Into<Ns>,
         strategy: Strategy,
     ) -> Self {
         SnapshotMap {
             primary: Map::new_dyn(pk),
-            snapshots: Snapshot::new_dyn(checkpoints, changelog, strategy),
+            snapshots: Snapshot::new_generic(checkpoints, changelog, strategy),
         }
     }
 

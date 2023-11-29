@@ -7,7 +7,7 @@ use cosmwasm_std::{
     WasmQuery,
 };
 
-use crate::{helpers::not_found_object_info, namespace::Ns, Namespace};
+use crate::{helpers::not_found_object_info, namespace::Ns};
 
 /// Item stores one typed item at the given key.
 /// This is an analog of Singleton.
@@ -31,9 +31,9 @@ impl<T> Item<T> {
 
     /// Creates a new [`Item`] with the given storage key. Use this if you might need to handle
     /// a dynamic string. Otherwise, you might prefer [`Item::new`].
-    pub fn new_dyn(storage_key: impl Namespace) -> Self {
+    pub fn new_dyn(storage_key: impl Into<Ns>) -> Self {
         Item {
-            storage_key: storage_key.namespace(),
+            storage_key: storage_key.into(),
             data_type: PhantomData,
         }
     }
