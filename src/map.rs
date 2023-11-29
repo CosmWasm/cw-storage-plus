@@ -50,7 +50,7 @@ impl<K, T> Map<K, T> {
         }
     }
 
-    pub fn namespace(&self) -> &[u8] {
+    pub fn namespace_bytes(&self) -> &[u8] {
         self.namespace.as_slice()
     }
 }

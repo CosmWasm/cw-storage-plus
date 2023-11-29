@@ -240,8 +240,9 @@ where
         K: 'c,
         K::Output: 'static,
     {
-        let mapped = namespaced_prefix_range(store, self.primary.namespace(), min, max, order)
-            .map(deserialize_kv::<K, T>);
+        let mapped =
+            namespaced_prefix_range(store, self.primary.namespace_bytes(), min, max, order)
+                .map(deserialize_kv::<K, T>);
         Box::new(mapped)
     }
 
@@ -274,15 +275,15 @@ where
     }
 
     pub fn prefix(&self, p: K::Prefix) -> Prefix<K::Suffix, T, K::Suffix> {
-        Prefix::new(self.primary.namespace(), &p.prefix())
+        Prefix::new(self.primary.namespace_bytes(), &p.prefix())
     }
 
     pub fn sub_prefix(&self, p: K::SubPrefix) -> Prefix<K::SuperSuffix, T, K::SuperSuffix> {
-        Prefix::new(self.primary.namespace(), &p.prefix())
+        Prefix::new(self.primary.namespace_bytes(), &p.prefix())
     }
 
     fn no_prefix(&self) -> Prefix<K, T, K> {
-        Prefix::new(self.primary.namespace(), &[])
+        Prefix::new(self.primary.namespace_bytes(), &[])
     }
 }
 
