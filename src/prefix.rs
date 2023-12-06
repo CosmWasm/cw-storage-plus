@@ -15,27 +15,6 @@ use crate::iter_helpers::{concat, deserialize_kv, deserialize_v, trim};
 use crate::keys::Key;
 use crate::{Bound, Prefixer, PrimaryKey};
 
-type DeserializeVFn<T> = fn(&dyn Storage, &[u8], Record) -> StdResult<Record<T>>;
-
-type DeserializeKvFn<K, T> =
-    fn(&dyn Storage, &[u8], Record) -> StdResult<(<K as KeyDeserialize>::Output, T)>;
-
-pub fn default_deserializer_v<T: DeserializeOwned>(
-    _: &dyn Storage,
-    _: &[u8],
-    raw: Record,
-) -> StdResult<Record<T>> {
-    deserialize_v(raw)
-}
-
-pub fn default_deserializer_kv<K: KeyDeserialize, T: DeserializeOwned>(
-    _: &dyn Storage,
-    _: &[u8],
-    raw: Record,
-) -> StdResult<(K::Output, T)> {
-    deserialize_kv::<K, T>(raw)
-}
-
 #[derive(Clone)]
 pub struct Prefix<K, T, B = Vec<u8>>
 where
@@ -45,10 +24,7 @@ where
     /// all namespaces prefixes and concatenated with the key
     storage_prefix: Vec<u8>,
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
-    data: PhantomData<(T, B)>,
-    pk_name: Vec<u8>,
-    de_fn_kv: DeserializeKvFn<K, T>,
-    de_fn_v: DeserializeVFn<T>,
+    data: PhantomData<(T, K, B)>,
 }
 
 impl<K, T> Debug for Prefix<K, T>
@@ -59,7 +35,6 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Prefix")
             .field("storage_prefix", &self.storage_prefix)
-            .field("pk_name", &self.pk_name)
             .finish_non_exhaustive()
     }
 }
@@ -82,22 +57,6 @@ where
     T: Serialize + DeserializeOwned,
 {
     pub fn new(top_name: &[u8], sub_names: &[Key]) -> Self {
-        Prefix::with_deserialization_functions(
-            top_name,
-            sub_names,
-            &[],
-            default_deserializer_kv::<K, T>,
-            default_deserializer_v,
-        )
-    }
-
-    pub fn with_deserialization_functions(
-        top_name: &[u8],
-        sub_names: &[Key],
-        pk_name: &[u8],
-        de_fn_kv: DeserializeKvFn<K, T>,
-        de_fn_v: DeserializeVFn<T>,
-    ) -> Self {
         let calculated_len = 1 + sub_names.len();
         let mut combined: Vec<&[u8]> = Vec::with_capacity(calculated_len);
         combined.push(top_name);
@@ -107,9 +66,6 @@ where
         Prefix {
             storage_prefix,
             data: PhantomData,
-            pk_name: pk_name.to_vec(),
-            de_fn_kv,
-            de_fn_v,
         }
     }
 }
@@ -130,8 +86,6 @@ where
     where
         T: 'a,
     {
-        let de_fn = self.de_fn_v;
-        let pk_name = self.pk_name.clone();
         let mapped = range_with_prefix(
             store,
             &self.storage_prefix,
@@ -139,7 +93,7 @@ where
             max.map(|b| b.to_raw_bound()),
             order,
         )
-        .map(move |kv| (de_fn)(store, &pk_name, kv));
+        .map(deserialize_v);
         Box::new(mapped)
     }
 
@@ -202,8 +156,6 @@ where
         T: 'a,
         K::Output: 'static,
     {
-        let de_fn = self.de_fn_kv;
-        let pk_name = self.pk_name.clone();
         let mapped = range_with_prefix(
             store,
             &self.storage_prefix,
@@ -211,7 +163,7 @@ where
             max.map(|b| b.to_raw_bound()),
             order,
         )
-        .map(move |kv| (de_fn)(store, &pk_name, kv));
+        .map(|kv| deserialize_kv::<K, T>(kv));
         Box::new(mapped)
     }
 
@@ -226,16 +178,14 @@ where
         T: 'a,
         K::Output: 'static,
     {
-        let de_fn = self.de_fn_kv;
-        let pk_name = self.pk_name.clone();
-        let mapped = range_with_prefix(
+        let mapped = keys_with_prefix(
             store,
             &self.storage_prefix,
             min.map(|b| b.to_raw_bound()),
             max.map(|b| b.to_raw_bound()),
             order,
         )
-        .map(move |kv| (de_fn)(store, &pk_name, kv).map(|(k, _)| k));
+        .map(|k| K::from_vec(k));
         Box::new(mapped)
     }
 }
@@ -398,10 +348,7 @@ mod test {
         // manually create this - not testing nested prefixes here
         let prefix: Prefix<Vec<u8>, u64> = Prefix {
             storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
-            pk_name: vec![],
-            de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
-            de_fn_v: |_, _, kv| deserialize_v(kv),
+            data: PhantomData,
         };
 
         // set some data, we care about "foo" prefix
@@ -538,7 +485,7 @@ mod test {
         let prefix: Prefix<String, String> = Prefix::new(b"lol", &[Key::Val8([8; 1])]);
         assert_eq!(
             format!("{:?}", prefix),
-            "Prefix { storage_prefix: [0, 3, 108, 111, 108, 0, 1, 8], pk_name: [], .. }"
+            "Prefix { storage_prefix: [0, 3, 108, 111, 108, 0, 1, 8], .. }"
         );
     }
 
@@ -548,10 +495,7 @@ mod test {
         // manually create this - not testing nested prefixes here
         let prefix: Prefix<Vec<u8>, u64> = Prefix {
             storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
-            pk_name: vec![],
-            de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
-            de_fn_v: |_, _, kv| deserialize_v(kv),
+            data: PhantomData,
         };
 
         // set some data, we care about "foo" prefix
@@ -594,10 +538,7 @@ mod test {
         // manually create this - not testing nested prefixes here
         let prefix: Prefix<Vec<u8>, u64> = Prefix {
             storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
-            pk_name: vec![],
-            de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
-            de_fn_v: |_, _, kv| deserialize_v(kv),
+            data: PhantomData,
         };
 
         // set some data, we care about "foo" prefix
@@ -630,10 +571,7 @@ mod test {
         // manually create this - not testing nested prefixes here
         let prefix: Prefix<Vec<u8>, u64> = Prefix {
             storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
-            pk_name: vec![],
-            de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
-            de_fn_v: |_, _, kv| deserialize_v(kv),
+            data: PhantomData,
         };
 
         let mut storage = MockStorage::new();
@@ -651,10 +589,7 @@ mod test {
         // manually create this - not testing nested prefixes here
         let prefix: Prefix<Vec<u8>, u64> = Prefix {
             storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
-            pk_name: vec![],
-            de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
-            de_fn_v: |_, _, kv| deserialize_v(kv),
+            data: PhantomData,
         };
 
         let mut storage = MockStorage::new();

@@ -9,11 +9,11 @@ use std::marker::PhantomData;
 use cosmwasm_std::{Order, Record, StdResult, Storage};
 use std::ops::Deref;
 
-use crate::bound::{PrefixBound, RawBound};
+use crate::bound::RawBound;
 use crate::de::KeyDeserialize;
 use crate::iter_helpers::{concat, deserialize_kv, deserialize_v, trim};
 use crate::keys::Key;
-use crate::{Bound, Prefixer, PrimaryKey};
+use crate::{Bound, PrimaryKey};
 
 type DeserializeVFn<T> = fn(&dyn Storage, &[u8], Record) -> StdResult<Record<T>>;
 
@@ -318,49 +318,6 @@ fn calc_end_bound(namespace: &[u8], bound: Option<RawBound>) -> Vec<u8> {
         // this is the natural limits of the underlying Storage
         Some(RawBound::Exclusive(limit)) => concat(namespace, &limit),
         Some(RawBound::Inclusive(limit)) => concat(namespace, &extend_one_byte(&limit)),
-    }
-}
-
-pub fn namespaced_prefix_range<'a, 'c, K: Prefixer<'a>>(
-    storage: &'c dyn Storage,
-    namespace: &[u8],
-    start: Option<PrefixBound<'a, K>>,
-    end: Option<PrefixBound<'a, K>>,
-    order: Order,
-) -> Box<dyn Iterator<Item = Record> + 'c> {
-    let prefix = to_length_prefixed_nested(&[namespace]);
-    let start = calc_prefix_start_bound(&prefix, start);
-    let end = calc_prefix_end_bound(&prefix, end);
-
-    // get iterator from storage
-    let base_iterator = storage.range(Some(&start), Some(&end), order);
-
-    // make a copy for the closure to handle lifetimes safely
-    let mapped = base_iterator.map(move |(k, v)| (trim(&prefix, &k), v));
-    Box::new(mapped)
-}
-
-fn calc_prefix_start_bound<'a, K: Prefixer<'a>>(
-    namespace: &[u8],
-    bound: Option<PrefixBound<'a, K>>,
-) -> Vec<u8> {
-    match bound.map(|b| b.to_raw_bound()) {
-        None => namespace.to_vec(),
-        // this is the natural limits of the underlying Storage
-        Some(RawBound::Inclusive(limit)) => concat(namespace, &limit),
-        Some(RawBound::Exclusive(limit)) => concat(namespace, &increment_last_byte(&limit)),
-    }
-}
-
-fn calc_prefix_end_bound<'a, K: Prefixer<'a>>(
-    namespace: &[u8],
-    bound: Option<PrefixBound<'a, K>>,
-) -> Vec<u8> {
-    match bound.map(|b| b.to_raw_bound()) {
-        None => increment_last_byte(namespace),
-        // this is the natural limits of the underlying Storage
-        Some(RawBound::Exclusive(limit)) => concat(namespace, &limit),
-        Some(RawBound::Inclusive(limit)) => concat(namespace, &increment_last_byte(&limit)),
     }
 }
 
