@@ -9,10 +9,11 @@ use cosmwasm_std::{from_json, Order, Record, StdError, StdResult, Storage};
 
 use crate::bound::PrefixBound;
 use crate::de::KeyDeserialize;
+use crate::indexes::IndexPrefix;
 use crate::iter_helpers::deserialize_kv;
 use crate::map::Map;
 use crate::prefix::namespaced_prefix_range;
-use crate::{Bound, Index, Prefix, Prefixer, PrimaryKey};
+use crate::{Bound, Index, Prefixer, PrimaryKey};
 use std::marker::PhantomData;
 
 /// MultiIndex stores (namespace, index_name, idx_value, pk) -> b"pk_len".
@@ -150,8 +151,8 @@ where
     T: Serialize + DeserializeOwned + Clone,
     IK: PrimaryKey<'a> + Prefixer<'a>,
 {
-    fn no_prefix_raw(&self) -> Prefix<Vec<u8>, T, (IK, PK)> {
-        Prefix::with_deserialization_functions(
+    fn no_prefix_raw(&self) -> IndexPrefix<Vec<u8>, T, (IK, PK)> {
+        IndexPrefix::with_deserialization_functions(
             self.idx_namespace,
             &[],
             self.pk_namespace,
@@ -256,8 +257,8 @@ where
     T: Serialize + DeserializeOwned + Clone,
     IK: PrimaryKey<'a> + Prefixer<'a>,
 {
-    pub fn prefix(&self, p: IK) -> Prefix<PK, T, PK> {
-        Prefix::with_deserialization_functions(
+    pub fn prefix(&self, p: IK) -> IndexPrefix<PK, T, PK> {
+        IndexPrefix::with_deserialization_functions(
             self.idx_namespace,
             &p.prefix(),
             self.pk_namespace,
@@ -266,8 +267,8 @@ where
         )
     }
 
-    pub fn sub_prefix(&self, p: IK::Prefix) -> Prefix<PK, T, (IK::Suffix, PK)> {
-        Prefix::with_deserialization_functions(
+    pub fn sub_prefix(&self, p: IK::Prefix) -> IndexPrefix<PK, T, (IK::Suffix, PK)> {
+        IndexPrefix::with_deserialization_functions(
             self.idx_namespace,
             &p.prefix(),
             self.pk_namespace,
@@ -337,8 +338,8 @@ where
         self.no_prefix().keys(store, min, max, order)
     }
 
-    fn no_prefix(&self) -> Prefix<PK, T, (IK, PK)> {
-        Prefix::with_deserialization_functions(
+    fn no_prefix(&self) -> IndexPrefix<PK, T, (IK, PK)> {
+        IndexPrefix::with_deserialization_functions(
             self.idx_namespace,
             &[],
             self.pk_namespace,

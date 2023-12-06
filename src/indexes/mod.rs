@@ -1,9 +1,11 @@
 // this module requires iterator to be useful at all
 #![cfg(feature = "iterator")]
 mod multi;
+mod prefix;
 mod unique;
 
 pub use multi::MultiIndex;
+pub use prefix::IndexPrefix;
 pub use unique::UniqueIndex;
 
 use serde::de::DeserializeOwned;
