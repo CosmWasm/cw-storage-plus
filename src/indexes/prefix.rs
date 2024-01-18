@@ -186,7 +186,7 @@ where
 
     /// Returns `true` if the prefix is empty.
     pub fn is_empty(&self, store: &dyn Storage) -> bool {
-        range_full(store, &self.storage_prefix, None, None, Order::Ascending)
+        keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
             .next()
             .is_none()
     }
