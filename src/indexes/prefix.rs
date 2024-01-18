@@ -57,7 +57,7 @@ where
     T: Serialize + DeserializeOwned,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Prefix")
+        f.debug_struct("IndexPrefix")
             .field("storage_prefix", &self.storage_prefix)
             .field("pk_name", &self.pk_name)
             .finish_non_exhaustive()
@@ -495,7 +495,7 @@ mod test {
         let prefix: IndexPrefix<String, String> = IndexPrefix::new(b"lol", &[Key::Val8([8; 1])]);
         assert_eq!(
             format!("{:?}", prefix),
-            "Prefix { storage_prefix: [0, 3, 108, 111, 108, 0, 1, 8], pk_name: [], .. }"
+            "IndexPrefix { storage_prefix: [0, 3, 108, 111, 108, 0, 1, 8], pk_name: [], .. }"
         );
     }
 

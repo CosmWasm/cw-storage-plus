@@ -17,8 +17,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 [#34]: https://github.com/CosmWasm/cw-storage-plus/pull/34
 [#37]: https://github.com/CosmWasm/cw-storage-plus/pull/37
 [#60]: https://github.com/CosmWasm/cw-storage-plus/pull/60
-[#70]: https://github.com/CosmWasm/cw-storage-plus/pull/70
-[`cosmwasm_std::Storage::range_keys`]: https://docs.rs/cosmwasm-std/latest/cosmwasm_std/trait.Storage.html#method.range_keys
 
 ### Breaking
 
