@@ -93,7 +93,7 @@ where
 fn deserialize_unique_v<T: DeserializeOwned>(kv: Record) -> StdResult<Record<T>> {
     let (_, v) = kv;
     let t = from_json::<UniqueRef<T>>(&v)?;
-    Ok((t.pk.0, t.value))
+    Ok((t.pk.into(), t.value))
 }
 
 fn deserialize_unique_kv<K: KeyDeserialize, T: DeserializeOwned>(
@@ -101,7 +101,7 @@ fn deserialize_unique_kv<K: KeyDeserialize, T: DeserializeOwned>(
 ) -> StdResult<(K::Output, T)> {
     let (_, v) = kv;
     let t = from_json::<UniqueRef<T>>(&v)?;
-    Ok((K::from_vec(t.pk.0)?, t.value))
+    Ok((K::from_vec(t.pk.into())?, t.value))
 }
 
 impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK>

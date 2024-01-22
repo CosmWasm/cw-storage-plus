@@ -13,4 +13,4 @@ documentation = "https://docs.cosmwasm.com"
 proc-macro = true
 
 [dependencies]
-syn = { version = "1.0.96", features = ["full"] }
+syn = { version = "2", features = ["full"] }
