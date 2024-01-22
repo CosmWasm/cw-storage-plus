@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.0.0-beta.0] - 2024-01-23
+
 ### Changed
 
 - Update to `cosmwasm-std` 1.5.0 ([#60])
