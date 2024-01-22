@@ -11,10 +11,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Fix incorrect implementation of `KeyDeserialize` for `(T, U)`.
   This required a breaking change to the `KeyDeserialize` trait. See MIGRATING.md. ([#34])
 - Make `UniqueIndex` `PK` type parameter mandatory. See MIGRATING.md. ([#37])
+- Internally, `Prefix::keys` now uses [`cosmwasm_std::Storage::range_keys`].
+  This improves efficiency if you use `cosmwasm-std` with the `cosmwasm_1_4` feature ([#70])
 
 [#34]: https://github.com/CosmWasm/cw-storage-plus/pull/34
 [#37]: https://github.com/CosmWasm/cw-storage-plus/pull/37
 [#60]: https://github.com/CosmWasm/cw-storage-plus/pull/60
+
+### Breaking
+
+- Remove the `Prefix::with_deserialization_functions` constructor ([#70])
+- `MultiIndex::{no_prefix, no_prefix_raw, prefix, sub_prefix}` and `UniqueIndex::{no_prefix, no_prefix_raw, prefix, sub_prefix}` now return `IndexPrefix` instead of `Prefix`. ([#70])
+
+[#70]: https://github.com/CosmWasm/cw-storage-plus/pull/70
 
 ## [1.2.0] - 2023-11-14
 

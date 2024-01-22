@@ -42,11 +42,7 @@ pub use indexed_map::{IndexList, IndexedMap};
 #[cfg(feature = "iterator")]
 pub use indexed_snapshot::IndexedSnapshotMap;
 #[cfg(feature = "iterator")]
-pub use indexes::Index;
-#[cfg(feature = "iterator")]
-pub use indexes::MultiIndex;
-#[cfg(feature = "iterator")]
-pub use indexes::UniqueIndex;
+pub use indexes::{Index, IndexPrefix, MultiIndex, UniqueIndex};
 pub use int_key::IntKey;
 pub use item::Item;
 pub use keys::{Key, Prefixer, PrimaryKey};

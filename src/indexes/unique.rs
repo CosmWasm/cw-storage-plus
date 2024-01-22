@@ -10,10 +10,11 @@ use cosmwasm_std::{from_json, Binary, Order, Record, StdError, StdResult, Storag
 
 use crate::bound::PrefixBound;
 use crate::de::KeyDeserialize;
+use crate::indexes::IndexPrefix;
 use crate::iter_helpers::deserialize_kv;
 use crate::map::Map;
 use crate::prefix::namespaced_prefix_range;
-use crate::{Bound, Index, Prefix, Prefixer, PrimaryKey};
+use crate::{Bound, Index, Prefixer, PrimaryKey};
 
 /// UniqueRef stores Binary(Vec[u8]) representation of private key and index value
 #[derive(Deserialize, Serialize)]
@@ -112,8 +113,8 @@ where
         k.joined_key()
     }
 
-    fn no_prefix_raw(&self) -> Prefix<Vec<u8>, T, IK> {
-        Prefix::with_deserialization_functions(
+    fn no_prefix_raw(&self) -> IndexPrefix<Vec<u8>, T, IK> {
+        IndexPrefix::with_deserialization_functions(
             self.idx_namespace,
             &[],
             &[],
@@ -224,8 +225,8 @@ where
         self.no_prefix().keys(store, min, max, order)
     }
 
-    pub fn prefix(&self, p: IK::Prefix) -> Prefix<PK, T, IK::Suffix> {
-        Prefix::with_deserialization_functions(
+    pub fn prefix(&self, p: IK::Prefix) -> IndexPrefix<PK, T, IK::Suffix> {
+        IndexPrefix::with_deserialization_functions(
             self.idx_namespace,
             &p.prefix(),
             &[],
@@ -234,8 +235,8 @@ where
         )
     }
 
-    pub fn sub_prefix(&self, p: IK::SubPrefix) -> Prefix<PK, T, IK::SuperSuffix> {
-        Prefix::with_deserialization_functions(
+    pub fn sub_prefix(&self, p: IK::SubPrefix) -> IndexPrefix<PK, T, IK::SuperSuffix> {
+        IndexPrefix::with_deserialization_functions(
             self.idx_namespace,
             &p.prefix(),
             &[],
@@ -244,8 +245,8 @@ where
         )
     }
 
-    fn no_prefix(&self) -> Prefix<PK, T, IK> {
-        Prefix::with_deserialization_functions(
+    fn no_prefix(&self) -> IndexPrefix<PK, T, IK> {
+        IndexPrefix::with_deserialization_functions(
             self.idx_namespace,
             &[],
             &[],
