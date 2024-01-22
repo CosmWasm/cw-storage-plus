@@ -1,9 +1,5 @@
 # `cw-storage-plus`: Storage abstractions for CosmWasm
 
-**Status: beta**
-
-As of `cw-storage-plus` `v0.12` the API should be quite stable.
-
 This has been heavily used in many production-quality contracts.
 The code has demonstrated itself to be stable and powerful.
 It has not been audited, and Confio assumes no liability, but we consider it mature enough
@@ -185,17 +181,17 @@ fn demo() -> StdResult<()> {
 A `Map` key can be anything that implements the `PrimaryKey` trait. There are a series of implementations of
 `PrimaryKey` already provided (see [keys.rs](./src/keys.rs)):
 
- - `impl<'a> PrimaryKey<'a> for &'a [u8]`
- - `impl<'a> PrimaryKey<'a> for &'a str`
- - `impl<'a> PrimaryKey<'a> for Vec<u8>`
- - `impl<'a> PrimaryKey<'a> for String`
- - `impl<'a> PrimaryKey<'a> for Addr`
- - `impl<'a, const N: usize> PrimaryKey<'a> for [u8; N]`
- - `impl<'a, T: Prefixer<'a>> Prefixer<'a> for &'a T`
- - `impl<'a, T: PrimaryKey<'a> + Prefixer<'a>, U: PrimaryKey<'a>> PrimaryKey<'a> for (T, U)`
- - `impl<'a, T: PrimaryKey<'a> + Prefixer<'a>, U: PrimaryKey<'a> + Prefixer<'a>, V: PrimaryKey<'a>> PrimaryKey<'a> for (T, U, V)`
- - `PrimaryKey` implemented for unsigned integers up to `u128`
- - `PrimaryKey` implemented for signed integers up to `i128`
+- `impl<'a> PrimaryKey<'a> for &'a [u8]`
+- `impl<'a> PrimaryKey<'a> for &'a str`
+- `impl<'a> PrimaryKey<'a> for Vec<u8>`
+- `impl<'a> PrimaryKey<'a> for String`
+- `impl<'a> PrimaryKey<'a> for Addr`
+- `impl<'a, const N: usize> PrimaryKey<'a> for [u8; N]`
+- `impl<'a, T: Prefixer<'a>> Prefixer<'a> for &'a T`
+- `impl<'a, T: PrimaryKey<'a> + Prefixer<'a>, U: PrimaryKey<'a>> PrimaryKey<'a> for (T, U)`
+- `impl<'a, T: PrimaryKey<'a> + Prefixer<'a>, U: PrimaryKey<'a> + Prefixer<'a>, V: PrimaryKey<'a>> PrimaryKey<'a> for (T, U, V)`
+- `PrimaryKey` implemented for unsigned integers up to `u128`
+- `PrimaryKey` implemented for signed integers up to `i128`
 
 That means that byte and string slices, byte vectors, and strings, can be conveniently used as keys.
 Moreover, some other types can be used as well, like addresses and address references, pairs, triples, and
@@ -323,7 +319,7 @@ over all items with `range(store, min, max, order)`. It supports `Order::Ascendi
 
 If the `min` and `max` bounds are `None`, `range` will return all items under the prefix. You can use `.take(n)` to
 limit the results to `n` items and start doing pagination. You can also set the `min` bound to
-eg. `Bound::exclusive(last_value)` to start iterating over all items *after* the last value. Combined with
+eg. `Bound::exclusive(last_value)` to start iterating over all items _after_ the last value. Combined with
 `take`, we easily have pagination support. You can also use `Bound::inclusive(x)` when you want to include any
 perfect matches.
 
@@ -343,6 +339,7 @@ pub enum Bound<'a, K: PrimaryKey<'a>> {
 ```
 
 To better understand the API, please check the following example:
+
 ```rust
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 struct Data {
@@ -447,6 +444,7 @@ pub fn tokens<'a>() -> IndexedMap<'a, &'a str, TokenInfo, TokenIndexes<'a>> {
 ```
 
 Let's discuss this piece by piece:
+
 ```rust
 pub struct TokenIndexes<'a> {
   pub owner: MultiIndex<'a, Addr, TokenInfo, String>,
@@ -462,12 +460,14 @@ we need a `MultiIndex` to be able to list / iterate over all the tokens he has.
 
 The `TokenInfo` data will originally be stored by `token_id` (which is a string value).
 You can see this in the token creation code:
+
 ```rust
     tokens().update(deps.storage, &msg.token_id, |old| match old {
         Some(_) => Err(ContractError::Claimed {}),
         None => Ok(token),
     })?;
 ```
+
 (Incidentally, this is using `update` instead of `save`, to avoid overwriting an already existing token).
 
 Given that `token_id` is a string value, we specify `String` as the last argument of the `MultiIndex` definition.
@@ -535,9 +535,11 @@ Here `tokens()` is just a helper function, that simplifies the `IndexedMap` cons
 index (es) is (are) created, and then, the `IndexedMap` is created and returned.
 
 During index creation, we must supply an index function per index
+
 ```rust
         owner: MultiIndex::new(|d: &TokenInfo| d.owner.clone(),
 ```
+
 which is the one that will take the value of the original map and create the index key from it.
 Of course, this requires that the elements required for the index key are present in the value.
 Besides the index function, we must also supply the namespace of the pk, and the one for the new index.
@@ -580,6 +582,7 @@ Notice this uses `prefix()`, explained above in the `Map` section.
         .collect();
     let tokens = res?;
 ```
+
 Now `tokens` contains `(token_id, TokenInfo)` pairs for the given `owner`.
 The pk values are `Vec<u8>` in the case of `range_raw()`, but will be deserialized to the proper type using
 `range()`; provided that the pk deserialization type (`String`, in this case) is correctly specified
@@ -587,6 +590,7 @@ in the `MultiIndex` definition (see [Index keys deserialization](#index-keys-des
 below).
 
 Another example that is similar, but returning only the (raw) `token_id`s, using the `keys_raw()` method:
+
 ```rust
     let pks: Vec<_> = tokens()
         .idx
@@ -601,6 +605,7 @@ Another example that is similar, but returning only the (raw) `token_id`s, using
         .take(limit)
         .collect();
 ```
+
 Now `pks` contains `token_id` values (as raw `Vec<u8>`s) for the given `owner`. By using `keys` instead,
 a deserialized key can be obtained, as detailed in the next section.
 
