@@ -277,8 +277,6 @@ mod test {
         let output = CONFIG.update(&mut store, |_c| {
             Err(StdError::overflow(OverflowError::new(
                 OverflowOperation::Sub,
-                4,
-                7,
             )))
         });
         match output.unwrap_err() {
