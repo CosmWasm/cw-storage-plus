@@ -22,9 +22,9 @@ where
     T: Serialize + DeserializeOwned,
 {
     /// all namespaces prefixes and concatenated with the key
-    storage_prefix: Vec<u8>,
+    pub(crate) storage_prefix: Vec<u8>,
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
-    data: PhantomData<(T, K, B)>,
+    pub(crate) data: PhantomData<(T, K, B)>,
 }
 
 impl<K, T> Debug for Prefix<K, T>
@@ -140,7 +140,7 @@ where
 
     /// Returns `true` if the prefix is empty.
     pub fn is_empty(&self, store: &dyn Storage) -> bool {
-        range_full(store, &self.storage_prefix, None, None, Order::Ascending)
+        keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
             .next()
             .is_none()
     }

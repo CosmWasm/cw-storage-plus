@@ -1,10 +1,8 @@
 #![cfg(feature = "iterator")]
 use core::fmt;
-use cosmwasm_std::storage_keys::to_length_prefixed_nested;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
-use std::marker::PhantomData;
 
 use cosmwasm_std::{Order, Record, StdResult, Storage};
 use std::ops::Deref;
@@ -41,10 +39,7 @@ where
     K: KeyDeserialize,
     T: Serialize + DeserializeOwned,
 {
-    /// all namespaces prefixes and concatenated with the key
-    storage_prefix: Vec<u8>,
-    // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
-    data: PhantomData<(T, B)>,
+    inner: crate::prefix::Prefix<K, T, B>,
     pk_name: Vec<u8>,
     de_fn_kv: DeserializeKvFn<K, T>,
     de_fn_v: DeserializeVFn<T>,
@@ -57,7 +52,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("IndexPrefix")
-            .field("storage_prefix", &self.storage_prefix)
+            .field("storage_prefix", &self.inner.storage_prefix)
             .field("pk_name", &self.pk_name)
             .finish_non_exhaustive()
     }
@@ -71,7 +66,7 @@ where
     type Target = [u8];
 
     fn deref(&self) -> &[u8] {
-        &self.storage_prefix
+        &self.inner.storage_prefix
     }
 }
 
@@ -97,15 +92,8 @@ where
         de_fn_kv: DeserializeKvFn<K, T>,
         de_fn_v: DeserializeVFn<T>,
     ) -> Self {
-        let calculated_len = 1 + sub_names.len();
-        let mut combined: Vec<&[u8]> = Vec::with_capacity(calculated_len);
-        combined.push(top_name);
-        combined.extend(sub_names.iter().map(|sub_name| sub_name.as_ref()));
-        debug_assert_eq!(calculated_len, combined.len()); // as long as we calculate correctly, we don't need to reallocate
-        let storage_prefix = to_length_prefixed_nested(&combined);
         IndexPrefix {
-            storage_prefix,
-            data: PhantomData,
+            inner: crate::prefix::Prefix::new(top_name, sub_names),
             pk_name: pk_name.to_vec(),
             de_fn_kv,
             de_fn_v,
@@ -133,7 +121,7 @@ where
         let pk_name = self.pk_name.clone();
         let mapped = crate::prefix::range_with_prefix(
             store,
-            &self.storage_prefix,
+            &self.inner.storage_prefix,
             min.map(|b| b.to_raw_bound()),
             max.map(|b| b.to_raw_bound()),
             order,
@@ -151,7 +139,7 @@ where
     ) -> Box<dyn Iterator<Item = Vec<u8>> + 'a> {
         crate::prefix::keys_with_prefix(
             store,
-            &self.storage_prefix,
+            &self.inner.storage_prefix,
             min.map(|b| b.to_raw_bound()),
             max.map(|b| b.to_raw_bound()),
             order,
@@ -160,35 +148,20 @@ where
 
     /// Clears the prefix, removing the first `limit` elements (or all if `limit == None`).
     pub fn clear(&self, store: &mut dyn Storage, limit: Option<usize>) {
-        const TAKE: usize = 10;
-        let mut cleared = false;
-
-        let mut left_to_clear = limit.unwrap_or(usize::MAX);
-
-        while !cleared {
-            // Take just TAKE elements to prevent possible heap overflow if the prefix is big,
-            // but don't take more than we want to clear.
-            let take = TAKE.min(left_to_clear);
-
-            let paths =
-                crate::prefix::keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
-                    .take(take)
-                    .collect::<Vec<_>>();
-
-            for path in &paths {
-                store.remove(path);
-            }
-            left_to_clear -= paths.len();
-
-            cleared = paths.len() < take || left_to_clear == 0;
-        }
+        self.inner.clear(store, limit);
     }
 
     /// Returns `true` if the prefix is empty.
     pub fn is_empty(&self, store: &dyn Storage) -> bool {
-        crate::prefix::keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
-            .next()
-            .is_none()
+        crate::prefix::keys_full(
+            store,
+            &self.inner.storage_prefix,
+            None,
+            None,
+            Order::Ascending,
+        )
+        .next()
+        .is_none()
     }
 
     pub fn range<'a>(
@@ -206,7 +179,7 @@ where
         let pk_name = self.pk_name.clone();
         let mapped = crate::prefix::range_with_prefix(
             store,
-            &self.storage_prefix,
+            &self.inner.storage_prefix,
             min.map(|b| b.to_raw_bound()),
             max.map(|b| b.to_raw_bound()),
             order,
@@ -230,7 +203,7 @@ where
         let pk_name = self.pk_name.clone();
         let mapped = crate::prefix::range_with_prefix(
             store,
-            &self.storage_prefix,
+            &self.inner.storage_prefix,
             min.map(|b| b.to_raw_bound()),
             max.map(|b| b.to_raw_bound()),
             order,
@@ -243,6 +216,9 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+
+    use std::marker::PhantomData;
+
     use cosmwasm_std::testing::MockStorage;
 
     #[test]
@@ -250,8 +226,10 @@ mod test {
         let mut store = MockStorage::new();
         // manually create this - not testing nested prefixes here
         let prefix: IndexPrefix<Vec<u8>, u64> = IndexPrefix {
-            storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
+            inner: crate::prefix::Prefix {
+                storage_prefix: b"foo".to_vec(),
+                data: PhantomData::<(u64, _, _)>,
+            },
             pk_name: vec![],
             de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
             de_fn_v: |_, _, kv| deserialize_v(kv),
@@ -400,8 +378,10 @@ mod test {
         let mut store = MockStorage::new();
         // manually create this - not testing nested prefixes here
         let prefix: IndexPrefix<Vec<u8>, u64> = IndexPrefix {
-            storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
+            inner: crate::prefix::Prefix {
+                storage_prefix: b"foo".to_vec(),
+                data: PhantomData::<(u64, _, _)>,
+            },
             pk_name: vec![],
             de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
             de_fn_v: |_, _, kv| deserialize_v(kv),
@@ -446,8 +426,10 @@ mod test {
         let mut store = MockStorage::new();
         // manually create this - not testing nested prefixes here
         let prefix: IndexPrefix<Vec<u8>, u64> = IndexPrefix {
-            storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
+            inner: crate::prefix::Prefix {
+                storage_prefix: b"foo".to_vec(),
+                data: PhantomData::<(u64, _, _)>,
+            },
             pk_name: vec![],
             de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
             de_fn_v: |_, _, kv| deserialize_v(kv),
@@ -482,8 +464,10 @@ mod test {
     fn is_empty_works() {
         // manually create this - not testing nested prefixes here
         let prefix: IndexPrefix<Vec<u8>, u64> = IndexPrefix {
-            storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
+            inner: crate::prefix::Prefix {
+                storage_prefix: b"foo".to_vec(),
+                data: PhantomData::<(u64, _, _)>,
+            },
             pk_name: vec![],
             de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
             de_fn_v: |_, _, kv| deserialize_v(kv),
@@ -503,8 +487,10 @@ mod test {
     fn keys_raw_works() {
         // manually create this - not testing nested prefixes here
         let prefix: IndexPrefix<Vec<u8>, u64> = IndexPrefix {
-            storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
+            inner: crate::prefix::Prefix {
+                storage_prefix: b"foo".to_vec(),
+                data: PhantomData::<(u64, _, _)>,
+            },
             pk_name: vec![],
             de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
             de_fn_v: |_, _, kv| deserialize_v(kv),
