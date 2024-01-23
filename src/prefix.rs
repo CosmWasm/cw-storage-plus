@@ -223,7 +223,7 @@ pub fn keys_with_prefix<'a>(
 
 /// Returns an iterator through all records in storage within the given bounds,
 /// yielding the full key (including the prefix) and value.
-fn range_full<'a>(
+pub(crate) fn range_full<'a>(
     store: &'a dyn Storage,
     namespace: &[u8],
     start: Option<RawBound>,
@@ -239,7 +239,7 @@ fn range_full<'a>(
 
 /// Returns an iterator through all keys in storage within the given bounds,
 /// yielding the full key including the prefix.
-fn keys_full<'a>(
+pub(crate) fn keys_full<'a>(
     store: &'a dyn Storage,
     namespace: &[u8],
     start: Option<RawBound>,
@@ -314,7 +314,7 @@ fn calc_prefix_end_bound<'a, K: Prefixer<'a>>(
     }
 }
 
-fn extend_one_byte(limit: &[u8]) -> Vec<u8> {
+pub(crate) fn extend_one_byte(limit: &[u8]) -> Vec<u8> {
     let mut v = limit.to_vec();
     v.push(0);
     v

@@ -9,9 +9,8 @@ use std::marker::PhantomData;
 use cosmwasm_std::{Order, Record, StdResult, Storage};
 use std::ops::Deref;
 
-use crate::bound::RawBound;
 use crate::de::KeyDeserialize;
-use crate::iter_helpers::{concat, deserialize_kv, deserialize_v, trim};
+use crate::iter_helpers::{deserialize_kv, deserialize_v};
 use crate::keys::Key;
 use crate::{Bound, PrimaryKey};
 
@@ -132,7 +131,7 @@ where
     {
         let de_fn = self.de_fn_v;
         let pk_name = self.pk_name.clone();
-        let mapped = range_with_prefix(
+        let mapped = crate::prefix::range_with_prefix(
             store,
             &self.storage_prefix,
             min.map(|b| b.to_raw_bound()),
@@ -150,7 +149,7 @@ where
         max: Option<Bound<'b, B>>,
         order: Order,
     ) -> Box<dyn Iterator<Item = Vec<u8>> + 'a> {
-        keys_with_prefix(
+        crate::prefix::keys_with_prefix(
             store,
             &self.storage_prefix,
             min.map(|b| b.to_raw_bound()),
@@ -171,9 +170,10 @@ where
             // but don't take more than we want to clear.
             let take = TAKE.min(left_to_clear);
 
-            let paths = keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
-                .take(take)
-                .collect::<Vec<_>>();
+            let paths =
+                crate::prefix::keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
+                    .take(take)
+                    .collect::<Vec<_>>();
 
             for path in &paths {
                 store.remove(path);
@@ -186,7 +186,7 @@ where
 
     /// Returns `true` if the prefix is empty.
     pub fn is_empty(&self, store: &dyn Storage) -> bool {
-        keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
+        crate::prefix::keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
             .next()
             .is_none()
     }
@@ -204,7 +204,7 @@ where
     {
         let de_fn = self.de_fn_kv;
         let pk_name = self.pk_name.clone();
-        let mapped = range_with_prefix(
+        let mapped = crate::prefix::range_with_prefix(
             store,
             &self.storage_prefix,
             min.map(|b| b.to_raw_bound()),
@@ -228,7 +228,7 @@ where
     {
         let de_fn = self.de_fn_kv;
         let pk_name = self.pk_name.clone();
-        let mapped = range_with_prefix(
+        let mapped = crate::prefix::range_with_prefix(
             store,
             &self.storage_prefix,
             min.map(|b| b.to_raw_bound()),
@@ -238,110 +238,6 @@ where
         .map(move |kv| (de_fn)(store, &pk_name, kv).map(|(k, _)| k));
         Box::new(mapped)
     }
-}
-
-/// Returns an iterator through all records in storage with the given prefix and
-/// within the given bounds, yielding the key without prefix and value.
-pub fn range_with_prefix<'a>(
-    storage: &'a dyn Storage,
-    namespace: &[u8],
-    start: Option<RawBound>,
-    end: Option<RawBound>,
-    order: Order,
-) -> Box<dyn Iterator<Item = Record> + 'a> {
-    // make a copy for the closure to handle lifetimes safely
-    let prefix = namespace.to_vec();
-    let mapped =
-        range_full(storage, namespace, start, end, order).map(move |(k, v)| (trim(&prefix, &k), v));
-    Box::new(mapped)
-}
-
-/// Returns an iterator through all keys in storage with the given prefix and
-/// within the given bounds, yielding the key without the prefix.
-pub fn keys_with_prefix<'a>(
-    storage: &'a dyn Storage,
-    namespace: &[u8],
-    start: Option<RawBound>,
-    end: Option<RawBound>,
-    order: Order,
-) -> Box<dyn Iterator<Item = Vec<u8>> + 'a> {
-    // make a copy for the closure to handle lifetimes safely
-    let prefix = namespace.to_vec();
-    let mapped = keys_full(storage, namespace, start, end, order).map(move |k| trim(&prefix, &k));
-    Box::new(mapped)
-}
-
-/// Returns an iterator through all records in storage within the given bounds,
-/// yielding the full key (including the prefix) and value.
-fn range_full<'a>(
-    store: &'a dyn Storage,
-    namespace: &[u8],
-    start: Option<RawBound>,
-    end: Option<RawBound>,
-    order: Order,
-) -> impl Iterator<Item = Record> + 'a {
-    let start = calc_start_bound(namespace, start);
-    let end = calc_end_bound(namespace, end);
-
-    // get iterator from storage
-    store.range(Some(&start), Some(&end), order)
-}
-
-/// Returns an iterator through all keys in storage within the given bounds,
-/// yielding the full key including the prefix.
-fn keys_full<'a>(
-    store: &'a dyn Storage,
-    namespace: &[u8],
-    start: Option<RawBound>,
-    end: Option<RawBound>,
-    order: Order,
-) -> impl Iterator<Item = Vec<u8>> + 'a {
-    let start = calc_start_bound(namespace, start);
-    let end = calc_end_bound(namespace, end);
-
-    // get iterator from storage
-    store.range_keys(Some(&start), Some(&end), order)
-}
-
-fn calc_start_bound(namespace: &[u8], bound: Option<RawBound>) -> Vec<u8> {
-    match bound {
-        None => namespace.to_vec(),
-        // this is the natural limits of the underlying Storage
-        Some(RawBound::Inclusive(limit)) => concat(namespace, &limit),
-        Some(RawBound::Exclusive(limit)) => concat(namespace, &extend_one_byte(&limit)),
-    }
-}
-
-fn calc_end_bound(namespace: &[u8], bound: Option<RawBound>) -> Vec<u8> {
-    match bound {
-        None => increment_last_byte(namespace),
-        // this is the natural limits of the underlying Storage
-        Some(RawBound::Exclusive(limit)) => concat(namespace, &limit),
-        Some(RawBound::Inclusive(limit)) => concat(namespace, &extend_one_byte(&limit)),
-    }
-}
-
-fn extend_one_byte(limit: &[u8]) -> Vec<u8> {
-    let mut v = limit.to_vec();
-    v.push(0);
-    v
-}
-
-/// Returns a new vec of same length and last byte incremented by one
-/// If last bytes are 255, we handle overflow up the chain.
-/// If all bytes are 255, this returns wrong data - but that is never possible as a namespace
-fn increment_last_byte(input: &[u8]) -> Vec<u8> {
-    let mut copy = input.to_vec();
-    // zero out all trailing 255, increment first that is not such
-    for i in (0..input.len()).rev() {
-        if copy[i] == 255 {
-            copy[i] = 0;
-        } else {
-            copy[i] += 1;
-            break;
-        }
-    }
-    copy
 }
 
 #[cfg(test)]
