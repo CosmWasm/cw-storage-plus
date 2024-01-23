@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- Update to `cosmwasm-std` 1.5.0 ([#60])
+- Update to `cosmwasm-std` 2.0.0-beta.1 ([#73])
 - Fix incorrect implementation of `KeyDeserialize` for `(T, U)`.
   This required a breaking change to the `KeyDeserialize` trait. See MIGRATING.md. ([#34])
 - Make `UniqueIndex` `PK` type parameter mandatory. See MIGRATING.md. ([#37])
@@ -18,7 +18,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 [#34]: https://github.com/CosmWasm/cw-storage-plus/pull/34
 [#37]: https://github.com/CosmWasm/cw-storage-plus/pull/37
-[#60]: https://github.com/CosmWasm/cw-storage-plus/pull/60
+[#73]: https://github.com/CosmWasm/cw-storage-plus/pull/73
 
 ### Breaking
 
