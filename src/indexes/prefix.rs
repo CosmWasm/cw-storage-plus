@@ -1,17 +1,14 @@
 #![cfg(feature = "iterator")]
 use core::fmt;
-use cosmwasm_std::storage_keys::to_length_prefixed_nested;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::fmt::Debug;
-use std::marker::PhantomData;
 
 use cosmwasm_std::{Order, Record, StdResult, Storage};
 use std::ops::Deref;
 
-use crate::bound::RawBound;
 use crate::de::KeyDeserialize;
-use crate::iter_helpers::{concat, deserialize_kv, deserialize_v, trim};
+use crate::iter_helpers::{deserialize_kv, deserialize_v};
 use crate::keys::Key;
 use crate::{Bound, PrimaryKey};
 
@@ -42,10 +39,7 @@ where
     K: KeyDeserialize,
     T: Serialize + DeserializeOwned,
 {
-    /// all namespaces prefixes and concatenated with the key
-    storage_prefix: Vec<u8>,
-    // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
-    data: PhantomData<(T, B)>,
+    inner: crate::prefix::Prefix<K, T, B>,
     pk_name: Vec<u8>,
     de_fn_kv: DeserializeKvFn<K, T>,
     de_fn_v: DeserializeVFn<T>,
@@ -58,7 +52,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("IndexPrefix")
-            .field("storage_prefix", &self.storage_prefix)
+            .field("storage_prefix", &self.inner.storage_prefix)
             .field("pk_name", &self.pk_name)
             .finish_non_exhaustive()
     }
@@ -72,7 +66,7 @@ where
     type Target = [u8];
 
     fn deref(&self) -> &[u8] {
-        &self.storage_prefix
+        &self.inner.storage_prefix
     }
 }
 
@@ -98,15 +92,8 @@ where
         de_fn_kv: DeserializeKvFn<K, T>,
         de_fn_v: DeserializeVFn<T>,
     ) -> Self {
-        let calculated_len = 1 + sub_names.len();
-        let mut combined: Vec<&[u8]> = Vec::with_capacity(calculated_len);
-        combined.push(top_name);
-        combined.extend(sub_names.iter().map(|sub_name| sub_name.as_ref()));
-        debug_assert_eq!(calculated_len, combined.len()); // as long as we calculate correctly, we don't need to reallocate
-        let storage_prefix = to_length_prefixed_nested(&combined);
         IndexPrefix {
-            storage_prefix,
-            data: PhantomData,
+            inner: crate::prefix::Prefix::new(top_name, sub_names),
             pk_name: pk_name.to_vec(),
             de_fn_kv,
             de_fn_v,
@@ -132,9 +119,9 @@ where
     {
         let de_fn = self.de_fn_v;
         let pk_name = self.pk_name.clone();
-        let mapped = range_with_prefix(
+        let mapped = crate::prefix::range_with_prefix(
             store,
-            &self.storage_prefix,
+            &self.inner.storage_prefix,
             min.map(|b| b.to_raw_bound()),
             max.map(|b| b.to_raw_bound()),
             order,
@@ -150,9 +137,9 @@ where
         max: Option<Bound<'b, B>>,
         order: Order,
     ) -> Box<dyn Iterator<Item = Vec<u8>> + 'a> {
-        keys_with_prefix(
+        crate::prefix::keys_with_prefix(
             store,
-            &self.storage_prefix,
+            &self.inner.storage_prefix,
             min.map(|b| b.to_raw_bound()),
             max.map(|b| b.to_raw_bound()),
             order,
@@ -161,34 +148,20 @@ where
 
     /// Clears the prefix, removing the first `limit` elements (or all if `limit == None`).
     pub fn clear(&self, store: &mut dyn Storage, limit: Option<usize>) {
-        const TAKE: usize = 10;
-        let mut cleared = false;
-
-        let mut left_to_clear = limit.unwrap_or(usize::MAX);
-
-        while !cleared {
-            // Take just TAKE elements to prevent possible heap overflow if the prefix is big,
-            // but don't take more than we want to clear.
-            let take = TAKE.min(left_to_clear);
-
-            let paths = keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
-                .take(take)
-                .collect::<Vec<_>>();
-
-            for path in &paths {
-                store.remove(path);
-            }
-            left_to_clear -= paths.len();
-
-            cleared = paths.len() < take || left_to_clear == 0;
-        }
+        self.inner.clear(store, limit);
     }
 
     /// Returns `true` if the prefix is empty.
     pub fn is_empty(&self, store: &dyn Storage) -> bool {
-        keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
-            .next()
-            .is_none()
+        crate::prefix::keys_full(
+            store,
+            &self.inner.storage_prefix,
+            None,
+            None,
+            Order::Ascending,
+        )
+        .next()
+        .is_none()
     }
 
     pub fn range<'a>(
@@ -204,9 +177,9 @@ where
     {
         let de_fn = self.de_fn_kv;
         let pk_name = self.pk_name.clone();
-        let mapped = range_with_prefix(
+        let mapped = crate::prefix::range_with_prefix(
             store,
-            &self.storage_prefix,
+            &self.inner.storage_prefix,
             min.map(|b| b.to_raw_bound()),
             max.map(|b| b.to_raw_bound()),
             order,
@@ -228,9 +201,9 @@ where
     {
         let de_fn = self.de_fn_kv;
         let pk_name = self.pk_name.clone();
-        let mapped = range_with_prefix(
+        let mapped = crate::prefix::range_with_prefix(
             store,
-            &self.storage_prefix,
+            &self.inner.storage_prefix,
             min.map(|b| b.to_raw_bound()),
             max.map(|b| b.to_raw_bound()),
             order,
@@ -240,113 +213,12 @@ where
     }
 }
 
-/// Returns an iterator through all records in storage with the given prefix and
-/// within the given bounds, yielding the key without prefix and value.
-pub fn range_with_prefix<'a>(
-    storage: &'a dyn Storage,
-    namespace: &[u8],
-    start: Option<RawBound>,
-    end: Option<RawBound>,
-    order: Order,
-) -> Box<dyn Iterator<Item = Record> + 'a> {
-    // make a copy for the closure to handle lifetimes safely
-    let prefix = namespace.to_vec();
-    let mapped =
-        range_full(storage, namespace, start, end, order).map(move |(k, v)| (trim(&prefix, &k), v));
-    Box::new(mapped)
-}
-
-/// Returns an iterator through all keys in storage with the given prefix and
-/// within the given bounds, yielding the key without the prefix.
-pub fn keys_with_prefix<'a>(
-    storage: &'a dyn Storage,
-    namespace: &[u8],
-    start: Option<RawBound>,
-    end: Option<RawBound>,
-    order: Order,
-) -> Box<dyn Iterator<Item = Vec<u8>> + 'a> {
-    // make a copy for the closure to handle lifetimes safely
-    let prefix = namespace.to_vec();
-    let mapped = keys_full(storage, namespace, start, end, order).map(move |k| trim(&prefix, &k));
-    Box::new(mapped)
-}
-
-/// Returns an iterator through all records in storage within the given bounds,
-/// yielding the full key (including the prefix) and value.
-fn range_full<'a>(
-    store: &'a dyn Storage,
-    namespace: &[u8],
-    start: Option<RawBound>,
-    end: Option<RawBound>,
-    order: Order,
-) -> impl Iterator<Item = Record> + 'a {
-    let start = calc_start_bound(namespace, start);
-    let end = calc_end_bound(namespace, end);
-
-    // get iterator from storage
-    store.range(Some(&start), Some(&end), order)
-}
-
-/// Returns an iterator through all keys in storage within the given bounds,
-/// yielding the full key including the prefix.
-fn keys_full<'a>(
-    store: &'a dyn Storage,
-    namespace: &[u8],
-    start: Option<RawBound>,
-    end: Option<RawBound>,
-    order: Order,
-) -> impl Iterator<Item = Vec<u8>> + 'a {
-    let start = calc_start_bound(namespace, start);
-    let end = calc_end_bound(namespace, end);
-
-    // get iterator from storage
-    store.range_keys(Some(&start), Some(&end), order)
-}
-
-fn calc_start_bound(namespace: &[u8], bound: Option<RawBound>) -> Vec<u8> {
-    match bound {
-        None => namespace.to_vec(),
-        // this is the natural limits of the underlying Storage
-        Some(RawBound::Inclusive(limit)) => concat(namespace, &limit),
-        Some(RawBound::Exclusive(limit)) => concat(namespace, &extend_one_byte(&limit)),
-    }
-}
-
-fn calc_end_bound(namespace: &[u8], bound: Option<RawBound>) -> Vec<u8> {
-    match bound {
-        None => increment_last_byte(namespace),
-        // this is the natural limits of the underlying Storage
-        Some(RawBound::Exclusive(limit)) => concat(namespace, &limit),
-        Some(RawBound::Inclusive(limit)) => concat(namespace, &extend_one_byte(&limit)),
-    }
-}
-
-fn extend_one_byte(limit: &[u8]) -> Vec<u8> {
-    let mut v = limit.to_vec();
-    v.push(0);
-    v
-}
-
-/// Returns a new vec of same length and last byte incremented by one
-/// If last bytes are 255, we handle overflow up the chain.
-/// If all bytes are 255, this returns wrong data - but that is never possible as a namespace
-fn increment_last_byte(input: &[u8]) -> Vec<u8> {
-    let mut copy = input.to_vec();
-    // zero out all trailing 255, increment first that is not such
-    for i in (0..input.len()).rev() {
-        if copy[i] == 255 {
-            copy[i] = 0;
-        } else {
-            copy[i] += 1;
-            break;
-        }
-    }
-    copy
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
+
+    use std::marker::PhantomData;
+
     use cosmwasm_std::testing::MockStorage;
 
     #[test]
@@ -354,8 +226,10 @@ mod test {
         let mut store = MockStorage::new();
         // manually create this - not testing nested prefixes here
         let prefix: IndexPrefix<Vec<u8>, u64> = IndexPrefix {
-            storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
+            inner: crate::prefix::Prefix {
+                storage_prefix: b"foo".to_vec(),
+                data: PhantomData::<(u64, _, _)>,
+            },
             pk_name: vec![],
             de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
             de_fn_v: |_, _, kv| deserialize_v(kv),
@@ -500,94 +374,13 @@ mod test {
     }
 
     #[test]
-    fn prefix_clear_limited() {
-        let mut store = MockStorage::new();
-        // manually create this - not testing nested prefixes here
-        let prefix: IndexPrefix<Vec<u8>, u64> = IndexPrefix {
-            storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
-            pk_name: vec![],
-            de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
-            de_fn_v: |_, _, kv| deserialize_v(kv),
-        };
-
-        // set some data, we care about "foo" prefix
-        for i in 0..100u32 {
-            store.set(format!("foo{}", i).as_bytes(), b"1");
-        }
-
-        // clearing less than `TAKE` should work
-        prefix.clear(&mut store, Some(1));
-        assert_eq!(
-            prefix.range(&store, None, None, Order::Ascending).count(),
-            99
-        );
-
-        // clearing more than `TAKE` should work
-        prefix.clear(&mut store, Some(12));
-        assert_eq!(
-            prefix.range(&store, None, None, Order::Ascending).count(),
-            99 - 12
-        );
-
-        // clearing an exact multiple of `TAKE` should work
-        prefix.clear(&mut store, Some(20));
-        assert_eq!(
-            prefix.range(&store, None, None, Order::Ascending).count(),
-            99 - 12 - 20
-        );
-
-        // clearing more than available should work
-        prefix.clear(&mut store, Some(1000));
-        assert_eq!(
-            prefix.range(&store, None, None, Order::Ascending).count(),
-            0
-        );
-    }
-
-    #[test]
-    fn prefix_clear_unlimited() {
-        let mut store = MockStorage::new();
-        // manually create this - not testing nested prefixes here
-        let prefix: IndexPrefix<Vec<u8>, u64> = IndexPrefix {
-            storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
-            pk_name: vec![],
-            de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
-            de_fn_v: |_, _, kv| deserialize_v(kv),
-        };
-
-        // set some data, we care about "foo" prefix
-        for i in 0..1000u32 {
-            store.set(format!("foo{}", i).as_bytes(), b"1");
-        }
-
-        // clearing all should work
-        prefix.clear(&mut store, None);
-        assert_eq!(
-            prefix.range(&store, None, None, Order::Ascending).count(),
-            0
-        );
-
-        // set less data
-        for i in 0..5u32 {
-            store.set(format!("foo{}", i).as_bytes(), b"1");
-        }
-
-        // clearing all should work
-        prefix.clear(&mut store, None);
-        assert_eq!(
-            prefix.range(&store, None, None, Order::Ascending).count(),
-            0
-        );
-    }
-
-    #[test]
     fn is_empty_works() {
         // manually create this - not testing nested prefixes here
         let prefix: IndexPrefix<Vec<u8>, u64> = IndexPrefix {
-            storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
+            inner: crate::prefix::Prefix {
+                storage_prefix: b"foo".to_vec(),
+                data: PhantomData::<(u64, _, _)>,
+            },
             pk_name: vec![],
             de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
             de_fn_v: |_, _, kv| deserialize_v(kv),
@@ -601,36 +394,5 @@ mod test {
         storage.set(b"fookey2", b"2");
 
         assert!(!prefix.is_empty(&storage));
-    }
-
-    #[test]
-    fn keys_raw_works() {
-        // manually create this - not testing nested prefixes here
-        let prefix: IndexPrefix<Vec<u8>, u64> = IndexPrefix {
-            storage_prefix: b"foo".to_vec(),
-            data: PhantomData::<(u64, _)>,
-            pk_name: vec![],
-            de_fn_kv: |_, _, kv| deserialize_kv::<Vec<u8>, u64>(kv),
-            de_fn_v: |_, _, kv| deserialize_v(kv),
-        };
-
-        let mut storage = MockStorage::new();
-        storage.set(b"fookey1", b"1");
-        storage.set(b"fookey2", b"2");
-
-        let keys: Vec<_> = prefix
-            .keys_raw(&storage, None, None, Order::Ascending)
-            .collect();
-        assert_eq!(keys, vec![b"key1", b"key2"]);
-
-        let keys: Vec<_> = prefix
-            .keys_raw(
-                &storage,
-                Some(Bound::exclusive("key1")),
-                None,
-                Order::Ascending,
-            )
-            .collect();
-        assert_eq!(keys, vec![b"key2"]);
     }
 }

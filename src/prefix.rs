@@ -22,9 +22,9 @@ where
     T: Serialize + DeserializeOwned,
 {
     /// all namespaces prefixes and concatenated with the key
-    storage_prefix: Vec<u8>,
+    pub(crate) storage_prefix: Vec<u8>,
     // see https://doc.rust-lang.org/std/marker/struct.PhantomData.html#unused-type-parameters for why this is needed
-    data: PhantomData<(T, K, B)>,
+    pub(crate) data: PhantomData<(T, K, B)>,
 }
 
 impl<K, T> Debug for Prefix<K, T>
@@ -140,7 +140,7 @@ where
 
     /// Returns `true` if the prefix is empty.
     pub fn is_empty(&self, store: &dyn Storage) -> bool {
-        range_full(store, &self.storage_prefix, None, None, Order::Ascending)
+        keys_full(store, &self.storage_prefix, None, None, Order::Ascending)
             .next()
             .is_none()
     }
@@ -223,7 +223,7 @@ pub fn keys_with_prefix<'a>(
 
 /// Returns an iterator through all records in storage within the given bounds,
 /// yielding the full key (including the prefix) and value.
-fn range_full<'a>(
+pub(crate) fn range_full<'a>(
     store: &'a dyn Storage,
     namespace: &[u8],
     start: Option<RawBound>,
@@ -239,7 +239,7 @@ fn range_full<'a>(
 
 /// Returns an iterator through all keys in storage within the given bounds,
 /// yielding the full key including the prefix.
-fn keys_full<'a>(
+pub(crate) fn keys_full<'a>(
     store: &'a dyn Storage,
     namespace: &[u8],
     start: Option<RawBound>,
@@ -314,7 +314,7 @@ fn calc_prefix_end_bound<'a, K: Prefixer<'a>>(
     }
 }
 
-fn extend_one_byte(limit: &[u8]) -> Vec<u8> {
+pub(crate) fn extend_one_byte(limit: &[u8]) -> Vec<u8> {
     let mut v = limit.to_vec();
     v.push(0);
     v
