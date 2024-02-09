@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-## [2.0.0-beta.0] - 2024-01-23
+## [2.0.0-rc.0] - 2024-02-09
 
 ### Changed
 
@@ -52,8 +52,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.2.0...HEAD
-[1.2.0]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.1.0...v1.2.0
+[unreleased]: https://github.com/CosmWasm/cw-storage-plus/compare/v2.0.0-rc.0...HEAD
+[2.0.0-rc.0]: https://github.com/CosmWasm/cw-storage-plus/compare/v1.2.0...v2.0.0-rc.0
+[1.2.0]: https://github.com/CosmWasm/cw-storage-plus/compare/v1.1.0...v1.2.0
 
 ## [v1.1.0](https://github.com/CosmWasm/cw-storage-plus/tree/v1.1.0) (2023-06-12)
 
