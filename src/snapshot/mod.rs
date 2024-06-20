@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 /// been checkpointed (as u32).
 /// Stores all changes in changelog.
 #[derive(Debug, Clone)]
-pub(crate) struct Snapshot<'a, K, T> {
+pub struct Snapshot<'a, K, T, S> {
     checkpoints: Map<'a, u64, u32>,
 
     // this stores all changes (key, height). Must differentiate between no data written,
@@ -25,15 +25,15 @@ pub(crate) struct Snapshot<'a, K, T> {
     pub changelog: Map<'a, (K, u64), ChangeSet<T>>,
 
     // How aggressive we are about checkpointing all data
-    strategy: Strategy,
+    strategy: S,
 }
 
-impl<'a, K, T> Snapshot<'a, K, T> {
+impl<'a, K, T, S> Snapshot<'a, K, T, S> {
     pub const fn new(
         checkpoints: &'a str,
         changelog: &'a str,
-        strategy: Strategy,
-    ) -> Snapshot<'a, K, T> {
+        strategy: S,
+    ) -> Snapshot<'a, K, T, S> {
         Snapshot {
             checkpoints: Map::new(checkpoints),
             changelog: Map::new(changelog),
@@ -61,59 +61,27 @@ impl<'a, K, T> Snapshot<'a, K, T> {
     }
 }
 
-impl<'a, K, T> Snapshot<'a, K, T>
+impl<'a, K, T, S> Snapshot<'a, K, T, S>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
+    S: SnapshotStrategy<'a, K, T>,
 {
-    /// should_checkpoint looks at the strategy and determines if we want to checkpoint
-    pub fn should_checkpoint(&self, store: &dyn Storage, k: &K) -> StdResult<bool> {
-        match self.strategy {
-            Strategy::EveryBlock => Ok(true),
-            Strategy::Never => Ok(false),
-            Strategy::Selected => self.should_checkpoint_selected(store, k),
-        }
+    pub fn should_archive(&self, store: &dyn Storage, key: &K) -> StdResult<bool> {
+        self.strategy.should_archive(store, self, key)
     }
 
-    /// this is just pulled out from above for the selected block
-    fn should_checkpoint_selected(&self, store: &dyn Storage, k: &K) -> StdResult<bool> {
-        // most recent checkpoint
-        let checkpoint = self
-            .checkpoints
-            .range(store, None, None, Order::Descending)
-            .next()
-            .transpose()?;
-        if let Some((height, _)) = checkpoint {
-            // any changelog for the given key since then?
-            let start = Bound::inclusive(height);
-            let first = self
-                .changelog
-                .prefix(k.clone())
-                .range_raw(store, Some(start), None, Order::Ascending)
-                .next()
-                .transpose()?;
-            if first.is_none() {
-                // there must be at least one open checkpoint and no changelog for the given height since then
-                return Ok(true);
-            }
-        }
-        // otherwise, we don't save this
-        Ok(false)
-    }
-
-    // If there is no checkpoint for that height, then we return StdError::NotFound
     pub fn assert_checkpointed(&self, store: &dyn Storage, height: u64) -> StdResult<()> {
-        let has = match self.strategy {
-            Strategy::EveryBlock => true,
-            Strategy::Never => false,
-            Strategy::Selected => self.checkpoints.may_load(store, height)?.is_some(),
-        };
-        match has {
-            true => Ok(()),
-            false => Err(StdError::not_found("checkpoint")),
-        }
+        self.strategy.assert_checkpointed(store, self, height)
     }
+}
 
+impl<'a, K, T, S> Snapshot<'a, K, T, S>
+where
+    T: Serialize + DeserializeOwned + Clone,
+    K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
+    S: SnapshotStrategy<'a, K, T>,
+{
     pub fn has_changelog(&self, store: &mut dyn Storage, key: K, height: u64) -> StdResult<bool> {
         Ok(self.changelog.may_load(store, (key, height))?.is_some())
     }
@@ -140,7 +108,7 @@ where
         key: K,
         height: u64,
     ) -> StdResult<Option<Option<T>>> {
-        self.assert_checkpointed(store, height)?;
+        self.strategy.assert_checkpointed(store, self, height)?;
 
         // this will look for the first snapshot of height >= given height
         // If None, there is no snapshot since that time.
@@ -160,6 +128,28 @@ where
     }
 }
 
+pub trait SnapshotStrategy<'a, K, T>
+where
+    Self: Sized,
+    T: Serialize + DeserializeOwned + Clone,
+    K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
+{
+    // If there is no checkpoint for that height, then we return StdError::NotFound
+    fn assert_checkpointed(
+        &self,
+        store: &dyn Storage,
+        snapshot: &Snapshot<'a, K, T, Self>,
+        height: u64,
+    ) -> StdResult<()>;
+
+    fn should_archive(
+        &self,
+        store: &dyn Storage,
+        snapshot: &Snapshot<'a, K, T, Self>,
+        key: &K,
+    ) -> StdResult<bool>;
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum Strategy {
     EveryBlock,
@@ -172,6 +162,67 @@ pub enum Strategy {
     Selected,
 }
 
+impl<'a, K, T> SnapshotStrategy<'a, K, T> for Strategy
+where
+    T: Serialize + DeserializeOwned + Clone,
+    K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
+{
+    // If there is no checkpoint for that height, then we return StdError::NotFound
+    fn assert_checkpointed(
+        &self,
+        store: &dyn Storage,
+        snapshot: &Snapshot<K, T, Self>,
+        height: u64,
+    ) -> StdResult<()> {
+        let has = match self {
+            Self::EveryBlock => true,
+            Self::Never => false,
+            Self::Selected => snapshot.checkpoints.may_load(store, height)?.is_some(),
+        };
+        match has {
+            true => Ok(()),
+            false => Err(StdError::not_found("checkpoint")),
+        }
+    }
+
+    /// should_checkpoint looks at the strategy and determines if we want to checkpoint
+    fn should_archive(
+        &self,
+        store: &dyn Storage,
+        snapshot: &Snapshot<'a, K, T, Self>,
+        k: &K,
+    ) -> StdResult<bool> {
+        match self {
+            Strategy::EveryBlock => Ok(true),
+            Strategy::Never => Ok(false),
+            Strategy::Selected => {
+                // most recent checkpoint
+                let checkpoint = snapshot
+                    .checkpoints
+                    .range(store, None, None, Order::Descending)
+                    .next()
+                    .transpose()?;
+                if let Some((height, _)) = checkpoint {
+                    // any changelog for the given key since then?
+                    let start = Bound::inclusive(height);
+                    let first = snapshot
+                        .changelog
+                        .prefix(k.clone())
+                        .range_raw(store, Some(start), None, Order::Ascending)
+                        .next()
+                        .transpose()?;
+                    if first.is_none() {
+                        // there must be at least one open checkpoint and no changelog for the given height since then
+                        return Ok(true);
+                    }
+                }
+                // otherwise, we don't save this
+                Ok(false)
+            }
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct ChangeSet<T> {
     pub old: Option<T>,
@@ -182,7 +233,7 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::MockStorage;
 
-    type TestSnapshot = Snapshot<'static, &'static str, u64>;
+    type TestSnapshot = Snapshot<'static, &'static str, u64, Strategy>;
 
     const NEVER: TestSnapshot = Snapshot::new("never__check", "never__change", Strategy::Never);
     const EVERY: TestSnapshot =
@@ -196,9 +247,9 @@ mod tests {
     fn should_checkpoint() {
         let storage = MockStorage::new();
 
-        assert_eq!(NEVER.should_checkpoint(&storage, &DUMMY_KEY), Ok(false));
-        assert_eq!(EVERY.should_checkpoint(&storage, &DUMMY_KEY), Ok(true));
-        assert_eq!(SELECT.should_checkpoint(&storage, &DUMMY_KEY), Ok(false));
+        assert_eq!(NEVER.should_archive(&storage, &DUMMY_KEY), Ok(false));
+        assert_eq!(EVERY.should_archive(&storage, &DUMMY_KEY), Ok(true));
+        assert_eq!(SELECT.should_archive(&storage, &DUMMY_KEY), Ok(false));
     }
 
     #[test]

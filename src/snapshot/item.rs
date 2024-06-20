@@ -6,16 +6,18 @@ use cosmwasm_std::{StdError, StdResult, Storage};
 use crate::snapshot::{ChangeSet, Snapshot};
 use crate::{Item, Map, Strategy};
 
+use super::SnapshotStrategy;
+
 /// Item that maintains a snapshot of one or more checkpoints.
 /// We can query historical data as well as current state.
 /// What data is snapshotted depends on the Strategy.
-pub struct SnapshotItem<'a, T> {
+pub struct SnapshotItem<'a, T, S = Strategy> {
     primary: Item<'a, T>,
     changelog_namespace: &'a str,
-    snapshots: Snapshot<'a, (), T>,
+    snapshots: Snapshot<'a, (), T, S>,
 }
 
-impl<'a, T> SnapshotItem<'a, T> {
+impl<'a, T, S> SnapshotItem<'a, T, S> {
     /// Example:
     ///
     /// ```rust
@@ -31,7 +33,7 @@ impl<'a, T> SnapshotItem<'a, T> {
         storage_key: &'a str,
         checkpoints: &'a str,
         changelog: &'a str,
-        strategy: Strategy,
+        strategy: S,
     ) -> Self {
         SnapshotItem {
             primary: Item::new(storage_key),
@@ -54,9 +56,10 @@ impl<'a, T> SnapshotItem<'a, T> {
     }
 }
 
-impl<'a, T> SnapshotItem<'a, T>
+impl<'a, T, S> SnapshotItem<'a, T, S>
 where
     T: Serialize + DeserializeOwned + Clone,
+    S: SnapshotStrategy<'a, (), T>,
 {
     /// load old value and store changelog
     fn write_change(&self, store: &mut dyn Storage, height: u64) -> StdResult<()> {
@@ -70,14 +73,14 @@ where
     }
 
     pub fn save(&self, store: &mut dyn Storage, data: &T, height: u64) -> StdResult<()> {
-        if self.snapshots.should_checkpoint(store, &())? {
+        if self.snapshots.should_archive(store, &())? {
             self.write_change(store, height)?;
         }
         self.primary.save(store, data)
     }
 
     pub fn remove(&self, store: &mut dyn Storage, height: u64) -> StdResult<()> {
-        if self.snapshots.should_checkpoint(store, &())? {
+        if self.snapshots.should_archive(store, &())? {
             self.write_change(store, height)?;
         }
         self.primary.remove(store);
