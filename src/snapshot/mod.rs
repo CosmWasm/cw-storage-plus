@@ -67,8 +67,8 @@ where
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
     S: SnapshotStrategy<'a, K, T>,
 {
-    pub fn should_archive(&self, store: &dyn Storage, key: &K) -> StdResult<bool> {
-        self.strategy.should_archive(store, self, key)
+    pub fn should_archive(&self, store: &dyn Storage, key: &K, height: u64) -> StdResult<bool> {
+        self.strategy.should_archive(store, self, key, height)
     }
 
     pub fn assert_checkpointed(&self, store: &dyn Storage, height: u64) -> StdResult<()> {
@@ -108,7 +108,7 @@ where
         key: K,
         height: u64,
     ) -> StdResult<Option<Option<T>>> {
-        self.strategy.assert_checkpointed(store, self, height)?;
+        self.assert_checkpointed(store, height)?;
 
         // this will look for the first snapshot of height >= given height
         // If None, there is no snapshot since that time.
@@ -147,6 +147,7 @@ where
         store: &dyn Storage,
         snapshot: &Snapshot<'a, K, T, Self>,
         key: &K,
+        height: u64,
     ) -> StdResult<bool>;
 }
 
@@ -191,6 +192,7 @@ where
         store: &dyn Storage,
         snapshot: &Snapshot<'a, K, T, Self>,
         k: &K,
+        _height: u64,
     ) -> StdResult<bool> {
         match self {
             Strategy::EveryBlock => Ok(true),
@@ -247,9 +249,9 @@ mod tests {
     fn should_checkpoint() {
         let storage = MockStorage::new();
 
-        assert_eq!(NEVER.should_archive(&storage, &DUMMY_KEY), Ok(false));
-        assert_eq!(EVERY.should_archive(&storage, &DUMMY_KEY), Ok(true));
-        assert_eq!(SELECT.should_archive(&storage, &DUMMY_KEY), Ok(false));
+        assert_eq!(NEVER.should_archive(&storage, &DUMMY_KEY, 0), Ok(false));
+        assert_eq!(EVERY.should_archive(&storage, &DUMMY_KEY, 0), Ok(true));
+        assert_eq!(SELECT.should_archive(&storage, &DUMMY_KEY, 0), Ok(false));
     }
 
     #[test]

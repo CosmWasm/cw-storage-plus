@@ -88,14 +88,14 @@ where
     }
 
     pub fn save(&self, store: &mut dyn Storage, k: K, data: &T, height: u64) -> StdResult<()> {
-        if self.snapshots.should_archive(store, &k)? {
+        if self.snapshots.should_archive(store, &k, height)? {
             self.write_change(store, k.clone(), height)?;
         }
         self.primary.save(store, k, data)
     }
 
     pub fn remove(&self, store: &mut dyn Storage, k: K, height: u64) -> StdResult<()> {
-        if self.snapshots.should_archive(store, &k)? {
+        if self.snapshots.should_archive(store, &k, height)? {
             self.write_change(store, k.clone(), height)?;
         }
         self.primary.remove(store, k);
