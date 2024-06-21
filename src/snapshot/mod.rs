@@ -24,7 +24,7 @@ pub struct Snapshot<'a, K, T, S> {
     // and explicit None (just inserted)
     pub changelog: Map<'a, (K, u64), ChangeSet<T>>,
 
-    // How aggressive we are about checkpointing all data
+    // The strategy for deciding when to archive data
     strategy: S,
 }
 
@@ -134,7 +134,10 @@ where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
 {
-    // If there is no checkpoint for that height, then we return StdError::NotFound
+    /// Whether or not we have a checkpoint at the given height. This is used in
+    /// Snapshot::may_load_at_height and is checked before trying to load changelog entries.
+    /// Therefore, return Ok(()) if you are not using the checkpoint feature to still allow
+    /// loading the changelog.
     fn assert_checkpointed(
         &self,
         store: &dyn Storage,
@@ -142,6 +145,8 @@ where
         height: u64,
     ) -> StdResult<()>;
 
+    /// Whether or not we should archive the previously stored data to the changelog for the
+    /// given key and height.
     fn should_archive(
         &self,
         store: &dyn Storage,
