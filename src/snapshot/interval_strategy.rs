@@ -1,9 +1,9 @@
-use cosmwasm_std::{StdResult, Storage};
+use cosmwasm_std::{Order, StdResult, Storage};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use crate::{KeyDeserialize, Prefixer, PrimaryKey};
+use crate::{Bound, KeyDeserialize, Map, Prefixer, PrimaryKey};
 
-use super::{Snapshot, SnapshotStrategy};
+use super::{ChangeSet, SnapshotStrategy};
 
 /// A SnapshotStrategy that takes a snapshot only if at least the specified interval has passed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -28,7 +28,7 @@ where
     fn assert_checkpointed(
         &self,
         _store: &dyn Storage,
-        _snapshot: &Snapshot<K, T, Self>,
+        _checkpoints: &Map<'a, u64, u32>,
         _height: u64,
     ) -> StdResult<()> {
         Ok(())
@@ -37,19 +37,32 @@ where
     fn should_archive(
         &self,
         store: &dyn Storage,
-        snapshot: &Snapshot<'a, K, T, Self>,
+        _checkpoints: &Map<'a, u64, u32>,
+        changelog: &Map<'a, (K, u64), ChangeSet<T>>,
         key: &K,
         height: u64,
     ) -> StdResult<bool> {
         let last_height = height.saturating_sub(self.interval);
-        let change_since_interval = snapshot.may_load_at_height(store, key.clone(), last_height)?;
 
-        Ok(change_since_interval.is_none())
+        // Check if there is a changelog entry since the last interval
+        let changelog_entry = changelog
+            .prefix(key.clone())
+            .range_raw(
+                store,
+                Some(Bound::inclusive(last_height)),
+                None,
+                Order::Ascending,
+            )
+            .next();
+
+        Ok(changelog_entry.is_none())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::snapshot::Snapshot;
+
     use super::*;
     use cosmwasm_std::testing::MockStorage;
 

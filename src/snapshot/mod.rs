@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 /// been checkpointed (as u32).
 /// Stores all changes in changelog.
 #[derive(Debug, Clone)]
-pub struct Snapshot<'a, K, T, S> {
+pub(crate) struct Snapshot<'a, K, T, S> {
     checkpoints: Map<'a, u64, u32>,
 
     // this stores all changes (key, height). Must differentiate between no data written,
@@ -70,11 +70,13 @@ where
     S: SnapshotStrategy<'a, K, T>,
 {
     pub fn should_archive(&self, store: &dyn Storage, key: &K, height: u64) -> StdResult<bool> {
-        self.strategy.should_archive(store, self, key, height)
+        self.strategy
+            .should_archive(store, &self.checkpoints, &self.changelog, key, height)
     }
 
     pub fn assert_checkpointed(&self, store: &dyn Storage, height: u64) -> StdResult<()> {
-        self.strategy.assert_checkpointed(store, self, height)
+        self.strategy
+            .assert_checkpointed(store, &self.checkpoints, height)
     }
 }
 
@@ -143,7 +145,7 @@ where
     fn assert_checkpointed(
         &self,
         store: &dyn Storage,
-        snapshot: &Snapshot<'a, K, T, Self>,
+        checkpoints: &Map<'a, u64, u32>,
         height: u64,
     ) -> StdResult<()>;
 
@@ -152,7 +154,8 @@ where
     fn should_archive(
         &self,
         store: &dyn Storage,
-        snapshot: &Snapshot<'a, K, T, Self>,
+        checkpoints: &Map<'a, u64, u32>,
+        changelog: &Map<'a, (K, u64), ChangeSet<T>>,
         key: &K,
         height: u64,
     ) -> StdResult<bool>;
@@ -179,13 +182,13 @@ where
     fn assert_checkpointed(
         &self,
         store: &dyn Storage,
-        snapshot: &Snapshot<K, T, Self>,
+        checkpoints: &Map<'a, u64, u32>,
         height: u64,
     ) -> StdResult<()> {
         let has = match self {
             Self::EveryBlock => true,
             Self::Never => false,
-            Self::Selected => snapshot.checkpoints.may_load(store, height)?.is_some(),
+            Self::Selected => checkpoints.may_load(store, height)?.is_some(),
         };
         match has {
             true => Ok(()),
@@ -197,7 +200,8 @@ where
     fn should_archive(
         &self,
         store: &dyn Storage,
-        snapshot: &Snapshot<'a, K, T, Self>,
+        checkpoints: &Map<'a, u64, u32>,
+        changelog: &Map<'a, (K, u64), ChangeSet<T>>,
         k: &K,
         _height: u64,
     ) -> StdResult<bool> {
@@ -206,16 +210,14 @@ where
             Strategy::Never => Ok(false),
             Strategy::Selected => {
                 // most recent checkpoint
-                let checkpoint = snapshot
-                    .checkpoints
+                let checkpoint = checkpoints
                     .range(store, None, None, Order::Descending)
                     .next()
                     .transpose()?;
                 if let Some((height, _)) = checkpoint {
                     // any changelog for the given key since then?
                     let start = Bound::inclusive(height);
-                    let first = snapshot
-                        .changelog
+                    let first = changelog
                         .prefix(k.clone())
                         .range_raw(store, Some(start), None, Order::Ascending)
                         .next()
