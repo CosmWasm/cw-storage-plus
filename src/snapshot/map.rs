@@ -13,15 +13,17 @@ use crate::prefix::{namespaced_prefix_range, Prefix};
 use crate::snapshot::{ChangeSet, Snapshot};
 use crate::{Bound, Prefixer, Strategy};
 
+use super::SnapshotStrategy;
+
 /// Map that maintains a snapshots of one or more checkpoints.
 /// We can query historical data as well as current state.
 /// What data is snapshotted depends on the Strategy.
-pub struct SnapshotMap<'a, K, T> {
+pub struct SnapshotMap<'a, K, T, S = Strategy> {
     primary: Map<'a, K, T>,
-    snapshots: Snapshot<'a, K, T>,
+    snapshots: Snapshot<'a, K, T, S>,
 }
 
-impl<'a, K, T> SnapshotMap<'a, K, T> {
+impl<'a, K, T, S> SnapshotMap<'a, K, T, S> {
     /// Example:
     ///
     /// ```rust
@@ -34,12 +36,7 @@ impl<'a, K, T> SnapshotMap<'a, K, T> {
     ///     Strategy::EveryBlock
     /// );
     /// ```
-    pub const fn new(
-        pk: &'a str,
-        checkpoints: &'a str,
-        changelog: &'a str,
-        strategy: Strategy,
-    ) -> Self {
+    pub const fn new(pk: &'a str, checkpoints: &'a str, changelog: &'a str, strategy: S) -> Self {
         SnapshotMap {
             primary: Map::new(pk),
             snapshots: Snapshot::new(checkpoints, changelog, strategy),
@@ -51,7 +48,7 @@ impl<'a, K, T> SnapshotMap<'a, K, T> {
     }
 }
 
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T, S> SnapshotMap<'a, K, T, S>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a>,
@@ -65,10 +62,11 @@ where
     }
 }
 
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T, S> SnapshotMap<'a, K, T, S>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
+    S: SnapshotStrategy<'a, K, T>,
 {
     pub fn key(&self, k: K) -> Path<T> {
         self.primary.key(k)
@@ -90,14 +88,14 @@ where
     }
 
     pub fn save(&self, store: &mut dyn Storage, k: K, data: &T, height: u64) -> StdResult<()> {
-        if self.snapshots.should_checkpoint(store, &k)? {
+        if self.snapshots.should_archive(store, &k, height)? {
             self.write_change(store, k.clone(), height)?;
         }
         self.primary.save(store, k, data)
     }
 
     pub fn remove(&self, store: &mut dyn Storage, k: K, height: u64) -> StdResult<()> {
-        if self.snapshots.should_checkpoint(store, &k)? {
+        if self.snapshots.should_archive(store, &k, height)? {
             self.write_change(store, k.clone(), height)?;
         }
         self.primary.remove(store, k);
@@ -162,10 +160,11 @@ where
 }
 
 // short-cut for simple keys, rather than .prefix(()).range_raw(...)
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T, S> SnapshotMap<'a, K, T, S>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
+    S: SnapshotStrategy<'a, K, T>,
 {
     // I would prefer not to copy code from Prefix, but no other way
     // with lifetimes (create Prefix inside function and return ref = no no)
@@ -197,7 +196,7 @@ where
 }
 
 #[cfg(feature = "iterator")]
-impl<'a, K, T> SnapshotMap<'a, K, T>
+impl<'a, K, T, S> SnapshotMap<'a, K, T, S>
 where
     T: Serialize + DeserializeOwned,
     K: PrimaryKey<'a> + KeyDeserialize,

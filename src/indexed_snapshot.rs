@@ -14,15 +14,15 @@ use crate::PrefixBound;
 use crate::{Bound, IndexList, Map, Path, Strategy};
 
 /// `IndexedSnapshotMap` works like a `SnapshotMap` but has a secondary index
-pub struct IndexedSnapshotMap<'a, K, T, I> {
+pub struct IndexedSnapshotMap<'a, K, T, I, S = Strategy> {
     pk_namespace: &'a [u8],
-    primary: SnapshotMap<'a, K, T>,
+    primary: SnapshotMap<'a, K, T, S>,
     /// This is meant to be read directly to get the proper types, like:
     /// map.idx.owner.items(...)
     pub idx: I,
 }
 
-impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I> {
+impl<'a, K, T, I, S> IndexedSnapshotMap<'a, K, T, I, S> {
     /// Examples:
     ///
     /// ```rust
@@ -48,7 +48,7 @@ impl<'a, K, T, I> IndexedSnapshotMap<'a, K, T, I> {
         pk_namespace: &'a str,
         checkpoints: &'a str,
         changelog: &'a str,
-        strategy: Strategy,
+        strategy: S,
         indexes: I,
     ) -> Self {
         IndexedSnapshotMap {
