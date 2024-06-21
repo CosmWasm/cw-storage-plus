@@ -54,7 +54,7 @@ pub use path::Path;
 #[cfg(feature = "iterator")]
 pub use prefix::{range_with_prefix, Prefix};
 #[cfg(feature = "iterator")]
-pub use snapshot::{SnapshotItem, SnapshotMap, Strategy};
+pub use snapshot::{IntervalStrategy, SnapshotItem, SnapshotMap, Strategy};
 
 // cw_storage_macro reexports
 #[cfg(all(feature = "iterator", feature = "macro"))]

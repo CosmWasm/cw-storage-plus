@@ -1,7 +1,9 @@
 #![cfg(feature = "iterator")]
+mod interval_strategy;
 mod item;
 mod map;
 
+pub use interval_strategy::IntervalStrategy;
 pub use item::SnapshotItem;
 pub use map::SnapshotMap;
 
