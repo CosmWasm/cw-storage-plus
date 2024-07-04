@@ -179,6 +179,19 @@ impl<T: Serialize + DeserializeOwned> Deque<T> {
             .map(Some)
     }
 
+    /// Sets the value at the given position in the queue. Returns [`StdError::NotFound`] if index is out of bounds
+    pub fn set(&self, storage: &mut dyn Storage, pos: u32, value: &T) -> StdResult<()> {
+        let head = self.head(storage)?;
+        let tail = self.tail(storage)?;
+
+        if pos >= calc_len(head, tail) {
+            // out of bounds
+            return Err(StdError::not_found(format!("deque position {}", pos)));
+        }
+
+        self.set_unchecked(storage, pos, value)
+    }
+
     /// Tries to get the value at the given position
     /// Used internally
     fn get_unchecked(&self, storage: &dyn Storage, pos: u32) -> StdResult<Option<T>> {
@@ -674,6 +687,37 @@ mod tests {
             deque.get(&store, 5).unwrap(),
             None,
             "out of bounds access should return None"
+        );
+    }
+
+    #[test]
+    fn set() {
+        let mut store = MockStorage::new();
+        let deque = Deque::new("test");
+
+        deque.push_back(&mut store, &1u32).unwrap();
+        deque.push_back(&mut store, &2).unwrap();
+
+        deque.set(&mut store, 1, &3).unwrap();
+
+        assert_eq!(deque.get(&store, 1).unwrap(), Some(3));
+        assert_eq!(deque.back(&store).unwrap(), Some(3));
+        assert_eq!(
+            deque.get(&store, 2).unwrap(),
+            None,
+            "out of bounds access should return None"
+        );
+
+        assert!(
+            matches!(deque.set(&mut store, 2, &3), Err(StdError::NotFound { .. })),
+            "setting value at an out of bounds index should error"
+        );
+
+        assert_eq!(deque.pop_back(&mut store), Ok(Some(3)));
+
+        assert!(
+            matches!(deque.set(&mut store, 1, &3), Err(StdError::NotFound { .. })),
+            "setting value at an out of bounds index should error"
         );
     }
 }
