@@ -402,7 +402,7 @@ mod test {
 
         let path = TRIPLE.key((b"john", 8u8, "pedro"));
         let key = path.deref();
-        // this should be prefixed(allow) || prefixed(john) || maria
+        // this should be prefixed(triple) || prefixed(john) || prefixed(8u8) || pedro
         assert_eq!(
             "triple".len() + "john".len() + 1 + "pedro".len() + 2 * 3,
             key.len()
