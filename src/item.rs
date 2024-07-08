@@ -9,7 +9,7 @@ use cosmwasm_std::{
 
 use crate::{helpers::not_found_object_info, namespace::Namespace};
 
-/// /// `Item` manages a single typed element using a specified key.
+/// `Item` manages a single typed element using a specified key.
 /// Comparable to `Singleton`, it operates similarly to `Path` but with notable differences.
 /// Unlike `Path`, `Item` avoids using a `Vec` and features a constant function (const fn) constructor
 /// for streamlined initialization. Additionally, `Item` offers a more efficient storage
