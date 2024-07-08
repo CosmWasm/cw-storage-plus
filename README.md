@@ -104,7 +104,7 @@ activates it in `cosmwasm-std`, and is typically enabled by default.
 
 Switching from using `Bucket`, the most significant change is the omission of `Storage` inside it.
  This eliminates the need for separate read and write variants, requiring only one type. 
- Moreover, `Bucket` is created using `const fn`, allowing it to be set as a global compile-time 
+ Moreover, `Map` can be created using `const fn`, allowing it to be set as a global compile-time 
  constant rather than a runtime-constructed function, which conserves gas and reduces typing effort. 
  Additionally, the use of composite indexes (tuples) has been made more ergonomic and streamlined.
   This ergonomic enhancement simplifies the usage of composite keys, making the development 
