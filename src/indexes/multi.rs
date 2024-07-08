@@ -29,13 +29,13 @@ use std::marker::PhantomData;
 /// - It then performs a secondary retrieval of the associated value from the primary map.
 ///
 /// # Key Types
-/// - The PK type is essential for defining the primary key's data type, ensuring both 
+/// - The PK type is essential for defining the primary key's data type, ensuring both
 /// deserialization accuracy and type-safe key usage.
-/// - This PK type must be congruent with the `IndexedMap` primary key type 
+/// - This PK type must be congruent with the `IndexedMap` primary key type
 /// or its variant, ensuring consistency across the data structure.
 ///
-/// `MultiIndex` thus plays a vital role in managing multi-dimensional data structures, 
-/// 
+/// `MultiIndex` thus plays a vital role in managing multi-dimensional data structures,
+///
 /// ensuring efficient access and retrieval within the Cosmos ecosystem's complex data environments.
 pub struct MultiIndex<'a, IK, T, PK> {
     index: fn(&[u8], &T) -> IK,

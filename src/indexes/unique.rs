@@ -33,10 +33,10 @@ pub(crate) struct UniqueRef<T> {
 /// - Efficiency: By storing both the key and value, it allows for faster access and retrieval of data.
 ///
 /// # Primary Key (PK) Role
-/// - The PK type is critical for the format and deserialization of the primary key, 
+/// - The PK type is critical for the format and deserialization of the primary key,
 /// ensuring data consistency and integrity.
 ///
-/// This design is particularly valuable in scenarios where unique identification and 
+/// This design is particularly valuable in scenarios where unique identification and
 /// efficient data access are paramount, making `UniqueIndex` a key component in the Cosmos ecosystem
 ///  for managing unique data sets.
 pub struct UniqueIndex<'a, IK, T, PK> {

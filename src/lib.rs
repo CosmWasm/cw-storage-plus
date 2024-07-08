@@ -1,22 +1,22 @@
-/* 
+/*
 
-##Overview 
- 
+##Overview
+
 cw-storage-plus is a refined iteration of cosmwasm-storage, born out of the need for
-a more flexible and efficient ORM layer. It transcends the basic KV-store 
+a more flexible and efficient ORM layer. It transcends the basic KV-store
 abstractions, offering sophisticated data handling through complex key types and generics.
-This crate has evolved through multiple releases, incorporating user feedback and practical 
-insights to fully leverage Rust's generics. 
+This crate has evolved through multiple releases, incorporating user feedback and practical
+insights to fully leverage Rust's generics.
 
-##Key Features 
+##Key Features
 
 The main goal of cw-storage-plus is to make it easier to build robust contracts by providing:
 
-*Advanced Key Handling: Utilizes complex key types for efficient data access and manipulation. 
+*Advanced Key Handling: Utilizes complex key types for efficient data access and manipulation.
 
-*ORM Capabilities: Provides an Object-Relational Mapping layer to work with stored data more intuitively. 
+*ORM Capabilities: Provides an Object-Relational Mapping layer to work with stored data more intuitively.
 
-*Generics Utilization: Leverages the power of Rust's generics for versatile and type-safe storage solutions. 
+*Generics Utilization: Leverages the power of Rust's generics for versatile and type-safe storage solutions.
 
 For more information on this package, please check out the
 [README](https://github.com/CosmWasm/cw-plus/blob/main/packages/storage-plus/README.md).
