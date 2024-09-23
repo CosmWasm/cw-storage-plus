@@ -1,7 +1,7 @@
 use std::array::TryFromSliceError;
 use std::convert::TryInto;
 
-use cosmwasm_std::{Addr, StdError, StdResult};
+use cosmwasm_std::{Addr, Int128, Int64, StdError, StdResult, Uint128, Uint64};
 
 use crate::int_key::IntKey;
 
@@ -156,7 +156,7 @@ macro_rules! integer_de {
     }
 }
 
-integer_de!(for i8, u8, i16, u16, i32, u32, i64, u64, i128, u128);
+integer_de!(for i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, Uint64, Uint128, Int64, Int128);
 
 fn parse_length(value: &[u8]) -> StdResult<usize> {
     Ok(u16::from_be_bytes(

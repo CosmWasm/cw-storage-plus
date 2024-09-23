@@ -1,5 +1,7 @@
 use std::mem;
 
+use cosmwasm_std::{Int128, Int64, Uint128, Uint64};
+
 /// Our int keys are simply the big-endian representation bytes for unsigned ints,
 /// but "sign-flipped" (xored msb) big-endian bytes for signed ints.
 ///
@@ -50,6 +52,28 @@ macro_rules! cw_int_keys {
 }
 
 cw_int_keys!(for i8, u8, i16, u16, i32, u32, i64, u64, i128, u128);
+
+macro_rules! cw_uint_std_keys {
+    (for $($t:ty => $tt:ident),+) => {
+        $(impl IntKey for $t {
+            type Buf = [u8; mem::size_of::<$t>()];
+
+            #[inline]
+            fn to_cw_bytes(&self) -> Self::Buf {
+                self.$tt().to_cw_bytes()
+            }
+
+            #[inline]
+            fn from_cw_bytes(bytes: Self::Buf) -> Self {
+                Self::new(IntKey::from_cw_bytes(bytes))
+            }
+        })*
+    }
+}
+
+// the bit after => is the name of the method to convert to the underlying type
+// e.g. Uint64 => u64 means Uint64 has a method .u64() that returns a u64
+cw_uint_std_keys!(for Uint64 => u64, Uint128 => u128,Int64 => i64, Int128 => i128);
 
 #[cfg(test)]
 mod test {
