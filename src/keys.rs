@@ -1,4 +1,5 @@
 use cosmwasm_std::{storage_keys::namespace_with_key, Addr};
+use cosmwasm_std::{Int128, Int64, Uint128, Uint64};
 
 use crate::de::KeyDeserialize;
 use crate::int_key::IntKey;
@@ -304,8 +305,7 @@ macro_rules! integer_key {
     }
 }
 
-integer_key!(for i8, Val8, u8, Val8, i16, Val16, u16, Val16, i32, Val32, u32, Val32, i64, Val64, u64, Val64, i128, Val128, u128, Val128);
-
+integer_key!(for i8, Val8, u8, Val8, i16, Val16, u16, Val16, i32, Val32, u32, Val32, i64, Val64, u64, Val64, i128, Val128, u128, Val128, Uint64, Val64, Uint128, Val128, Int64, Val64, Int128, Val128);
 macro_rules! integer_prefix {
     (for $($t:ty, $v:tt),+) => {
         $(impl<'a> Prefixer<'a> for $t {
@@ -316,7 +316,7 @@ macro_rules! integer_prefix {
     }
 }
 
-integer_prefix!(for i8, Val8, u8, Val8, i16, Val16, u16, Val16, i32, Val32, u32, Val32, i64, Val64, u64, Val64, i128, Val128, u128, Val128);
+integer_prefix!(for i8, Val8, u8, Val8, i16, Val16, u16, Val16, i32, Val32, u32, Val32, i64, Val64, u64, Val64, i128, Val128, u128, Val128, Uint64, Val64, Uint128, Val128, Int64, Val64, Int128, Val128);
 
 #[cfg(test)]
 mod test {
@@ -387,6 +387,38 @@ mod test {
         let path = k.key();
         assert_eq!(1, path.len());
         assert_eq!(4242i128.to_cw_bytes(), path[0].as_ref());
+    }
+
+    #[test]
+    fn std_uint64_key_works() {
+        let k: Uint64 = Uint64::from(4242u64);
+        let path = k.key();
+        assert_eq!(1, path.len());
+        assert_eq!(4242u64.to_cw_bytes(), path[0].as_ref());
+    }
+
+    #[test]
+    fn std_uint128_key_works() {
+        let k: Uint128 = Uint128::from(4242u128);
+        let path = k.key();
+        assert_eq!(1, path.len());
+        assert_eq!(4242u128.to_cw_bytes(), path[0].as_ref());
+    }
+
+    #[test]
+    fn std_int64_key_works() {
+        let k: Int64 = Int64::from(-4242i64);
+        let path = k.key();
+        assert_eq!(1, path.len());
+        assert_eq!((-4242i64).to_cw_bytes(), path[0].as_ref());
+    }
+
+    #[test]
+    fn std_int128_key_works() {
+        let k: Int128 = Int128::from(-4242i128);
+        let path = k.key();
+        assert_eq!(1, path.len());
+        assert_eq!((-4242i128).to_cw_bytes(), path[0].as_ref());
     }
 
     #[test]
