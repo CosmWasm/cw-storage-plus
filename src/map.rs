@@ -20,6 +20,7 @@ use crate::prefix::{namespaced_prefix_range, Prefix};
 use cosmwasm_std::Order;
 use cosmwasm_std::{from_json, Addr, CustomQuery, QuerierWrapper, StdError, StdResult, Storage};
 
+/// `Map`: A basic storage map.
 #[derive(Debug, Clone)]
 pub struct Map<K, T> {
     namespace: Namespace,
