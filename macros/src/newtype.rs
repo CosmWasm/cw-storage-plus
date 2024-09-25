@@ -1,5 +1,3 @@
-extern crate proc_macro;
-
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DeriveInput, Fields};
@@ -25,8 +23,8 @@ fn impl_newtype(input: &DeriveInput) -> proc_macro2::TokenStream {
         _ => None,
     };
 
-    let inner_type =
-        inner_type.expect("CwStorageNewtype can only be derived for tuple structs with one field");
+    let inner_type = inner_type
+        .expect("NewTypeKey can only be derived for newtypes (tuple structs with one field)");
 
     // Implement PrimaryKey
     let impl_primary_key = quote! {
