@@ -5,6 +5,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.1.0] - 2024-09-25
+- Add derive macro for `NewTypeKey`
+
 ## [2.0.0] - 2024-03-14
 
 ## [2.0.0-rc.0] - 2024-02-09
