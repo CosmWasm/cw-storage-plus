@@ -105,7 +105,7 @@ jobs:
 
   build_maximal:
     docker:
-      - image: rust:1.65.0
+      - image: rust:1.75.0
     working_directory: ~/project/
     steps:
       - checkout
@@ -117,7 +117,7 @@ jobs:
           command: cargo update
       - restore_cache:
           keys:
-            - cargocache-v2-storage-plus:1.65.0-{{ checksum "Cargo.lock" }}
+            - cargocache-v2-storage-plus:1.75.0-{{ checksum "Cargo.lock" }}
       - run:
           name: Build library for native target (with iterator and macro)
           command: cargo build --locked --all-features
@@ -128,7 +128,7 @@ jobs:
           paths:
             - /usr/local/cargo/registry
             - target
-          key: cargocache-v2-storage-plus:1.65.0-{{ checksum "Cargo.lock" }}
+          key: cargocache-v2-storage-plus:1.75.0-{{ checksum "Cargo.lock" }}
 
   lint:
     docker:
