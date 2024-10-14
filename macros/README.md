@@ -20,3 +20,13 @@ struct TestIndexes<'a> {
     addr: UniqueIndex<'a, Addr, TestStruct, String>,
 }
 ```
+
+Auto generate the required impls to use a newtype as a key
+
+```rust
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(NewTypeKey)] // <- Add this line right here.
+struct TestKey(u64);
+
+// You can now use `TestKey` as a key in `Map`
+```
