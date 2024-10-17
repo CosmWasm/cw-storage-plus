@@ -15,7 +15,7 @@ use cosmwasm_std::{StdResult, Storage};
 
 // Note: we cannot store traits with generic functions inside `Box<dyn Index>`,
 // so I pull S: Storage to a top-level
-pub trait Index<T>
+pub trait Index<K, T>
 where
     T: Serialize + DeserializeOwned + Clone,
 {

@@ -129,10 +129,11 @@ fn deserialize_multi_kv<K: KeyDeserialize, T: DeserializeOwned>(
     Ok((K::from_slice(pk)?, v))
 }
 
-impl<'a, IK, T, PK> Index<T> for MultiIndex<'a, IK, T, PK>
+impl<'a, IK, T, PK, ALTPK> Index<ALTPK, T> for MultiIndex<'a, IK, T, PK>
 where
     T: Serialize + DeserializeOwned + Clone,
     IK: PrimaryKey<'a>,
+    ALTPK: Into<PK>,
 {
     fn save(&self, store: &mut dyn Storage, pk: &[u8], data: &T) -> StdResult<()> {
         let idx = (self.index)(pk, data).joined_extra_key(pk);

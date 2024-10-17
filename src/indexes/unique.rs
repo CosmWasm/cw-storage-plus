@@ -62,10 +62,11 @@ impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK> {
     }
 }
 
-impl<'a, IK, T, PK> Index<T> for UniqueIndex<'a, IK, T, PK>
+impl<'a, IK, T, PK, ALTPK> Index<ALTPK, T> for UniqueIndex<'a, IK, T, PK>
 where
     T: Serialize + DeserializeOwned + Clone,
     IK: PrimaryKey<'a>,
+    ALTPK: Into<PK>,
 {
     fn save(&self, store: &mut dyn Storage, pk: &[u8], data: &T) -> StdResult<()> {
         let idx = (self.index)(data);
