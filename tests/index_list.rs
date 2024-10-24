@@ -17,7 +17,7 @@ mod test {
         #[index_list(TestStruct)]
         struct TestIndexes<'a> {
             id: MultiIndex<'a, u32, TestStruct, u64>,
-            addr: UniqueIndex<'a, Addr, TestStruct, ()>,
+            addr: UniqueIndex<'a, Addr, TestStruct, u64>,
         }
 
         let _: IndexedMap<u64, TestStruct, TestIndexes> = IndexedMap::new(
@@ -41,7 +41,7 @@ mod test {
         #[index_list(TestStruct)]
         struct TestIndexes<'a> {
             id: MultiIndex<'a, u32, TestStruct, u64>,
-            addr: UniqueIndex<'a, Addr, TestStruct, ()>,
+            addr: UniqueIndex<'a, Addr, TestStruct, u64>,
         }
 
         let mut storage = MockStorage::new();

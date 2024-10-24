@@ -16,7 +16,9 @@ use crate::prefix::{namespaced_prefix_range, Prefix};
 use crate::{Bound, Path};
 
 pub trait IndexList<T> {
-    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<T>> + '_>;
+    type PK;
+
+    fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<T, PK = Self::PK>> + '_>;
 }
 
 /// `IndexedMap` works like a `Map` but has a secondary index
@@ -335,8 +337,13 @@ mod test {
 
     // Future Note: this can likely be macro-derived
     impl<'a> IndexList<Data> for DataIndexes<'a> {
-        fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Data>> + '_> {
-            let v: Vec<&dyn Index<Data>> = vec![&self.name, &self.age, &self.name_lastname];
+        type PK = String;
+
+        fn get_indexes(
+            &'_ self,
+        ) -> Box<dyn Iterator<Item = &'_ dyn Index<Data, PK = Self::PK>> + '_> {
+            let v: Vec<&dyn Index<Data, PK = Self::PK>> =
+                vec![&self.name, &self.age, &self.name_lastname];
             Box::new(v.into_iter())
         }
     }
@@ -349,8 +356,12 @@ mod test {
 
     // Future Note: this can likely be macro-derived
     impl<'a> IndexList<Data> for DataCompositeMultiIndex<'a> {
-        fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Data>> + '_> {
-            let v: Vec<&dyn Index<Data>> = vec![&self.name_age];
+        type PK = String;
+
+        fn get_indexes(
+            &'_ self,
+        ) -> Box<dyn Iterator<Item = &'_ dyn Index<Data, PK = Self::PK>> + '_> {
+            let v: Vec<&dyn Index<Data, PK = Self::PK>> = vec![&self.name_age];
             Box::new(v.into_iter())
         }
     }
@@ -1453,13 +1464,17 @@ mod test {
     mod bounds_unique_index {
         use super::*;
 
-        struct Indexes<'a> {
-            secondary: UniqueIndex<'a, u64, u64, ()>,
+        struct Indexes<'a, 's> {
+            secondary: UniqueIndex<'a, u64, u64, &'s str>,
         }
 
-        impl<'a> IndexList<u64> for Indexes<'a> {
-            fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<u64>> + '_> {
-                let v: Vec<&dyn Index<u64>> = vec![&self.secondary];
+        impl<'a, 's> IndexList<u64> for Indexes<'a, 's> {
+            type PK = &'s str;
+
+            fn get_indexes(
+                &'_ self,
+            ) -> Box<dyn Iterator<Item = &'_ dyn Index<u64, PK = Self::PK>> + '_> {
+                let v: Vec<&dyn Index<u64, PK = Self::PK>> = vec![&self.secondary];
                 Box::new(v.into_iter())
             }
         }
@@ -1498,7 +1513,7 @@ mod test {
                 .collect::<Result<_, _>>()
                 .unwrap();
 
-            assert_eq!(items, vec![((), 3)]);
+            matches!(items.as_slice(), [(_, 3)]);
         }
     }
 
@@ -1511,8 +1526,12 @@ mod test {
         }
 
         impl<'a> IndexList<u64> for Indexes<'a> {
-            fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<u64>> + '_> {
-                let v: Vec<&dyn Index<u64>> = vec![&self.secondary];
+            type PK = &'a str;
+
+            fn get_indexes(
+                &'_ self,
+            ) -> Box<dyn Iterator<Item = &'_ dyn Index<u64, PK = Self::PK>> + '_> {
+                let v: Vec<&dyn Index<u64, PK = Self::PK>> = vec![&self.secondary];
                 Box::new(v.into_iter())
             }
         }
@@ -1584,8 +1603,12 @@ mod test {
         }
 
         impl<'a> IndexList<Uint128> for Indexes<'a> {
-            fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Uint128>> + '_> {
-                let v: Vec<&dyn Index<Uint128>> = vec![&self.spender];
+            type PK = (Addr, Addr);
+
+            fn get_indexes(
+                &'_ self,
+            ) -> Box<dyn Iterator<Item = &'_ dyn Index<Uint128, PK = Self::PK>> + '_> {
+                let v: Vec<&dyn Index<Uint128, PK = Self::PK>> = vec![&self.spender];
                 Box::new(v.into_iter())
             }
         }
