@@ -1,30 +1,32 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput, Fields};
+use syn::{parse_macro_input, ItemStruct};
 
 pub fn cw_storage_newtype_key_derive(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
+    let input = parse_macro_input!(input as ItemStruct);
 
     let expanded = impl_newtype(&input);
 
     TokenStream::from(expanded)
 }
 
-fn impl_newtype(input: &DeriveInput) -> proc_macro2::TokenStream {
+fn impl_newtype(input: &ItemStruct) -> proc_macro2::TokenStream {
     // Extract the struct name
     let name = &input.ident;
 
     // Extract the inner type
-    let inner_type = match &input.data {
-        Data::Struct(data_struct) => match &data_struct.fields {
-            Fields::Unnamed(fields) if fields.unnamed.len() == 1 => Some(&fields.unnamed[0].ty),
-            _ => None,
-        },
-        _ => None,
+    let inner_type = if let syn::Fields::Unnamed(fields) = &input.fields {
+        if fields.unnamed.len() == 1 {
+            &fields.unnamed[0].ty
+        } else {
+            panic!(
+                "Too many fields for NewTypeKey. Expected 1, got {}",
+                fields.unnamed.len()
+            );
+        }
+    } else {
+        panic!("NewTypeKey can only be derived for newtypes (tuple structs with one field)");
     };
-
-    let inner_type = inner_type
-        .expect("NewTypeKey can only be derived for newtypes (tuple structs with one field)");
 
     // Implement PrimaryKey
     let impl_primary_key = quote! {
