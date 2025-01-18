@@ -1161,7 +1161,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 
 **Closed issues:**
 
-- Migration to 0.11: errors of shared functions accross contracts [\#103](https://github.com/CosmWasm/cw-plus/issues/103)
+- Migration to 0.11: errors of shared functions across contracts [\#103](https://github.com/CosmWasm/cw-plus/issues/103)
 - Look at serde\(flatten\) to simplify return value composition [\#57](https://github.com/CosmWasm/cw-plus/issues/57)
 
 **Merged pull requests:**
