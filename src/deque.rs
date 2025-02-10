@@ -244,7 +244,7 @@ where
     end: u32,
 }
 
-impl<'a, T> Iterator for DequeIter<'a, T>
+impl<T> Iterator for DequeIter<'_, T>
 where
     T: Serialize + DeserializeOwned,
 {
@@ -285,7 +285,7 @@ where
     }
 }
 
-impl<'a, T> DoubleEndedIterator for DequeIter<'a, T>
+impl<T> DoubleEndedIterator for DequeIter<'_, T>
 where
     T: Serialize + DeserializeOwned,
 {
