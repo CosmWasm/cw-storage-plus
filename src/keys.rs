@@ -14,7 +14,7 @@ pub enum Key<'a> {
     Val128([u8; 16]),
 }
 
-impl<'a> AsRef<[u8]> for Key<'a> {
+impl AsRef<[u8]> for Key<'_> {
     fn as_ref(&self) -> &[u8] {
         match self {
             Key::Ref(r) => r,
@@ -27,7 +27,7 @@ impl<'a> AsRef<[u8]> for Key<'a> {
     }
 }
 
-impl<'a> PartialEq<&[u8]> for Key<'a> {
+impl PartialEq<&[u8]> for Key<'_> {
     fn eq(&self, other: &&[u8]) -> bool {
         self.as_ref() == *other
     }
@@ -82,7 +82,7 @@ pub trait PrimaryKey<'a>: Clone {
 }
 
 // Empty / no primary key
-impl<'a> PrimaryKey<'a> for () {
+impl PrimaryKey<'_> for () {
     type Prefix = Self;
     type SubPrefix = Self;
     type Suffix = Self;
@@ -105,7 +105,7 @@ impl<'a> PrimaryKey<'a> for &'a [u8] {
     }
 }
 
-impl<'a, const N: usize> PrimaryKey<'a> for [u8; N] {
+impl<const N: usize> PrimaryKey<'_> for [u8; N] {
     type Prefix = ();
     type SubPrefix = ();
     type Suffix = Self;
@@ -192,7 +192,7 @@ pub trait Prefixer<'a> {
     }
 }
 
-impl<'a> Prefixer<'a> for () {
+impl Prefixer<'_> for () {
     fn prefix(&self) -> Vec<Key> {
         vec![]
     }
@@ -237,7 +237,7 @@ impl<'a> Prefixer<'a> for &'a str {
     }
 }
 
-impl<'a> PrimaryKey<'a> for Vec<u8> {
+impl PrimaryKey<'_> for Vec<u8> {
     type Prefix = ();
     type SubPrefix = ();
     type Suffix = Self;
@@ -248,13 +248,13 @@ impl<'a> PrimaryKey<'a> for Vec<u8> {
     }
 }
 
-impl<'a> Prefixer<'a> for Vec<u8> {
+impl Prefixer<'_> for Vec<u8> {
     fn prefix(&self) -> Vec<Key> {
         vec![Key::Ref(self.as_ref())]
     }
 }
 
-impl<'a> PrimaryKey<'a> for String {
+impl PrimaryKey<'_> for String {
     type Prefix = ();
     type SubPrefix = ();
     type Suffix = Self;
@@ -265,14 +265,14 @@ impl<'a> PrimaryKey<'a> for String {
     }
 }
 
-impl<'a> Prefixer<'a> for String {
+impl Prefixer<'_> for String {
     fn prefix(&self) -> Vec<Key> {
         vec![Key::Ref(self.as_bytes())]
     }
 }
 
 /// owned variant.
-impl<'a> PrimaryKey<'a> for Addr {
+impl PrimaryKey<'_> for Addr {
     type Prefix = ();
     type SubPrefix = ();
     type Suffix = Self;
@@ -284,7 +284,7 @@ impl<'a> PrimaryKey<'a> for Addr {
     }
 }
 
-impl<'a> Prefixer<'a> for Addr {
+impl Prefixer<'_> for Addr {
     fn prefix(&self) -> Vec<Key> {
         vec![Key::Ref(self.as_bytes())]
     }

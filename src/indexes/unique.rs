@@ -34,7 +34,7 @@ pub struct UniqueIndex<'a, IK, T, PK> {
     phantom: PhantomData<PK>,
 }
 
-impl<'a, IK, T, PK> UniqueIndex<'a, IK, T, PK> {
+impl<IK, T, PK> UniqueIndex<'_, IK, T, PK> {
     /// Create a new UniqueIndex
     ///
     /// idx_fn - lambda creating index key from index value

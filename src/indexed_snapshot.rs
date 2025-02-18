@@ -325,7 +325,7 @@ mod test {
     }
 
     // Future Note: this can likely be macro-derived
-    impl<'a> IndexList<Data> for DataIndexes<'a> {
+    impl IndexList<Data> for DataIndexes<'_> {
         fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Data>> + '_> {
             let v: Vec<&dyn Index<Data>> = vec![&self.name, &self.age, &self.name_lastname];
             Box::new(v.into_iter())
@@ -339,7 +339,7 @@ mod test {
     }
 
     // Future Note: this can likely be macro-derived
-    impl<'a> IndexList<Data> for DataCompositeMultiIndex<'a> {
+    impl IndexList<Data> for DataCompositeMultiIndex<'_> {
         fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Data>> + '_> {
             let v: Vec<&dyn Index<Data>> = vec![&self.name_age];
             Box::new(v.into_iter())

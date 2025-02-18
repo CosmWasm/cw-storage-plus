@@ -334,7 +334,7 @@ mod test {
     }
 
     // Future Note: this can likely be macro-derived
-    impl<'a> IndexList<Data> for DataIndexes<'a> {
+    impl IndexList<Data> for DataIndexes<'_> {
         fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Data>> + '_> {
             let v: Vec<&dyn Index<Data>> = vec![&self.name, &self.age, &self.name_lastname];
             Box::new(v.into_iter())
@@ -348,7 +348,7 @@ mod test {
     }
 
     // Future Note: this can likely be macro-derived
-    impl<'a> IndexList<Data> for DataCompositeMultiIndex<'a> {
+    impl IndexList<Data> for DataCompositeMultiIndex<'_> {
         fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Data>> + '_> {
             let v: Vec<&dyn Index<Data>> = vec![&self.name_age];
             Box::new(v.into_iter())
@@ -1457,7 +1457,7 @@ mod test {
             secondary: UniqueIndex<'a, u64, u64, ()>,
         }
 
-        impl<'a> IndexList<u64> for Indexes<'a> {
+        impl IndexList<u64> for Indexes<'_> {
             fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<u64>> + '_> {
                 let v: Vec<&dyn Index<u64>> = vec![&self.secondary];
                 Box::new(v.into_iter())
@@ -1510,7 +1510,7 @@ mod test {
             secondary: MultiIndex<'a, u64, u64, &'a str>,
         }
 
-        impl<'a> IndexList<u64> for Indexes<'a> {
+        impl IndexList<u64> for Indexes<'_> {
             fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<u64>> + '_> {
                 let v: Vec<&dyn Index<u64>> = vec![&self.secondary];
                 Box::new(v.into_iter())
@@ -1583,7 +1583,7 @@ mod test {
             spender: MultiIndex<'a, Addr, Uint128, (Addr, Addr)>,
         }
 
-        impl<'a> IndexList<Uint128> for Indexes<'a> {
+        impl IndexList<Uint128> for Indexes<'_> {
             fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Uint128>> + '_> {
                 let v: Vec<&dyn Index<Uint128>> = vec![&self.spender];
                 Box::new(v.into_iter())
