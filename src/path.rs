@@ -7,6 +7,7 @@ use crate::helpers::not_found_object_info;
 use cosmwasm_std::{from_json, to_json_vec, StdError, StdResult, Storage};
 use std::ops::Deref;
 
+/// Path: Utilities for path and prefix operations in storage.
 #[derive(Debug, Clone)]
 pub struct Path<T>
 where

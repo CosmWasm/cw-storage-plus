@@ -9,9 +9,11 @@ use cosmwasm_std::{
 
 use crate::{helpers::not_found_object_info, namespace::Namespace};
 
-/// Item stores one typed item at the given key.
-/// This is an analog of Singleton.
-/// It functions the same way as Path does but doesn't use a Vec and thus has a const fn constructor.
+/// `Item` manages a single typed element using a specified key.
+/// Comparable to `Singleton`, it operates similarly to `Path` but with notable differences.
+/// Unlike `Path`, `Item` avoids using a `Vec` and features a constant function (const fn) constructor
+/// for streamlined initialization. Additionally, `Item` offers a more efficient storage
+/// mechanism, particularly suited for scenarios requiring direct and simple key-based access to a single data entity.
 pub struct Item<T> {
     // this is full key - no need to length-prefix it, we only store one item
     storage_key: Namespace,
