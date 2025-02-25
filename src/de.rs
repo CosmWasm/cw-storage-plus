@@ -158,7 +158,7 @@ macro_rules! integer_de {
 
 integer_de!(for i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, Uint64, Uint128, Int64, Int128);
 
-fn parse_length(value: &[u8]) -> StdResult<usize> {
+pub fn parse_length(value: &[u8]) -> StdResult<usize> {
     Ok(u16::from_be_bytes(
         value
             .try_into()
@@ -170,7 +170,7 @@ fn parse_length(value: &[u8]) -> StdResult<usize> {
 /// Splits the first key from the value based on the provided number of key elements.
 /// The return value is ordered as (first_key, remainder).
 ///
-fn split_first_key(key_elems: u16, value: &[u8]) -> StdResult<(Vec<u8>, &[u8])> {
+pub fn split_first_key(key_elems: u16, value: &[u8]) -> StdResult<(Vec<u8>, &[u8])> {
     let mut index = 0;
     let mut first_key = Vec::new();
 
