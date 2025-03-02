@@ -69,7 +69,7 @@ impl<'a, K, T, I> IndexedSnapshotMap<K, T, I>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
-    I: IndexList<T>,
+    I: IndexList<K, T>,
 {
     pub fn add_checkpoint(&self, store: &mut dyn Storage, height: u64) -> StdResult<()> {
         self.primary.add_checkpoint(store, height)
@@ -101,7 +101,7 @@ impl<'a, K, T, I> IndexedSnapshotMap<K, T, I>
 where
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
     T: Serialize + DeserializeOwned + Clone,
-    I: IndexList<T>,
+    I: IndexList<K, T>,
 {
     /// save will serialize the model and store, returns an error on serialization issues.
     /// this must load the old value to update the indexes properly
@@ -192,7 +192,7 @@ impl<'a, K, T, I> IndexedSnapshotMap<K, T, I>
 where
     K: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize,
     T: Serialize + DeserializeOwned + Clone,
-    I: IndexList<T>,
+    I: IndexList<K, T>,
 {
     // I would prefer not to copy code from Prefix, but no other way
     // with lifetimes (create Prefix inside function and return ref = no no)
@@ -225,7 +225,7 @@ impl<'a, K, T, I> IndexedSnapshotMap<K, T, I>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a>,
-    I: IndexList<T>,
+    I: IndexList<K, T>,
 {
     pub fn sub_prefix(&self, p: K::SubPrefix) -> Prefix<K::SuperSuffix, T, K::SuperSuffix> {
         Prefix::new(self.pk_namespace.as_slice(), &p.prefix())
@@ -241,7 +241,7 @@ impl<'a, K, T, I> IndexedSnapshotMap<K, T, I>
 where
     T: Serialize + DeserializeOwned + Clone,
     K: PrimaryKey<'a> + KeyDeserialize,
-    I: IndexList<T>,
+    I: IndexList<K, T>,
 {
     /// While `range` over a `prefix` fixes the prefix to one element and iterates over the
     /// remaining, `prefix_range` accepts bounds for the lowest and highest elements of the
@@ -325,23 +325,34 @@ mod test {
     }
 
     // Future Note: this can likely be macro-derived
-    impl<'a> IndexList<Data> for DataIndexes<'a> {
-        fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Data>> + '_> {
-            let v: Vec<&dyn Index<Data>> = vec![&self.name, &self.age, &self.name_lastname];
+    impl<'a, 's> IndexList<&'s str, Data> for DataIndexes<'a> {
+        fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<&'s str, Data>> + '_> {
+            let v: Vec<&dyn Index<&str, Data>> = vec![&self.name, &self.age, &self.name_lastname];
             Box::new(v.into_iter())
         }
     }
 
     // For composite multi index tests
-    struct DataCompositeMultiIndex<'a> {
+    struct DataCompositeMultiIndex<'a, PK = String> {
         // Last type parameter is for signaling pk deserialization
-        pub name_age: MultiIndex<'a, (Vec<u8>, u32), Data, String>,
+        pub name_age: MultiIndex<'a, (Vec<u8>, u32), Data, PK>,
     }
 
     // Future Note: this can likely be macro-derived
-    impl<'a> IndexList<Data> for DataCompositeMultiIndex<'a> {
-        fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<Data>> + '_> {
-            let v: Vec<&dyn Index<Data>> = vec![&self.name_age];
+    impl<'a, 's> IndexList<&'s str, Data> for DataCompositeMultiIndex<'a> {
+        fn get_indexes(&'_ self) -> Box<dyn Iterator<Item = &'_ dyn Index<&'s str, Data>> + '_> {
+            let v: Vec<&dyn Index<&str, Data>> = vec![&self.name_age];
+            Box::new(v.into_iter())
+        }
+    }
+
+    impl<'a, 's> IndexList<(&'s str, &'s str), Data>
+        for DataCompositeMultiIndex<'a, (&'s str, &'s str)>
+    {
+        fn get_indexes(
+            &'_ self,
+        ) -> Box<dyn Iterator<Item = &'_ dyn Index<(&'s str, &'s str), Data>> + '_> {
+            let v: Vec<&dyn Index<(&str, &str), Data>> = vec![&self.name_age];
             Box::new(v.into_iter())
         }
     }
@@ -1150,8 +1161,13 @@ mod test {
                 "data__name_age",
             ),
         };
-        let map =
-            IndexedSnapshotMap::new("data", "checks", "changes", Strategy::EveryBlock, indexes);
+        let map = IndexedSnapshotMap::<(&str, &str), _, _>::new(
+            "data",
+            "checks",
+            "changes",
+            Strategy::EveryBlock,
+            indexes,
+        );
 
         // save data
         let data1 = Data {
