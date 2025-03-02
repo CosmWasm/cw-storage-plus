@@ -19,6 +19,8 @@ pub trait Index<T>
 where
     T: Serialize + DeserializeOwned + Clone,
 {
+    type PK;
+
     fn save(&self, store: &mut dyn Storage, pk: &[u8], data: &T) -> StdResult<()>;
     fn remove(&self, store: &mut dyn Storage, pk: &[u8], old_data: &T) -> StdResult<()>;
 }

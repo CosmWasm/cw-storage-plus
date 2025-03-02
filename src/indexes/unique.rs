@@ -67,6 +67,8 @@ where
     T: Serialize + DeserializeOwned + Clone,
     IK: PrimaryKey<'a>,
 {
+    type PK = PK;
+
     fn save(&self, store: &mut dyn Storage, pk: &[u8], data: &T) -> StdResult<()> {
         let idx = (self.index)(data);
         // error if this is already set
