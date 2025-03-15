@@ -83,3 +83,20 @@ extern crate cw_storage_macro;
 /// ```
 ///
 pub use cw_storage_macro::index_list;
+
+#[cfg(all(feature = "iterator", feature = "macro"))]
+/// Auto generate the required impls to use a newtype as a key
+/// # Example
+///
+/// ```rust
+/// use cw_storage_plus::NewTypeKey;
+/// use serde::{Serialize, Deserialize};
+///
+/// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+/// #[derive(NewTypeKey)] // <- Add this line right here.
+/// struct TestKey(u64);
+///
+/// // You can now use `TestKey` as a key in `Map`
+/// ```
+///
+pub use cw_storage_macro::NewTypeKey;
