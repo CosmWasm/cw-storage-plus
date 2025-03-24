@@ -16,18 +16,27 @@ use crate::prefix::namespaced_prefix_range;
 use crate::{Bound, Index, Prefixer, PrimaryKey};
 use std::marker::PhantomData;
 
-/// MultiIndex stores (namespace, index_name, idx_value, pk) -> b"pk_len".
-/// Allows many values per index, and references pk.
-/// The associated primary key value is stored in the main (pk_namespace) map,
-/// which stores (namespace, pk_namespace, pk) -> value.
+/// `MultiIndex` facilitates the storage and retrieval of complex key-value pairs in a multi-indexed fashion.
+/// It stores a tuple (namespace, index_name, idx_value, pk) with a reference to the primary key (pk).
 ///
-/// The stored pk_len is used to recover the pk from the index namespace, and perform
-/// the secondary load of the associated value from the main map.
+/// # Structure
+/// - It supports multiple values for each index and directly references the primary key (pk).
+/// - The primary key value is held in the primary map (pk_namespace)
+///    which follows the format (namespace, pk_namespace, pk) -> value.
 ///
-/// The PK type defines the type of Primary Key, both for deserialization, and
-/// more important, as the type-safe bound key type.
-/// This type must match the encompassing `IndexedMap` primary key type,
-/// or its owned variant.
+/// # Functionality
+/// - The stored pk_len (length of the primary key) is crucial for retrieving the primary key from the index namespace.
+/// - It then performs a secondary retrieval of the associated value from the primary map.
+///
+/// # Key Types
+/// - The PK type is essential for defining the primary key's data type, ensuring both
+/// deserialization accuracy and type-safe key usage.
+/// - This PK type must be congruent with the `IndexedMap` primary key type
+/// or its variant, ensuring consistency across the data structure.
+///
+/// `MultiIndex` thus plays a vital role in managing multi-dimensional data structures,
+///
+/// ensuring efficient access and retrieval within the Cosmos ecosystem's complex data environments.
 pub struct MultiIndex<'a, IK, T, PK> {
     index: fn(&[u8], &T) -> IK,
     idx_namespace: &'a [u8],
