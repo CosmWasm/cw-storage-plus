@@ -88,6 +88,10 @@ jobs:
       - run:
           name: Remove Cargo.lock
           command: rm Cargo.lock
+      # 👇 Remove this command after dependencies in crate num-bigint are upgraded!
+      - run:
+          name: Temporarily update problematic crate
+          command: cargo update -p num-bigint
       - restore_cache:
           keys:
             - cargocache-v2-storage-plus:1.81-minimal-{{ checksum "~/project/Cargo.toml" }}
