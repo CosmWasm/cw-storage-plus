@@ -34,7 +34,12 @@ criterion = { version = "0.3", features = ["html_reports"] }
 # access to an entropy souce via getrandom such as wasm32-unknown-unknown
 rand = { version = "0.8", default-features = false }
 rand_xoshiro = { version = "0.6.0", default-features = false }
-derive_more = { version = "=1.0.0-beta.6", features = ["full"] }
+derive_more = {version = "1.0.0", features = ["full"]}
+
+# We don't use the following dependencies directly. They're dependencies of our dependencies.
+# We specify them to tighten their version requirements so that builds with `-Zminimal-versions` work.
+# https://github.com/GREsau/schemars/pull/192 is merged, we can update schemars and release this.
+serde_json = "1.0.29"
 
 [[bench]]
 name = "main"
