@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [3.0.0-ibc2.0] - 2025-05-26
+
+### Changed
+
+- Upgraded to `cosmwasm-std` 3.0.0-ibc2.0 ([#98])
+
+[#98]: https://github.com/CosmWasm/cw-storage-plus/pull/98
+
 ## [2.1.0] - 2024-09-25
 - Add derive macro for `NewTypeKey`
 
