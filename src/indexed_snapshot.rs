@@ -148,7 +148,8 @@ where
     /// Loads the data, perform the specified action, and store the result
     /// in the database. This is shorthand for some common sequences, which may be useful.
     ///
-    /// If the data exists, `action(Some(value))` is called. Otherwise `action(None)` is called.
+    /// If the data exists, `action(Some(value))` is called.
+    /// Otherwise, the `action(None)` is called.
     pub fn update<A, E>(
         &self,
         store: &mut dyn Storage,
@@ -307,7 +308,7 @@ mod test {
     use crate::indexes::test::{index_string_tuple, index_tuple};
     use crate::{Index, MultiIndex, UniqueIndex};
     use cosmwasm_std::testing::MockStorage;
-    use cosmwasm_std::{MemoryStorage, Order};
+    use cosmwasm_std::Order;
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -887,7 +888,7 @@ mod test {
         let mut height = 5;
 
         let name_count = |map: &IndexedSnapshotMap<&str, Data, DataIndexes>,
-                          store: &MemoryStorage,
+                          store: &MockStorage,
                           name: &str|
          -> usize {
             map.idx

@@ -311,12 +311,13 @@ where
 
 #[cfg(test)]
 mod test {
+
     use super::*;
 
     use crate::indexes::test::{index_string_tuple, index_tuple};
     use crate::{MultiIndex, UniqueIndex};
     use cosmwasm_std::testing::MockStorage;
-    use cosmwasm_std::{MemoryStorage, Order};
+    use cosmwasm_std::Order;
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -869,7 +870,7 @@ mod test {
     fn remove_and_update_reflected_on_indexes() {
         let mut store = MockStorage::new();
 
-        let name_count = |store: &MemoryStorage, name: &str| -> usize {
+        let name_count = |store: &MockStorage, name: &str| -> usize {
             DATA.idx
                 .name
                 .prefix(name.to_string())
