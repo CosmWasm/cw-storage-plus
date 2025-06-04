@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [3.0.0-rc.0] - 2025-06-04
+
+### Changed
+
+- Upgraded to `cosmwasm-std` 3.0.0-rc.0 ([#100])
+
+[#100]: https://github.com/CosmWasm/cw-storage-plus/pull/100
+
 ## [3.0.0-ibc2.0] - 2025-05-26
 
 ### Changed
