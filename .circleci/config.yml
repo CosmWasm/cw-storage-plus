@@ -30,8 +30,6 @@ workflows:
               only:
                 - main
     jobs:
-      # Build with minimal versions of dependencies
-      - build_minimal
       # Build with maximal versions of dependencies
       - build_maximal
 
