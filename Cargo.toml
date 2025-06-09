@@ -16,7 +16,7 @@ all-features = true # include macro feature when building docs
 [features]
 default = ["iterator"]
 iterator = ["cosmwasm-std/iterator"]
-macro = ["cw-storage-macro"]
+macro = ["dep:cw-storage-macro"]
 
 [lib]
 # See https://bheisler.github.io/criterion.rs/book/faq.html#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options
