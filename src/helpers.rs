@@ -1,5 +1,5 @@
 //! This module is an implementation of a namespacing scheme described
-//! in https://github.com/webmaster128/key-namespacing#length-prefixed-keys
+//! in <https://github.com/webmaster128/key-namespacing#length-prefixed-keys>
 //!
 //! Everything in this file is only responsible for building such keys
 //! and is in no way specific to any kind of storage.

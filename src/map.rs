@@ -99,7 +99,7 @@ where
     /// Loads the data, perform the specified action, and store the result
     /// in the database. This is shorthand for some common sequences, which may be useful.
     ///
-    /// If the data exists, `action(Some(value))` is called. Otherwise `action(None)` is called.
+    /// If the data exists, `action(Some(value))` is called. Otherwise, `action(None)` is called.
     pub fn update<A, E>(&self, store: &mut dyn Storage, k: K, action: A) -> Result<T, E>
     where
         A: FnOnce(Option<T>) -> Result<T, E>,
@@ -172,7 +172,7 @@ where
         store: &'c dyn Storage,
         min: Option<PrefixBound<'a, K::Prefix>>,
         max: Option<PrefixBound<'a, K::Prefix>>,
-        order: cosmwasm_std::Order,
+        order: Order,
     ) -> Box<dyn Iterator<Item = StdResult<cosmwasm_std::Record<T>>> + 'c>
     where
         T: 'c,
@@ -201,7 +201,7 @@ where
         store: &'c dyn Storage,
         min: Option<PrefixBound<'a, K::Prefix>>,
         max: Option<PrefixBound<'a, K::Prefix>>,
-        order: cosmwasm_std::Order,
+        order: Order,
     ) -> Box<dyn Iterator<Item = StdResult<(K::Output, T)>> + 'c>
     where
         T: 'c,
@@ -230,7 +230,7 @@ where
         store: &'c dyn Storage,
         min: Option<Bound<'a, K>>,
         max: Option<Bound<'a, K>>,
-        order: cosmwasm_std::Order,
+        order: Order,
     ) -> Box<dyn Iterator<Item = StdResult<cosmwasm_std::Record<T>>> + 'c>
     where
         T: 'c,
@@ -243,7 +243,7 @@ where
         store: &'c dyn Storage,
         min: Option<Bound<'a, K>>,
         max: Option<Bound<'a, K>>,
-        order: cosmwasm_std::Order,
+        order: Order,
     ) -> Box<dyn Iterator<Item = Vec<u8>> + 'c>
     where
         T: 'c,
@@ -263,7 +263,7 @@ where
         store: &'c dyn Storage,
         min: Option<Bound<'a, K>>,
         max: Option<Bound<'a, K>>,
-        order: cosmwasm_std::Order,
+        order: Order,
     ) -> Box<dyn Iterator<Item = StdResult<(K::Output, T)>> + 'c>
     where
         T: 'c,
@@ -277,7 +277,7 @@ where
         store: &'c dyn Storage,
         min: Option<Bound<'a, K>>,
         max: Option<Bound<'a, K>>,
-        order: cosmwasm_std::Order,
+        order: Order,
     ) -> Box<dyn Iterator<Item = StdResult<K::Output>> + 'c>
     where
         T: 'c,
@@ -346,19 +346,18 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use serde::{Deserialize, Serialize};
-    use std::ops::Deref;
-
+    #[cfg(feature = "iterator")]
+    use crate::bound::Bounder;
+    use crate::int_key::IntKey;
     use cosmwasm_std::testing::MockStorage;
+    #[cfg(feature = "iterator")]
     use cosmwasm_std::to_json_binary;
+    #[cfg(feature = "iterator")]
     use cosmwasm_std::StdError::InvalidUtf8;
     #[cfg(feature = "iterator")]
     use cosmwasm_std::{Order, StdResult};
-
-    #[cfg(feature = "iterator")]
-    use crate::bound::Bounder;
-
-    use crate::int_key::IntKey;
+    use serde::{Deserialize, Serialize};
+    use std::ops::Deref;
 
     #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
     struct Data {
@@ -496,7 +495,7 @@ mod test {
 
         // not under other key
         let different = TRIPLE
-            .may_load(&store, (b"owners", 10u8, "ecipient"))
+            .may_load(&store, (b"owners", 10u8, "receiver"))
             .unwrap();
         assert_eq!(None, different);
 
@@ -1307,7 +1306,7 @@ mod test {
         assert_eq!(777, loaded);
 
         // doesn't appear under other key (even if a concat would be the same)
-        let different = ALLOWANCE.may_load(&store, (b"owners", b"pender")).unwrap();
+        let different = ALLOWANCE.may_load(&store, (b"owners", b"pender"))?;
         assert_eq!(None, different);
 
         // simple update
@@ -1634,7 +1633,7 @@ mod test {
     #[test]
     #[cfg(feature = "iterator")]
     fn first_last_work() {
-        let mut storage = cosmwasm_std::testing::MockStorage::new();
+        let mut storage = MockStorage::new();
         const MAP: Map<&str, u32> = Map::new("map");
 
         // empty map

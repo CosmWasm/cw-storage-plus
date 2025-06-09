@@ -1,5 +1,5 @@
 //! This code is inspired by (and partially borrowed from)
-//! https://docs.rs/endiannezz/0.5.2/endiannezz/trait.Primitive.html
+//! <https://docs.rs/endiannezz/0.5.2/endiannezz/trait.Primitive.html>
 //! but there was a lot in that crate I did not want, the name did not inspire
 //! confidence, and I wanted a different return value, so I just took the code
 //! to modify slightly.

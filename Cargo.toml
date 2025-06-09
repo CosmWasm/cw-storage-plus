@@ -2,7 +2,7 @@
 
 [package]
 name = "cw-storage-plus"
-version = "3.0.0-rc.0"
+version = "3.0.0-rc.1"
 authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
 edition = "2021"
 description = "Enhanced storage engines"
@@ -16,7 +16,7 @@ all-features = true # include macro feature when building docs
 [features]
 default = ["iterator"]
 iterator = ["cosmwasm-std/iterator"]
-macro = ["cw-storage-macro"]
+macro = ["dep:cw-storage-macro"]
 
 [lib]
 # See https://bheisler.github.io/criterion.rs/book/faq.html#cargo-bench-gives-unrecognized-option-errors-for-valid-command-line-options
@@ -34,7 +34,7 @@ criterion = { version = "0.3", features = ["html_reports"] }
 # access to an entropy souce via getrandom such as wasm32-unknown-unknown
 rand = { version = "0.8", default-features = false }
 rand_xoshiro = { version = "0.6.0", default-features = false }
-derive_more = { version = "=1.0.0-beta.6", features = ["full"] }
+derive_more = { version = "2.0.1", features = ["full"] }
 
 [[bench]]
 name = "main"

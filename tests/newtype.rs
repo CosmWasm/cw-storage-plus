@@ -5,7 +5,7 @@ mod test {
     use cosmwasm_std::{testing::MockStorage, Addr, Uint128};
     use cw_storage_macro::NewTypeKey;
     use cw_storage_plus::Map;
-    use derive_more::Display;
+    use derive_more::with_trait::Display;
     use serde::{Deserialize, Serialize};
 
     #[test]
