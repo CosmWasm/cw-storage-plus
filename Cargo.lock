@@ -478,7 +478,7 @@ dependencies = [
 
 [[package]]
 name = "cw-storage-macro"
-version = "2.0.0"
+version = "2.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
