@@ -2,7 +2,7 @@
 
 [package]
 name = "cw-storage-plus"
-version = "3.0.0-rc.1"
+version = "3.0.0-rc.2"
 authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
 edition = "2021"
 description = "Enhanced storage engines"
@@ -26,7 +26,7 @@ bench = false
 cosmwasm-std = { version = "3.0.0-rc.0", default-features = false, features = ["std"] }
 schemars = "0.8.22"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
-cw-storage-macro = { version = "2.0.0", optional = true, path = "macros" }
+cw-storage-macro = { version = "2.1.0", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.3", features = ["html_reports"] }
