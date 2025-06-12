@@ -33,6 +33,8 @@ mod snapshot;
 
 #[cfg(feature = "iterator")]
 pub use bound::{Bound, Bounder, PrefixBound, RawBound};
+pub use de::parse_length;
+pub use de::split_first_key;
 pub use de::KeyDeserialize;
 pub use deque::Deque;
 pub use deque::DequeIter;

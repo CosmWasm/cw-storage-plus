@@ -249,6 +249,13 @@ fn demo() -> StdResult<()> {
 }
 ```
 
+### Using custom types as a Map keys
+
+If you want to use a custom type as a key in a `Map`, you need to implement the `PrimaryKey` trait for it
+as well as `KeyDeserialize` and `Prefixer` traits.
+
+Please take a look at the reference [example with Denom implementation](./tests/custom_types_serde.rs) for details.
+
 ### Path
 
 Under the scenes, we create a `Path` from the `Map` when accessing a key.
