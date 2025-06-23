@@ -66,7 +66,7 @@ where
             from_json(value)
         } else {
             let object_info = not_found_object_info::<T>(&self.storage_key);
-            Err(StdError::not_found(object_info))
+            Err(StdError::msg(format!("not found: {}", object_info)))
         }
     }
 
@@ -86,7 +86,7 @@ where
     /// Loads the data, perform the specified action, and store the result
     /// in the database. This is shorthand for some common sequences, which may be useful.
     ///
-    /// If the data exists, `action(Some(value))` is called. Otherwise `action(None)` is called.
+    /// If the data exists, `action(Some(value))` is called. Otherwise, `action(None)` is called.
     pub fn update<A, E>(&self, store: &mut dyn Storage, action: A) -> Result<T, E>
     where
         A: FnOnce(Option<T>) -> Result<T, E>,

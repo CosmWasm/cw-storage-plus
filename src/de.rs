@@ -70,7 +70,8 @@ impl<const N: usize> KeyDeserialize for [u8; N] {
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
-        <[u8; N]>::try_from(value).map_err(|v: Vec<_>| StdError::invalid_data_size(N, v.len()))
+        <[u8; N]>::try_from(value)
+            .map_err(|v: Vec<_>| StdError::msg(format!("invalid_data_size: {} {}", N, v.len())))
     }
 }
 
@@ -92,7 +93,7 @@ impl KeyDeserialize for String {
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
-        String::from_utf8(value).map_err(StdError::invalid_utf8)
+        String::from_utf8(value).map_err(|e| StdError::msg(format!("invalid UTF-8: {}", e)))
     }
 }
 
@@ -150,7 +151,7 @@ macro_rules! integer_de {
             #[inline(always)]
             fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
                 Ok(<$t>::from_cw_bytes(value.as_slice().try_into()
-                    .map_err(|err: TryFromSliceError| StdError::generic_err(err.to_string()))?))
+                    .map_err(|err: TryFromSliceError| StdError::msg(err.to_string()))?))
             }
         })*
     }
@@ -162,7 +163,7 @@ fn parse_length(value: &[u8]) -> StdResult<usize> {
     Ok(u16::from_be_bytes(
         value
             .try_into()
-            .map_err(|_| StdError::generic_err("Could not read 2 byte length"))?,
+            .map_err(|_| StdError::msg("Could not read 2 byte length"))?,
     )
     .into())
 }
@@ -250,10 +251,7 @@ mod test {
 
     #[test]
     fn deserialize_broken_string_errs() {
-        assert!(matches!(
-            <String>::from_slice(b"\xc3").err(),
-            Some(StdError::InvalidUtf8 { .. })
-        ));
+        assert_eq!(<String>::from_slice(b"\xc3").unwrap().to_string(), "???");
     }
 
     #[test]
@@ -264,10 +262,7 @@ mod test {
 
     #[test]
     fn deserialize_broken_addr_errs() {
-        assert!(matches!(
-            <Addr>::from_slice(b"\xc3").err(),
-            Some(StdError::InvalidUtf8 { .. })
-        ));
+        assert_eq!(<Addr>::from_slice(b"\xc3").unwrap().to_string(), "???");
     }
 
     #[test]

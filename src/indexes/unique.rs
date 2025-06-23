@@ -73,7 +73,7 @@ where
         self.idx_map
             .update(store, idx, |existing| -> StdResult<_> {
                 match existing {
-                    Some(_) => Err(StdError::generic_err("Violates unique constraint on index")),
+                    Some(_) => Err(StdError::msg("Violates unique constraint on index")),
                     None => Ok(UniqueRef::<T> {
                         pk: pk.into(),
                         value: data.clone(),
