@@ -708,16 +708,18 @@ mod tests {
             "out of bounds access should return None"
         );
 
-        // assert!(
-        //     matches!(deque.set(&mut store, 2, &3), Err(StdError::NotFound { .. })),
-        //     "setting value at an out of bounds index should error"
-        // );
+        assert_eq!(
+            "kind: Other, error: not found: deque position 2",
+            deque.set(&mut store, 2, &3).unwrap_err().to_string(),
+            "setting value at an out of bounds index should error"
+        );
 
         assert_eq!(deque.pop_back(&mut store).unwrap(), Some(3));
 
-        // assert!(
-        //     matches!(deque.set(&mut store, 1, &3), Err(StdError::NotFound { .. })),
-        //     "setting value at an out of bounds index should error"
-        // );
+        assert_eq!(
+            "kind: Other, error: not found: deque position 1",
+            deque.set(&mut store, 1, &3).unwrap_err().to_string(),
+            "setting value at an out of bounds index should error"
+        );
     }
 }
