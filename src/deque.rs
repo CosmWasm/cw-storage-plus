@@ -632,17 +632,19 @@ mod tests {
 
         let mut iter = deque.iter(&store).unwrap();
 
-        // assert!(
-        //     matches!(iter.next(), Some(Err(StdError::NotFound { .. }))),
-        //     "iterator should error when item is missing"
-        // );
-        //
-        // let mut iter = deque.iter(&store).unwrap().rev();
-        //
-        // assert!(
-        //     matches!(iter.next(), Some(Err(StdError::NotFound { .. }))),
-        //     "reverse iterator should error when item is missing"
-        // );
+        assert_eq!(
+            "kind: Other, error: u32",
+            iter.next().unwrap().unwrap_err().to_string(),
+            "iterator should error when item is missing"
+        );
+
+        let mut iter = deque.iter(&store).unwrap().rev();
+
+        assert_eq!(
+            "kind: Other, error: u32",
+            iter.next().unwrap().unwrap_err().to_string(),
+            "reverse iterator should error when item is missing"
+        );
     }
 
     #[test]
@@ -665,10 +667,11 @@ mod tests {
         // manually remove storage item
         deque.remove_unchecked(&mut store, 1);
 
-        // assert!(
-        //     matches!(deque.get(&store, 1), Err(StdError::NotFound { .. })),
-        //     "missing deque item should error"
-        // );
+        assert_eq!(
+            "kind: Other, error: not found: deque position 1",
+            deque.get(&store, 1).unwrap_err().to_string(),
+            "missing deque item should error"
+        );
 
         // start fresh
         let deque = Deque::new("test2");
