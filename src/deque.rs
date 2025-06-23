@@ -320,7 +320,7 @@ mod tests {
     use crate::deque::Deque;
 
     use cosmwasm_std::testing::MockStorage;
-    use cosmwasm_std::{StdError, StdResult};
+    use cosmwasm_std::StdResult;
     use serde::{Deserialize, Serialize};
 
     #[test]

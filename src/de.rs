@@ -70,8 +70,13 @@ impl<const N: usize> KeyDeserialize for [u8; N] {
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
-        <[u8; N]>::try_from(value)
-            .map_err(|v: Vec<_>| StdError::msg(format!("invalid_data_size: {} {}", N, v.len())))
+        <[u8; N]>::try_from(value).map_err(|v: Vec<_>| {
+            StdError::msg(format!(
+                "invalid_data_size: expected {}, actual {}",
+                N,
+                v.len()
+            ))
+        })
     }
 }
 
@@ -93,7 +98,7 @@ impl KeyDeserialize for String {
 
     #[inline(always)]
     fn from_vec(value: Vec<u8>) -> StdResult<Self::Output> {
-        String::from_utf8(value).map_err(|e| StdError::msg(format!("invalid UTF-8: {}", e)))
+        String::from_utf8(value).map_err(|e| StdError::msg(format!("invalid UTF-8, reason: {}", e)))
     }
 }
 
@@ -251,7 +256,10 @@ mod test {
 
     #[test]
     fn deserialize_broken_string_errs() {
-        assert_eq!(<String>::from_slice(b"\xc3").unwrap().to_string(), "???");
+        assert_eq!(
+            "kind: Other, error: invalid UTF-8, reason: incomplete utf-8 byte sequence from index 0",
+            <String>::from_slice(b"\xc3").unwrap_err().to_string()
+        );
     }
 
     #[test]
@@ -262,7 +270,9 @@ mod test {
 
     #[test]
     fn deserialize_broken_addr_errs() {
-        assert_eq!(<Addr>::from_slice(b"\xc3").unwrap().to_string(), "???");
+        assert_eq!(
+            "kind: Other, error: invalid UTF-8, reason: incomplete utf-8 byte sequence from index 0",
+            <Addr>::from_slice(b"\xc3").unwrap_err().to_string());
     }
 
     #[test]

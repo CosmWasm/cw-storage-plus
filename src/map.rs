@@ -297,13 +297,13 @@ where
     /// const MAP: Map<i32, u32> = Map::new("map");
     ///
     /// // empty map
-    /// assert_eq!(MAP.first(&storage), Ok(None));
+    /// assert_eq!(MAP.first(&storage).unwrap(), None);
     ///
     /// // insert entries
     /// MAP.save(&mut storage, 1, &10).unwrap();
     /// MAP.save(&mut storage, -2, &20).unwrap();
     ///
-    /// assert_eq!(MAP.first(&storage), Ok(Some((-2, 20))));
+    /// assert_eq!(MAP.first(&storage).unwrap(), Some((-2, 20)));
     /// ```
     pub fn first(&self, storage: &dyn Storage) -> StdResult<Option<(K::Output, T)>>
     where
@@ -325,13 +325,13 @@ where
     /// const MAP: Map<i32, u32> = Map::new("map");
     ///
     /// // empty map
-    /// assert_eq!(MAP.last(&storage), Ok(None));
+    /// assert_eq!(MAP.last(&storage).unwrap(), None);
     ///
     /// // insert entries
     /// MAP.save(&mut storage, 1, &10).unwrap();
     /// MAP.save(&mut storage, -2, &20).unwrap();
     ///
-    /// assert_eq!(MAP.last(&storage), Ok(Some((1, 10))));
+    /// assert_eq!(MAP.last(&storage).unwrap(), Some((1, 10)));
     /// ```
     pub fn last(&self, storage: &dyn Storage) -> StdResult<Option<(K::Output, T)>>
     where

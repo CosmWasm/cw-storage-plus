@@ -117,9 +117,8 @@ where
 mod test {
     use super::*;
     use cosmwasm_std::testing::MockStorage;
+    use cosmwasm_std::{to_json_vec, StdError};
     use serde::{Deserialize, Serialize};
-
-    use cosmwasm_std::{to_json_vec, OverflowError, OverflowOperation, StdError};
 
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct Config {
@@ -274,15 +273,11 @@ mod test {
         };
         CONFIG.save(&mut store, &cfg).unwrap();
 
-        // let output = CONFIG.update(&mut store, |_c| {
-        //     Err(StdError::overflow(OverflowError::new(
-        //         OverflowOperation::Sub,
-        //     )))
-        // });
-        // match output.unwrap_err() {
-        //     StdError::Overflow { .. } => {}
-        //     err => panic!("Unexpected error: {:?}", err),
-        // }
+        let output = CONFIG.update(&mut store, |_c| Err(StdError::msg("overflow")));
+        assert_eq!(
+            "kind: Other, error: overflow",
+            output.unwrap_err().to_string()
+        );
         assert_eq!(CONFIG.load(&store).unwrap(), cfg);
     }
 
@@ -321,8 +316,9 @@ mod test {
             c.max_tokens += 20;
             Ok(c)
         });
+
         match res.unwrap_err() {
-            MyError::Std(msg) if msg.to_string() == "broken stuff" => {}
+            MyError::Std(std) if std.to_string() == "kind: Other, error: broken stuff" => {}
             err => panic!("Unexpected error: {:?}", err),
         }
         assert_eq!(CONFIG.load(&store).unwrap(), cfg);
