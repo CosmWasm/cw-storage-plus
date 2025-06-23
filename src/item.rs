@@ -64,7 +64,7 @@ where
             from_json(value)
         } else {
             let object_info = not_found_object_info::<T>(self.storage_key.as_slice());
-            Err(StdError::msg(format!("not found: {}", object_info)))
+            Err(StdError::msg(format!("{} not found", object_info)))
         }
     }
 

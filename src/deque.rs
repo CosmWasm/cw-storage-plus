@@ -174,7 +174,7 @@ impl<T: Serialize + DeserializeOwned> Deque<T> {
         let pos = head.wrapping_add(pos);
         self.get_unchecked(storage, pos)
             .and_then(|v| {
-                v.ok_or_else(|| StdError::msg(format!("not found: deque position {}", pos)))
+                v.ok_or_else(|| StdError::msg(format!("deque position {} not found", pos)))
             })
             .map(Some)
     }
@@ -186,7 +186,7 @@ impl<T: Serialize + DeserializeOwned> Deque<T> {
 
         if pos >= calc_len(head, tail) {
             // out of bounds
-            return Err(StdError::msg(format!("not found: deque position {}", pos)));
+            return Err(StdError::msg(format!("deque position {} not found", pos)));
         }
 
         self.set_unchecked(storage, pos, value)
@@ -668,7 +668,7 @@ mod tests {
         deque.remove_unchecked(&mut store, 1);
 
         assert_eq!(
-            "kind: Other, error: not found: deque position 1",
+            "kind: Other, error: deque position 1 not found",
             deque.get(&store, 1).unwrap_err().to_string(),
             "missing deque item should error"
         );
@@ -712,7 +712,7 @@ mod tests {
         );
 
         assert_eq!(
-            "kind: Other, error: not found: deque position 2",
+            "kind: Other, error: deque position 2 not found",
             deque.set(&mut store, 2, &3).unwrap_err().to_string(),
             "setting value at an out of bounds index should error"
         );
@@ -720,7 +720,7 @@ mod tests {
         assert_eq!(deque.pop_back(&mut store).unwrap(), Some(3));
 
         assert_eq!(
-            "kind: Other, error: not found: deque position 1",
+            "kind: Other, error: deque position 1 not found",
             deque.set(&mut store, 1, &3).unwrap_err().to_string(),
             "setting value at an out of bounds index should error"
         );

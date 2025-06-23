@@ -129,7 +129,7 @@ where
         };
         match has {
             true => Ok(()),
-            false => Err(StdError::msg("not found, reason: checkpoint")),
+            false => Err(StdError::msg("checkpoint not found")),
         }
     }
 
@@ -224,7 +224,7 @@ mod tests {
         let mut storage = MockStorage::new();
 
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             NEVER
                 .assert_checkpointed(&storage, 1)
                 .unwrap_err()
@@ -232,7 +232,7 @@ mod tests {
         );
         assert!(EVERY.assert_checkpointed(&storage, 1).is_ok());
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             SELECT
                 .assert_checkpointed(&storage, 1)
                 .unwrap_err()
@@ -245,7 +245,7 @@ mod tests {
         SELECT.add_checkpoint(&mut storage, 1).unwrap();
 
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             NEVER
                 .assert_checkpointed(&storage, 1)
                 .unwrap_err()
@@ -260,7 +260,7 @@ mod tests {
         SELECT.remove_checkpoint(&mut storage, 1).unwrap();
 
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             NEVER
                 .assert_checkpointed(&storage, 1)
                 .unwrap_err()
@@ -268,7 +268,7 @@ mod tests {
         );
         assert!(EVERY.assert_checkpointed(&storage, 1).is_ok());
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             SELECT
                 .assert_checkpointed(&storage, 1)
                 .unwrap_err()
@@ -317,7 +317,7 @@ mod tests {
         let mut storage = MockStorage::new();
 
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             NEVER
                 .may_load_at_height(&storage, DUMMY_KEY, 3)
                 .unwrap_err()
@@ -328,7 +328,7 @@ mod tests {
             EVERY.may_load_at_height(&storage, DUMMY_KEY, 3).unwrap()
         );
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             SELECT
                 .may_load_at_height(&storage, DUMMY_KEY, 3)
                 .unwrap_err()
@@ -341,7 +341,7 @@ mod tests {
         SELECT.add_checkpoint(&mut storage, 3).unwrap();
 
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             NEVER
                 .may_load_at_height(&storage, DUMMY_KEY, 3)
                 .unwrap_err()
@@ -368,7 +368,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             NEVER
                 .may_load_at_height(&storage, DUMMY_KEY, 3)
                 .unwrap_err()
@@ -385,7 +385,7 @@ mod tests {
         // Check that may_load_at_height at a previous value will return the first change after that.
         // (Only with EVERY).
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             NEVER
                 .may_load_at_height(&storage, DUMMY_KEY, 2)
                 .unwrap_err()
@@ -396,7 +396,7 @@ mod tests {
             EVERY.may_load_at_height(&storage, DUMMY_KEY, 2).unwrap()
         );
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             SELECT
                 .may_load_at_height(&storage, DUMMY_KEY, 2)
                 .unwrap_err()
@@ -419,7 +419,7 @@ mod tests {
         SELECT.add_checkpoint(&mut storage, 4).unwrap();
 
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             NEVER
                 .may_load_at_height(&storage, DUMMY_KEY, 4)
                 .unwrap_err()
@@ -436,7 +436,7 @@ mod tests {
 
         // Confirm old value at 3
         assert_eq!(
-            "kind: Other, error: not found, reason: checkpoint",
+            "kind: Other, error: checkpoint not found",
             NEVER
                 .may_load_at_height(&storage, DUMMY_KEY, 3)
                 .unwrap_err()
