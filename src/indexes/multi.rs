@@ -98,7 +98,7 @@ fn deserialize_multi_v<T: DeserializeOwned>(
 
     let v = store
         .get(&full_key)
-        .ok_or_else(|| StdError::generic_err("pk not found"))?;
+        .ok_or_else(|| StdError::msg("pk not found"))?;
     let v = from_json::<T>(&v)?;
 
     Ok((pk.to_vec(), v))
@@ -122,7 +122,7 @@ fn deserialize_multi_kv<K: KeyDeserialize, T: DeserializeOwned>(
 
     let v = store
         .get(&full_key)
-        .ok_or_else(|| StdError::generic_err("pk not found"))?;
+        .ok_or_else(|| StdError::msg("pk not found"))?;
     let v = from_json::<T>(&v)?;
 
     // We return deserialized `pk` here for consistency
