@@ -1,6 +1,10 @@
 # Migrating
 
-This guide lists API changes between *cw-storage-plus* major releases.
+This guide lists API changes between `cw-storage-plus` major releases.
+
+## v2.0.x -> v3.0.0
+
+No breaking changes in API. Upgrade to `cosmwasm-std` v3.0.0.
 
 ## v1.0.x -> v2.0.0
 
