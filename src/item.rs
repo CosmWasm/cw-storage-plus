@@ -64,7 +64,7 @@ where
             from_json(value)
         } else {
             let object_info = not_found_object_info::<T>(self.storage_key.as_slice());
-            Err(StdError::msg(format!("{} not found", object_info)))
+            Err(StdError::msg(format!("{object_info} not found")))
         }
     }
 
@@ -150,7 +150,7 @@ mod test {
         let mut store = MockStorage::new();
 
         for i in 0..3 {
-            let key = format!("key{}", i);
+            let key = format!("key{i}");
             let item = Item::new_dyn(key);
             item.save(&mut store, &i).unwrap();
         }
@@ -319,7 +319,7 @@ mod test {
 
         match res.unwrap_err() {
             MyError::Std(std) if std.to_string() == "kind: Other, error: broken stuff" => {}
-            err => panic!("Unexpected error: {:?}", err),
+            err => panic!("Unexpected error: {err:?}"),
         }
         assert_eq!(CONFIG.load(&store).unwrap(), cfg);
     }

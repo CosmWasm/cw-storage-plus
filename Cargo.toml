@@ -29,11 +29,10 @@ serde = { version = "1.0", default-features = false, features = ["derive"] }
 cw-storage-macro = { version = "2.1.0", optional = true }
 
 [dev-dependencies]
-criterion = { version = "0.3", features = ["html_reports"] }
-# Deactivate default features in order to be able to use this on systems without
-# access to an entropy souce via getrandom such as wasm32-unknown-unknown
-rand = { version = "0.8", default-features = false }
-rand_xoshiro = { version = "0.6.0", default-features = false }
+# See https://bheisler.github.io/criterion.rs/book/user_guide/command_line_options.html for using baselines
+criterion = { version = "0.6.0", features = ["html_reports"] }
+rand = { version = "0.9.1", default-features = false }
+rand_xoshiro = { version = "0.7.0", default-features = false }
 derive_more = { version = "2.0.1", features = ["full"] }
 
 [[bench]]
