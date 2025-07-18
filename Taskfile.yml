@@ -1,0 +1,160 @@
+version: '3'
+
+silent: true
+
+tasks:
+
+  all:
+    desc: Runs all checks
+    summary: |
+      Runs all viable checks for cw-storage-plus.
+      Execute this task before pushing any changes.
+      This task takes a significant amount of time to complete.
+    cmds:
+      - task: clean
+      - task: build
+      - task: clippy
+      - task: test
+      - task: bench
+      - task: hack
+
+  bench:
+    desc: Runs all benchmarks
+    cmds:
+      - cmd: cargo +stable bench
+
+  build:
+    desc: Runs multiple building variants
+    cmds:
+      - task: build-all-features
+      - task: build-default-features
+      - task: build-no-default-features
+
+  build-all-features:
+    desc: Builds in debug mode with all features enabled
+    cmds:
+      - cmd: cargo +stable build --all-features
+
+  build-default-features:
+    desc: Builds in debug mode with default features
+    cmds:
+      - cmd: cargo +stable build
+
+  build-no-default-features:
+    desc: Builds in debug mode without default features
+    cmds:
+      - cmd: cargo +stable build --no-default-features
+
+  clean:
+    desc: Cleans target output
+    cmds:
+      - cmd: cargo clean
+
+  clippy:
+    desc: Runs multiple clippy variants
+    cmds:
+      - task: clippy-all-features
+      - task: clippy-default-features
+      - task: clippy-no-default-features
+
+  clippy-all-features:
+    desc: Runs clippy with all features enabled
+    cmds:
+      - cmd: cargo +stable clippy --all-features --all-targets
+
+  clippy-default-features:
+    desc: Runs clippy with default features
+    cmds:
+      - cmd: cargo +stable clippy --all-targets
+
+  clippy-no-default-features:
+    desc: Runs clippy without default features
+    cmds:
+      - cmd: cargo +stable clippy --no-default-features --all-targets
+
+  cov:
+    desc: Generates code coverage report and opens it in a browser
+    cmds:
+      - cmd: cargo +stable llvm-cov clean
+      - cmd: cargo +stable llvm-cov --no-cfg-coverage --all-features --html --open
+
+  fmt:
+    desc: Runs code formatter
+    cmds:
+      - cmd: cargo +stable fmt
+
+  doc:
+    desc: Generates documentation
+    cmds:
+      - cmd: cargo +stable doc --no-deps
+
+  doc-open:
+    desc: Generates documentation and opens it in a browser
+    cmds:
+      - cmd: cargo +stable doc --no-deps --open
+
+  test:
+    desc: Runs multiple test variants
+    cmds:
+      - task: test-all-features
+      - task: test-default-features
+      - task: test-no-default-features
+
+  test-all-features:
+    desc: Runs all tests in debug mode with all features enabled
+    cmds:
+      - cmd: cargo +stable test --all-features
+
+  test-default-features:
+    desc: Runs all tests in debug mode with default features
+    cmds:
+      - cmd: cargo +stable test
+
+  test-no-default-features:
+    desc: Runs all tests in debug mode without default features
+    cmds:
+      - cmd: cargo +stable test --no-default-features
+
+  testn:
+    desc: Runs all tests in debug mode using nextest
+    cmds:
+      - task: testn-all-features
+      - task: testn-default-features
+      - task: testn-no-default-features
+
+  testn-all-features:
+    desc: Runs all tests in debug mode with all features enabled using nextest
+    cmds:
+      - cmd: cargo +stable nextest run --all-features
+
+  testn-default-features:
+    desc: Runs all tests in debug mode with default features using nextest
+    cmds:
+      - cmd: cargo +stable nextest run
+
+  testn-no-default-features:
+    desc: Runs all tests in debug mode without default features using nextest
+    cmds:
+      - cmd: cargo +stable nextest run --no-default-features
+
+  hack:
+    desc: Runs checks based on all feature combinations
+    cmds:
+      - task: hack-build
+      - task: hack-clippy
+      - task: hack-test
+
+  hack-build:
+    desc: Builds in debug mode using all feature combinations
+    cmds:
+      - cmd: cargo +stable hack build --feature-powerset
+
+  hack-clippy:
+    desc: Runs clippy using all feature combinations
+    cmds:
+      - cmd: cargo +stable hack clippy --feature-powerset
+
+  hack-test:
+    desc: Runs tests using all feature combinations
+    cmds:
+      - cmd: cargo +stable hack test --feature-powerset
