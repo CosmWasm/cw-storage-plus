@@ -27,16 +27,14 @@ pub(crate) fn query_raw<Q: CustomQuery>(
     .into();
 
     let raw = to_json_vec(&request).map_err(|serialize_err| {
-        StdError::msg(format!("Serializing QueryRequest: {}", serialize_err))
+        StdError::msg(format!("Serializing QueryRequest: {serialize_err}"))
     })?;
     match querier.raw_query(&raw) {
-        SystemResult::Err(system_err) => Err(StdError::msg(format!(
-            "Querier system error: {}",
-            system_err
-        ))),
+        SystemResult::Err(system_err) => {
+            Err(StdError::msg(format!("Querier system error: {system_err}")))
+        }
         SystemResult::Ok(ContractResult::Err(contract_err)) => Err(StdError::msg(format!(
-            "Querier contract error: {}",
-            contract_err
+            "Querier contract error: {contract_err}"
         ))),
         SystemResult::Ok(ContractResult::Ok(value)) => Ok(value),
     }
@@ -45,7 +43,7 @@ pub(crate) fn query_raw<Q: CustomQuery>(
 /// Returns a debug identifier to explain what was not found
 pub(crate) fn not_found_object_info<T>(key: &[u8]) -> String {
     let type_name = type_name::<T>();
-    format!("type: {type_name}; key: {:02X?}", key)
+    format!("type: {type_name}; key: {key:02X?}")
 }
 
 #[cfg(test)]

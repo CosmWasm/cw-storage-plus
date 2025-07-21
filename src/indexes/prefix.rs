@@ -368,7 +368,7 @@ mod test {
     fn prefix_debug() {
         let prefix: IndexPrefix<String, String> = IndexPrefix::new(b"lol", &[Key::Val8([8; 1])]);
         assert_eq!(
-            format!("{:?}", prefix),
+            format!("{prefix:?}"),
             "IndexPrefix { storage_prefix: [0, 3, 108, 111, 108, 0, 1, 8], pk_name: [], .. }"
         );
     }

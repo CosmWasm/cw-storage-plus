@@ -1,27 +1,24 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-
+use criterion::{criterion_group, criterion_main, Criterion};
+use cw_storage_plus::IntKey;
 use rand::Rng;
 use rand_xoshiro::{rand_core::SeedableRng, Xoshiro256PlusPlus};
-use std::mem;
+use std::hint::black_box;
 use std::time::Duration;
-
-use cw_storage_plus::IntKey;
 
 fn bench_signed_int_key(c: &mut Criterion) {
     let mut group = c.benchmark_group("Signed int keys");
 
+    #[inline(always)]
     fn k() -> i32 {
-        // let k: i32 = 0x42434445;
-        // k
-        Xoshiro256PlusPlus::seed_from_u64(42).gen_range(i32::MIN..i32::MAX)
+        Xoshiro256PlusPlus::seed_from_u64(42).random_range(i32::MIN..i32::MAX)
     }
-    // For the asserts
+    // Save a value for future asserts.
     let k_check = k();
 
-    type Buf = [u8; mem::size_of::<i32>()];
+    type Buf = [u8; size_of::<i32>()];
 
     group.bench_function("i32 to_cw_bytes: xored (u32) + to_be_bytes", |b| {
-        #[inline]
+        #[inline(always)]
         fn to_cw_bytes(value: &i32) -> Buf {
             (*value as u32 ^ i32::MIN as u32).to_be_bytes()
         }
@@ -41,7 +38,7 @@ fn bench_signed_int_key(c: &mut Criterion) {
     });
 
     group.bench_function("i32 to_cw_bytes: xored (u128) + to_be_bytes", |b| {
-        #[inline]
+        #[inline(always)]
         fn to_cw_bytes(value: &i32) -> Buf {
             ((*value as u128 ^ i32::MIN as u128) as i32).to_be_bytes()
         }
@@ -61,7 +58,7 @@ fn bench_signed_int_key(c: &mut Criterion) {
     });
 
     group.bench_function("i32 to_cw_bytes: mut to_be_bytes + xor", |b| {
-        #[inline]
+        #[inline(always)]
         fn to_cw_bytes(value: &i32) -> Buf {
             let mut buf = i32::to_be_bytes(*value);
             buf[0] ^= 0x80;
@@ -83,12 +80,12 @@ fn bench_signed_int_key(c: &mut Criterion) {
     });
 
     group.bench_function("i32 to_cw_bytes: branching plus / minus", |b| {
-        #[inline]
+        #[inline(always)]
         fn to_cw_bytes(value: &i32) -> Buf {
             if value >= &0i32 {
-                ((*value as u32).wrapping_sub(i32::MIN as u32)).to_be_bytes()
+                (*value as u32).wrapping_sub(i32::MIN as u32).to_be_bytes()
             } else {
-                ((*value as u32).wrapping_add(i32::MIN as u32)).to_be_bytes()
+                (*value as u32).wrapping_add(i32::MIN as u32).to_be_bytes()
             }
         }
 
@@ -112,18 +109,17 @@ fn bench_signed_int_key(c: &mut Criterion) {
 fn bench_unsigned_int_key(c: &mut Criterion) {
     let mut group = c.benchmark_group("Unsigned int keys");
 
+    #[inline(always)]
     fn k() -> u32 {
-        // let k: u32 = 0x42434445;
-        // k
-        Xoshiro256PlusPlus::seed_from_u64(42).gen_range(u32::MIN..u32::MAX)
+        Xoshiro256PlusPlus::seed_from_u64(42).random_range(u32::MIN..u32::MAX)
     }
-    // For the asserts
+    // Save a value for future asserts.
     let k_check = k();
 
-    type Buf = [u8; mem::size_of::<u32>()];
+    type Buf = [u8; size_of::<u32>()];
 
     group.bench_function("u32 to_cw_bytes", |b| {
-        #[inline]
+        #[inline(always)]
         fn to_cw_bytes(value: &u32) -> Buf {
             value.to_be_bytes()
         }
@@ -133,8 +129,9 @@ fn bench_unsigned_int_key(c: &mut Criterion) {
 
         b.iter(|| {
             let k = k();
+            // Run twice for comparability with other benchmarks.
             black_box(to_cw_bytes(&k));
-            black_box(to_cw_bytes(&k)); // twice for comparability
+            black_box(to_cw_bytes(&k));
         });
     });
 
@@ -154,9 +151,11 @@ criterion_group!(
     config = make_config();
     targets = bench_signed_int_key
 );
+
 criterion_group!(
     name = unsigned_int_key;
     config = make_config();
     targets = bench_unsigned_int_key
 );
+
 criterion_main!(signed_int_key, unsigned_int_key);
