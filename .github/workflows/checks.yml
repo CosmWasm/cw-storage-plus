@@ -58,3 +58,11 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - run: cargo +stable build --release --target=wasm32-unknown-unknown --no-default-features
+
+  build-maximal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo update
+      - run: cargo build --release --all-features
