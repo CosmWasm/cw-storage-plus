@@ -10,3 +10,24 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo fmt -- --check
       - run: cargo clippy --all-features --all-targets -- -D warnings
+
+  build-all-features:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --all-features --locked
+
+  build-default-features:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --locked
+
+  build-no-default-features:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --locked
