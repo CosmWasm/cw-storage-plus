@@ -511,7 +511,7 @@ impl<'a> IndexList<TokenInfo> for TokenIndexes<'a> {
 
 This implements the `IndexList` trait for `TokenIndexes`.
 
-**NB**: this code is more or less boiler-plate, and needed for the internals. Do not try to customize this;
+**NB**: this code is more or less boilerplate, and needed for the internals. Do not try to customize this;
 just return a list of all indexes.
 Implementing this trait serves two purposes (which are really one and the same): it allows the indexes
 to be queried through `get_indexes`, and, it allows `TokenIndexes` to be treated as an `IndexList`. So that
