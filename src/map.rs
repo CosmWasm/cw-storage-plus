@@ -1446,7 +1446,7 @@ mod test {
         let keys: Vec<_> = AGES
             .keys_raw(&store, None, None, Order::Ascending)
             .collect();
-        println!("keys: {:?}", keys);
+        println!("keys: {keys:?}");
 
         // using inclusive bounds both sides
         let include = AGES
@@ -1533,7 +1533,7 @@ mod test {
         );
 
         let keys: Vec<_> = AGES.keys(&store, None, None, Order::Ascending).collect();
-        println!("keys: {:?}", keys);
+        println!("keys: {keys:?}");
 
         // using inclusive bounds both sides
         let include = AGES

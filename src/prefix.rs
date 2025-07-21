@@ -484,7 +484,7 @@ mod test {
     fn prefix_debug() {
         let prefix: Prefix<String, String> = Prefix::new(b"lol", &[Key::Val8([8; 1])]);
         assert_eq!(
-            format!("{:?}", prefix),
+            format!("{prefix:?}"),
             "Prefix { storage_prefix: [0, 3, 108, 111, 108, 0, 1, 8], .. }"
         );
     }
@@ -500,7 +500,7 @@ mod test {
 
         // set some data, we care about "foo" prefix
         for i in 0..100u32 {
-            store.set(format!("foo{}", i).as_bytes(), b"1");
+            store.set(format!("foo{i}").as_bytes(), b"1");
         }
 
         // clearing less than `TAKE` should work
@@ -543,7 +543,7 @@ mod test {
 
         // set some data, we care about "foo" prefix
         for i in 0..1000u32 {
-            store.set(format!("foo{}", i).as_bytes(), b"1");
+            store.set(format!("foo{i}").as_bytes(), b"1");
         }
 
         // clearing all should work
@@ -555,7 +555,7 @@ mod test {
 
         // set less data
         for i in 0..5u32 {
-            store.set(format!("foo{}", i).as_bytes(), b"1");
+            store.set(format!("foo{i}").as_bytes(), b"1");
         }
 
         // clearing all should work

@@ -148,7 +148,7 @@ impl<T: Serialize + DeserializeOwned> Deque<T> {
             .get(&full_key)
             .map(|vec| {
                 Ok(u32::from_be_bytes(vec.as_slice().try_into().map_err(
-                    |e| StdError::msg(format!("parse error u32: {}", e)),
+                    |e| StdError::msg(format!("parse error u32: {e}")),
                 )?))
             })
             .unwrap_or(Ok(0))
@@ -173,9 +173,7 @@ impl<T: Serialize + DeserializeOwned> Deque<T> {
 
         let pos = head.wrapping_add(pos);
         self.get_unchecked(storage, pos)
-            .and_then(|v| {
-                v.ok_or_else(|| StdError::msg(format!("deque position {} not found", pos)))
-            })
+            .and_then(|v| v.ok_or_else(|| StdError::msg(format!("deque position {pos} not found"))))
             .map(Some)
     }
 
@@ -186,7 +184,7 @@ impl<T: Serialize + DeserializeOwned> Deque<T> {
 
         if pos >= calc_len(head, tail) {
             // out of bounds
-            return Err(StdError::msg(format!("deque position {} not found", pos)));
+            return Err(StdError::msg(format!("deque position {pos} not found")));
         }
 
         self.set_unchecked(storage, pos, value)
@@ -328,7 +326,7 @@ mod tests {
         let mut store = MockStorage::new();
 
         for i in 1..4 {
-            let key = format!("key{}", i);
+            let key = format!("key{i}");
             let item = Deque::new_dyn(key);
             for i in 0..i {
                 item.push_back(&mut store, &i).unwrap();
