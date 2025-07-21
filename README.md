@@ -1,4 +1,4 @@
-# `cw-storage-plus`: Storage abstractions for CosmWasm
+# Storage abstractions for CosmWasm
 
 This has been heavily used in many production-quality contracts.
 The code has demonstrated itself to be stable and powerful.
