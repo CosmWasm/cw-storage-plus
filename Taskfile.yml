@@ -29,6 +29,9 @@ tasks:
       - task: build-all-features
       - task: build-default-features
       - task: build-no-default-features
+      - task: build-wasm-all-features
+      - task: build-wasm-default-features
+      - task: build-wasm-no-default-features
 
   build-all-features:
     desc: Builds in debug mode with all features enabled
@@ -44,6 +47,21 @@ tasks:
     desc: Builds in debug mode without default features
     cmds:
       - cmd: cargo +stable build --no-default-features
+
+  build-wasm-all-features:
+    desc: Builds WASM in debug mode with all features enabled
+    cmds:
+      - cmd: cargo +stable build --target wasm32-unknown-unknown --all-features
+
+  build-wasm-default-features:
+    desc: Builds WASM in debug mode with default features
+    cmds:
+      - cmd: cargo +stable build --target wasm32-unknown-unknown
+
+  build-wasm-no-default-features:
+    desc: Builds WASM in debug mode without default features
+    cmds:
+      - cmd: cargo +stable build --target wasm32-unknown-unknown --no-default-features
 
   clean:
     desc: Cleans target output

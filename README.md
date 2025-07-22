@@ -1,17 +1,36 @@
-# `cw-storage-plus`: Storage abstractions for CosmWasm
+# StoragePlus
+
+[![cw-storage-plus][crates-badge]][crates-url]
+[![docs][docs-badge]][docs-url]
+[![codecov][codecov-badge]][codecov-url]
+[![license][apache-badge]][apache-url]
+
+[crates-badge]: https://img.shields.io/crates/v/cw-storage-plus.svg
+[crates-url]: https://crates.io/crates/cw-storage-plus
+[docs-badge]: https://docs.rs/cw-storage-plus/badge.svg
+[docs-url]: https://docs.rs/cw-storage-plus
+[codecov-badge]: https://codecov.io/gh/CosmWasm/cw-storage-plus/branch/main/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/CosmWasm/cw-storage-plus
+[apache-badge]: https://img.shields.io/badge/License-Apache%202.0-blue.svg
+[apache-url]: LICENSE
+[notice-url]: NOTICE
+
+**Storage abstractions for CosmWasm smart contracts**
+
+## Introduction
 
 This has been heavily used in many production-quality contracts.
 The code has demonstrated itself to be stable and powerful.
 It is mature enough to be the **standard storage layer** for your contracts.
 
-## Usage Overview
+## Overview
 
 We introduce two main classes to provide a productive abstraction
 on top of `cosmwasm_std::Storage`. They are `Item`, which is
 a typed wrapper around one database key, providing some helper functions
 for interacting with it without dealing with raw bytes. And `Map`,
 which allows you to store multiple unique typed objects under a prefix,
-indexed by a simple or compound (eg. `(&[u8], &[u8])`) primary key.
+indexed by a simple or compound (e.g. `(&[u8], &[u8])`) primary key.
 
 ## Item
 
@@ -21,7 +40,7 @@ used by any other item. Then it will provide you with a nice interface
 to interact with such data.
 
 If you are coming from using `Singleton`, the biggest change is that
-we no longer store `Storage` inside, meaning we don't need read and write
+we no longer store `Storage` inside, meaning we don't need to read and write
 variants of the object, just one type. Furthermore, we use `const fn`
 to create the `Item`, allowing it to be defined as a global compile-time
 constant rather than a function that must be constructed each time,
@@ -103,7 +122,7 @@ This requires the `iterator` feature to be enabled in `cw-storage-plus`
 enabled by default).
 
 If you are coming from using `Bucket`, the biggest change is that
-we no longer store `Storage` inside, meaning we don't need read and write
+we no longer store `Storage` inside, meaning we don't need to read and write
 variants of the object, just one type. Furthermore, we use `const fn`
 to create the `Bucket`, allowing it to be defined as a global compile-time
 constant rather than a function that must be constructed each time,
@@ -318,7 +337,7 @@ over all items with `range(store, min, max, order)`. It supports `Order::Ascendi
 
 If the `min` and `max` bounds are `None`, `range` will return all items under the prefix. You can use `.take(n)` to
 limit the results to `n` items and start doing pagination. You can also set the `min` bound to
-eg. `Bound::exclusive(last_value)` to start iterating over all items _after_ the last value. Combined with
+e.g. `Bound::exclusive(last_value)` to start iterating over all items _after_ the last value. Combined with
 `take`, we easily have pagination support. You can also use `Bound::inclusive(x)` when you want to include any
 perfect matches.
 
@@ -511,7 +530,7 @@ impl<'a> IndexList<TokenInfo> for TokenIndexes<'a> {
 
 This implements the `IndexList` trait for `TokenIndexes`.
 
-**NB**: this code is more or less boiler-plate, and needed for the internals. Do not try to customize this;
+**NB**: this code is more or less boilerplate, and needed for the internals. Do not try to customize this;
 just return a list of all indexes.
 Implementing this trait serves two purposes (which are really one and the same): it allows the indexes
 to be queried through `get_indexes`, and, it allows `TokenIndexes` to be treated as an `IndexList`. So that
@@ -693,3 +712,11 @@ fn demo() -> StdResult<()> {
     Ok(())
 }
 ```
+
+## License
+
+Licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+(see [LICENSE][apache-url] and [NOTICE][notice-url]).
+
+Any contribution intentionally submitted for inclusion in this crate by you,
+shall be licensed as above, without any additional terms or conditions.
