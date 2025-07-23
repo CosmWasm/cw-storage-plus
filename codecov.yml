@@ -1,0 +1,4 @@
+comments:
+  flags:
+    - cw-storage-plus
+    - cw-storage-macro
