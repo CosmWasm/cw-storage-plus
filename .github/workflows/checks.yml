@@ -123,14 +123,28 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo bench
 
-  coverage:
+  coverage-cw-storage-plus:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo install cargo-llvm-cov
-      - run: cargo llvm-cov --no-cfg-coverage --all-features --workspace --cobertura --output-path ./coverage.xml
+      - run: cargo llvm-cov --no-cfg-coverage --all-features -p cw-storage-plus --cobertura --output-path ./coverage-cw-storage-plus.xml
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
+          flags: cw-storage-plus
+          files: ./coverage-cw-storage-plus.xml
+
+  coverage-cw-storage-macro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install cargo-llvm-cov
+      - run: cargo llvm-cov --no-cfg-coverage --all-features -p cw-storage-macro --cobertura --output-path ./coverage-cw-storage-macro.xml
+      - uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: cw-storage-macro
+          files: ./coverage-cw-storage-macro.xml
