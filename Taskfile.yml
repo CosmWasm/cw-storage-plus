@@ -36,32 +36,32 @@ tasks:
   build-all-features:
     desc: Builds in debug mode with all features enabled
     cmds:
-      - cmd: cargo +stable build --all-features
+      - cmd: cargo +stable build --all-features --workspace
 
   build-default-features:
     desc: Builds in debug mode with default features
     cmds:
-      - cmd: cargo +stable build
+      - cmd: cargo +stable build --workspace
 
   build-no-default-features:
     desc: Builds in debug mode without default features
     cmds:
-      - cmd: cargo +stable build --no-default-features
+      - cmd: cargo +stable build --no-default-features --workspace
 
   build-wasm-all-features:
     desc: Builds WASM in debug mode with all features enabled
     cmds:
-      - cmd: cargo +stable build --target wasm32-unknown-unknown --all-features
+      - cmd: cargo +stable build --target wasm32-unknown-unknown --all-features --workspace
 
   build-wasm-default-features:
     desc: Builds WASM in debug mode with default features
     cmds:
-      - cmd: cargo +stable build --target wasm32-unknown-unknown
+      - cmd: cargo +stable build --target wasm32-unknown-unknown --workspace
 
   build-wasm-no-default-features:
     desc: Builds WASM in debug mode without default features
     cmds:
-      - cmd: cargo +stable build --target wasm32-unknown-unknown --no-default-features
+      - cmd: cargo +stable build --target wasm32-unknown-unknown --no-default-features --workspace
 
   clean:
     desc: Cleans target output
@@ -78,23 +78,43 @@ tasks:
   clippy-all-features:
     desc: Runs clippy with all features enabled
     cmds:
-      - cmd: cargo +stable clippy --all-features --all-targets
+      - cmd: cargo +stable clippy --all-features --all-targets --workspace
 
   clippy-default-features:
     desc: Runs clippy with default features
     cmds:
-      - cmd: cargo +stable clippy --all-targets
+      - cmd: cargo +stable clippy --all-targets --workspace
 
   clippy-no-default-features:
     desc: Runs clippy without default features
     cmds:
-      - cmd: cargo +stable clippy --no-default-features --all-targets
+      - cmd: cargo +stable clippy --no-default-features --all-targets --workspace
 
   cov:
-    desc: Generates code coverage report and opens it in a browser
+    desc: Generates workspace code coverage report in text format and prints it to stdout
     cmds:
       - cmd: cargo +stable llvm-cov clean
-      - cmd: cargo +stable llvm-cov --no-cfg-coverage --all-features --html --open
+      - cmd: cargo +stable llvm-cov --no-cfg-coverage --all-features --workspace
+
+  cov-html:
+    desc: Generates workspace code coverage report in HTML format and opens it in a browser
+    cmds:
+      - cmd: cargo +stable llvm-cov clean
+      - cmd: cargo +stable llvm-cov --no-cfg-coverage --all-features --workspace --html --open
+
+  cov-badge-cw-storage-plus:
+    desc: Generates code coverage badge for cw-storage-plus
+    cmds:
+      - cmd: cargo +stable llvm-cov clean
+      - cmd: cargo +stable llvm-cov -p cw-storage-plus --no-cfg-coverage --all-features --json --summary-only --output-path ./target/coverage-cw-storage-plus.json
+      - cmd: coverio ./target/coverage-cw-storage-plus.json
+
+  cov-badge-cw-storage-macro:
+    desc: Generates code coverage badge for cw-storage-macro
+    cmds:
+      - cmd: cargo +stable llvm-cov clean
+      - cmd: cargo +stable llvm-cov -p cw-storage-macro --no-cfg-coverage --all-features --json --summary-only --output-path ./target/coverage-cw-storage-macro.json
+      - cmd: coverio ./target/coverage-cw-storage-macro.json
 
   fmt:
     desc: Runs code formatter
@@ -121,17 +141,17 @@ tasks:
   test-all-features:
     desc: Runs all tests in debug mode with all features enabled
     cmds:
-      - cmd: cargo +stable test --all-features
+      - cmd: cargo +stable test --all-features --workspace
 
   test-default-features:
     desc: Runs all tests in debug mode with default features
     cmds:
-      - cmd: cargo +stable test
+      - cmd: cargo +stable test --workspace
 
   test-no-default-features:
     desc: Runs all tests in debug mode without default features
     cmds:
-      - cmd: cargo +stable test --no-default-features
+      - cmd: cargo +stable test --no-default-features --workspace
 
   testn:
     desc: Runs all tests in debug mode using nextest
@@ -143,17 +163,17 @@ tasks:
   testn-all-features:
     desc: Runs all tests in debug mode with all features enabled using nextest
     cmds:
-      - cmd: cargo +stable nextest run --all-features
+      - cmd: cargo +stable nextest run --all-features --workspace
 
   testn-default-features:
     desc: Runs all tests in debug mode with default features using nextest
     cmds:
-      - cmd: cargo +stable nextest run
+      - cmd: cargo +stable nextest run --workspace
 
   testn-no-default-features:
     desc: Runs all tests in debug mode without default features using nextest
     cmds:
-      - cmd: cargo +stable nextest run --no-default-features
+      - cmd: cargo +stable nextest run --no-default-features --workspace
 
   hack:
     desc: Runs checks based on all feature combinations
@@ -165,14 +185,14 @@ tasks:
   hack-build:
     desc: Builds in debug mode using all feature combinations
     cmds:
-      - cmd: cargo +stable hack build --feature-powerset
+      - cmd: cargo +stable hack build --feature-powerset --workspace
 
   hack-clippy:
     desc: Runs clippy using all feature combinations
     cmds:
-      - cmd: cargo +stable hack clippy --feature-powerset
+      - cmd: cargo +stable hack clippy --feature-powerset --workspace
 
   hack-test:
     desc: Runs tests using all feature combinations
     cmds:
-      - cmd: cargo +stable hack test --feature-powerset
+      - cmd: cargo +stable hack test --feature-powerset --workspace

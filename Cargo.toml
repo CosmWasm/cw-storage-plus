@@ -1,4 +1,7 @@
 [workspace]
+members = [".", "macros"]
+
+resolver = "2"
 
 [package]
 name = "cw-storage-plus"
@@ -26,7 +29,7 @@ bench = false
 cosmwasm-std = { version = "3.0.0", default-features = false, features = ["std"] }
 schemars = "0.8.22"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
-cw-storage-macro = { version = "2.1.0", optional = true }
+cw-storage-macro = { path = "macros", version = "2.1.0", optional = true }
 
 [dev-dependencies]
 # See https://bheisler.github.io/criterion.rs/book/user_guide/command_line_options.html for using baselines
