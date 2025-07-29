@@ -1,21 +1,33 @@
 # StoragePlus
 
-[![cw-storage-plus][crates-badge]][crates-url]
-[![docs][docs-badge]][docs-url]
-[![codecov][codecov-badge]][codecov-url]
+![component][component-badge]
 [![license][apache-badge]][apache-url]
 
-[crates-badge]: https://img.shields.io/crates/v/cw-storage-plus.svg
-[crates-url]: https://crates.io/crates/cw-storage-plus
-[docs-badge]: https://docs.rs/cw-storage-plus/badge.svg
-[docs-url]: https://docs.rs/cw-storage-plus
-[codecov-badge]: https://codecov.io/gh/CosmWasm/cw-storage-plus/branch/main/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/CosmWasm/cw-storage-plus
+[component-badge]: https://img.shields.io/badge/CosmWasm-6343ae.svg
+[crates-badge-cw-storage-plus]: https://img.shields.io/crates/v/cw-storage-plus.svg
+[crates-url-cw-storage-plus]: https://crates.io/crates/cw-storage-plus
+[docs-badge-cw-storage-plus]: https://docs.rs/cw-storage-plus/badge.svg
+[docs-url-cw-storage-plus]: https://docs.rs/cw-storage-plus
+[coverage-badge-cw-storage-plus]: https://img.shields.io/badge/coverage-94%25%20%E2%94%82%2085%25%20%E2%94%82%2091%25-21b577.svg
+[crates-badge-cw-storage-macro]: https://img.shields.io/crates/v/cw-storage-macro.svg
+[crates-url-cw-storage-macro]: https://crates.io/crates/cw-storage-macro
+[docs-badge-cw-storage-macro]: https://docs.rs/cw-storage-macro/badge.svg
+[docs-url-cw-storage-macro]: https://docs.rs/cw-storage-macro
+[coverage-badge-cw-storage-macro]: https://img.shields.io/badge/coverage-0%25%20%E2%94%82%200%25%20%E2%94%82%200%25-f52020.svg
 [apache-badge]: https://img.shields.io/badge/License-Apache%202.0-blue.svg
 [apache-url]: LICENSE
 [notice-url]: NOTICE
 
 **Storage abstractions for CosmWasm smart contracts**
+
+## Rust crates
+
+The following Rust crates are maintained in this repository:
+
+| Crate                | Usage                | Download                                                                          | Docs                                                              | Coverage                                                       |
+|----------------------|----------------------|-----------------------------------------------------------------------------------|-------------------------------------------------------------------|----------------------------------------------------------------|
+| **cw-storage-plus**  | Contract development | [![cw-storage-plus][crates-badge-cw-storage-plus]][crates-url-cw-storage-plus]    | [![docs][docs-badge-cw-storage-plus]][docs-url-cw-storage-plus]   | ![coverage-cw-storgage-plus][coverage-badge-cw-storage-plus]   |
+| **cw-storage-macro** | Contract development | [![cw-storage-macro][crates-badge-cw-storage-macro]][crates-url-cw-storage-macro] | [![docs][docs-badge-cw-storage-macro]][docs-url-cw-storage-macro] | ![coverage-cw-storgage-macro][coverage-badge-cw-storage-macro] |
 
 ## Introduction
 
