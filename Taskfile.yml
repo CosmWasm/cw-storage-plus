@@ -106,15 +106,13 @@ tasks:
     desc: Generates code coverage badge for cw-storage-plus
     cmds:
       - cmd: cargo +stable llvm-cov clean
-      - cmd: cargo +stable llvm-cov -p cw-storage-plus --no-cfg-coverage --all-features --json --summary-only --output-path ./target/coverage-cw-storage-plus.json
-      - cmd: coverio ./target/coverage-cw-storage-plus.json
+      - cmd: cargo +stable llvm-cov -p cw-storage-plus --no-cfg-coverage --all-features --json --summary-only | coverio
 
   cov-badge-cw-storage-macro:
     desc: Generates code coverage badge for cw-storage-macro
     cmds:
       - cmd: cargo +stable llvm-cov clean
-      - cmd: cargo +stable llvm-cov -p cw-storage-macro --no-cfg-coverage --all-features --json --summary-only --output-path ./target/coverage-cw-storage-macro.json
-      - cmd: coverio ./target/coverage-cw-storage-macro.json
+      - cmd: cargo +stable llvm-cov -p cw-storage-macro --no-cfg-coverage --all-features --json --summary-only | coverio
 
   fmt:
     desc: Runs code formatter
