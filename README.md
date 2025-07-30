@@ -24,10 +24,10 @@
 
 The following Rust crates are maintained in this repository:
 
-| Crate                | Usage                | Download                                                                          | Docs                                                                            | Coverage                                                      |
-|----------------------|----------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------------|---------------------------------------------------------------|
-| **cw-storage-plus**  | Contract development | [![cw-storage-plus][crates-badge-cw-storage-plus]][crates-url-cw-storage-plus]    | [![docs-storage-plus][docs-badge-cw-storage-plus]][docs-url-cw-storage-plus]    | ![coverage-cw-storage-plus][coverage-badge-cw-storage-plus]   |
-| **cw-storage-macro** | Contract development | [![cw-storage-macro][crates-badge-cw-storage-macro]][crates-url-cw-storage-macro] | [![docs-storage-macro][docs-badge-cw-storage-macro]][docs-url-cw-storage-macro] | ![coverage-cw-storage-macro][coverage-badge-cw-storage-macro] |
+| Crate                  | Usage                | Download                                                                          | Docs                                                                            | Coverage                                                      |
+|------------------------|----------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------------|---------------------------------------------------------------|
+| **`cw-storage-plus`**  | Contract development | [![cw-storage-plus][crates-badge-cw-storage-plus]][crates-url-cw-storage-plus]    | [![docs-storage-plus][docs-badge-cw-storage-plus]][docs-url-cw-storage-plus]    | ![coverage-cw-storage-plus][coverage-badge-cw-storage-plus]   |
+| **`cw-storage-macro`** | Contract development | [![cw-storage-macro][crates-badge-cw-storage-macro]][crates-url-cw-storage-macro] | [![docs-storage-macro][docs-badge-cw-storage-macro]][docs-url-cw-storage-macro] | ![coverage-cw-storage-macro][coverage-badge-cw-storage-macro] |
 
 ## Introduction
 
