@@ -149,23 +149,36 @@ where
     }
 
     /// Clears the map, removing all elements.
-    pub fn clear(&self, store: &mut dyn Storage) {
+    pub fn clear(&self, store: &mut dyn Storage) -> StdResult<()> {
         const TAKE: usize = 10;
         let mut cleared = false;
 
         while !cleared {
-            let paths = self
+            let entries = self
                 .no_prefix_raw()
-                .keys_raw(store, None, None, cosmwasm_std::Order::Ascending)
-                .map(|raw_key| Path::<T>::new(self.pk_namespace.as_slice(), &[raw_key.as_slice()]))
+                .range_raw(store, None, None, cosmwasm_std::Order::Ascending)
                 // Take just TAKE elements to prevent possible heap overflow if the Map is big.
                 .take(TAKE)
-                .collect::<Vec<_>>();
+                .collect::<Result<Vec<_>, _>>();
 
-            paths.iter().for_each(|path| store.remove(path));
+            match entries {
+                Ok(entries) => {
+                    // Remove from indexes first
+                    for (raw_key, data) in &entries {
+                        for index in self.idx.get_indexes() {
+                            index.remove(store, raw_key, data)?;
+                        }
+                        let path =
+                            Path::<T>::new(self.pk_namespace.as_slice(), &[raw_key.as_slice()]);
+                        store.remove(&path);
+                    }
 
-            cleared = paths.len() < TAKE;
+                    cleared = entries.len() < TAKE;
+                }
+                Err(e) => return Err(e),
+            }
         }
+        Ok(())
     }
 
     /// Returns `true` if the map is empty.
@@ -1702,7 +1715,7 @@ mod test {
         let mut storage = MockStorage::new();
         let (pks, _) = save_data(&mut storage);
 
-        DATA.clear(&mut storage);
+        DATA.clear(&mut storage).unwrap();
 
         for key in pks {
             assert!(!DATA.has(&storage, key));
@@ -1714,7 +1727,7 @@ mod test {
         let mut storage = MockStorage::new();
         let (pks, _) = save_data(&mut storage);
 
-        DATA.clear(&mut storage);
+        DATA.clear(&mut storage).unwrap();
 
         for key in pks {
             assert!(!DATA.has(&storage, key));
