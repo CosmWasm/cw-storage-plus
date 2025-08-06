@@ -1710,6 +1710,41 @@ mod test {
     }
 
     #[test]
+    fn clear_with_indexes_works() {
+        let mut storage = MockStorage::new();
+        let (pks, _) = save_data(&mut storage);
+
+        DATA.clear(&mut storage);
+
+        for key in pks {
+            assert!(!DATA.has(&storage, key));
+        }
+
+        assert!(DATA.is_empty(&storage), "indexed map should be empty");
+
+        let count = DATA
+            .idx
+            .age
+            .keys_raw(&storage, None, None, Order::Ascending)
+            .count();
+        assert_eq!(count, 0, "age index should be empty");
+
+        let count = DATA
+            .idx
+            .name
+            .keys_raw(&storage, None, None, Order::Ascending)
+            .count();
+        assert_eq!(count, 0, "name index should be empty");
+
+        let count = DATA
+            .idx
+            .name_lastname
+            .keys_raw(&storage, None, None, Order::Ascending)
+            .count();
+        assert_eq!(count, 0, "name_lastname index should be empty");
+    }
+
+    #[test]
     fn is_empty_works() {
         let mut storage = MockStorage::new();
 
