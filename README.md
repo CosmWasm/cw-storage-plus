@@ -8,12 +8,12 @@
 [crates-url-cw-storage-plus]: https://crates.io/crates/cw-storage-plus
 [docs-badge-cw-storage-plus]: https://docs.rs/cw-storage-plus/badge.svg
 [docs-url-cw-storage-plus]: https://docs.rs/cw-storage-plus
-[coverage-badge-cw-storage-plus]: https://img.shields.io/badge/coverage-94%25%20%E2%94%82%2085%25%20%E2%94%82%2091%25-21b577.svg
+[coverage-badge-cw-storage-plus]: https://img.shields.io/badge/cov-94%25%20%E2%94%82%2085%25%20%E2%94%82%2091%25-21b577.svg
 [crates-badge-cw-storage-macro]: https://img.shields.io/crates/v/cw-storage-macro.svg
 [crates-url-cw-storage-macro]: https://crates.io/crates/cw-storage-macro
 [docs-badge-cw-storage-macro]: https://docs.rs/cw-storage-macro/badge.svg
 [docs-url-cw-storage-macro]: https://docs.rs/cw-storage-macro
-[coverage-badge-cw-storage-macro]: https://img.shields.io/badge/coverage-0%25%20%E2%94%82%200%25%20%E2%94%82%200%25-f52020.svg
+[coverage-badge-cw-storage-macro]: https://img.shields.io/badge/cov-0%25%20%E2%94%82%200%25%20%E2%94%82%200%25-f52020.svg
 [apache-badge]: https://img.shields.io/badge/License-Apache%202.0-blue.svg
 [apache-url]: LICENSE
 [notice-url]: NOTICE
@@ -24,10 +24,10 @@
 
 The following Rust crates are maintained in this repository:
 
-| Crate                  | Usage                | Download                                                                          | Docs                                                                            | Coverage                                                      |
-|------------------------|----------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------------|---------------------------------------------------------------|
-| **`cw-storage-plus`**  | Contract development | [![cw-storage-plus][crates-badge-cw-storage-plus]][crates-url-cw-storage-plus]    | [![docs-storage-plus][docs-badge-cw-storage-plus]][docs-url-cw-storage-plus]    | ![coverage-cw-storage-plus][coverage-badge-cw-storage-plus]   |
-| **`cw-storage-macro`** | Contract development | [![cw-storage-macro][crates-badge-cw-storage-macro]][crates-url-cw-storage-macro] | [![docs-storage-macro][docs-badge-cw-storage-macro]][docs-url-cw-storage-macro] | ![coverage-cw-storage-macro][coverage-badge-cw-storage-macro] |
+| Crate                        | Usage                | Download                                                                          | Docs                                                                            | Coverage                                                      |
+|------------------------------|----------------------|-----------------------------------------------------------------------------------|---------------------------------------------------------------------------------|---------------------------------------------------------------|
+| cw&#8209;storage&#8209;plus  | Contract development | [![cw-storage-plus][crates-badge-cw-storage-plus]][crates-url-cw-storage-plus]    | [![docs-storage-plus][docs-badge-cw-storage-plus]][docs-url-cw-storage-plus]    | ![coverage-cw-storage-plus][coverage-badge-cw-storage-plus]   |
+| cw&#8209;storage&#8209;macro | Contract development | [![cw-storage-macro][crates-badge-cw-storage-macro]][crates-url-cw-storage-macro] | [![docs-storage-macro][docs-badge-cw-storage-macro]][docs-url-cw-storage-macro] | ![coverage-cw-storage-macro][coverage-badge-cw-storage-macro] |
 
 ## Introduction
 
