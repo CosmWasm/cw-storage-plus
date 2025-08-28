@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [3.0.1] - 2025-08-28
 
+(maintenance release)
+
 ### Changed
 
 - Unified security policy ([#107])
