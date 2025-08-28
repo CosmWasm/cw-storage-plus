@@ -5,7 +5,7 @@ resolver = "2"
 
 [package]
 name = "cw-storage-plus"
-version = "3.0.0"
+version = "3.0.1"
 authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
 edition = "2021"
 description = "Enhanced storage engines"
@@ -26,14 +26,14 @@ macro = ["dep:cw-storage-macro"]
 bench = false
 
 [dependencies]
-cosmwasm-std = { version = "3.0.0", default-features = false, features = ["std"] }
+cosmwasm-std = { version = "3.0.1", default-features = false, features = ["std"] }
 schemars = "0.8.22"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
-cw-storage-macro = { path = "macros", version = "2.1.0", optional = true }
+cw-storage-macro = { path = "macros", version = "3.0.1", optional = true }
 
 [dev-dependencies]
 # See https://bheisler.github.io/criterion.rs/book/user_guide/command_line_options.html for using baselines
-criterion = { version = "0.6.0", features = ["html_reports"] }
+criterion = { version = "0.7.0", features = ["html_reports"] }
 rand = { version = "0.9.1", default-features = false }
 rand_xoshiro = { version = "0.7.0", default-features = false }
 derive_more = { version = "2.0.1", features = ["full"] }

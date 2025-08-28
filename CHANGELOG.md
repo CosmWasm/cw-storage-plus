@@ -1,13 +1,49 @@
 # CHANGELOG
 
-Starting at version 1.2.0, the format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+[Keep a Changelog]: https://keepachangelog.com/en/1.0.0
+[Semantic Versioning]: https://semver.org/spec/v2.0.0.html
+
+The format is based on [Keep a Changelog], and this project adheres to [Semantic Versioning].
+
+[Unreleased] changes
+
+---
+
+## [3.0.1] - 2025-08-28
+
+(maintenance release)
+
+### Changed
+
+- Unified security policy ([#107])
+- Upgraded development dependencies ([#108])
+- Removed .editorconfig ([#109])
+- Add Taskfile configuration ([#110])
+- Unified licensing ([#111])
+- Setup GH Actions ([#112])
+- Removed local codecov configuration ([#113])
+- Removed scripts ([#114])
+- Fixed workspace configuration ([#115])
+- Upgrade checkout action ([#118])
+- Upgrade to `cosmwasm-std` 3.0.1 ([#119])
+
+[#107]: https://github.com/CosmWasm/cw-storage-plus/pull/107
+[#108]: https://github.com/CosmWasm/cw-storage-plus/pull/108
+[#109]: https://github.com/CosmWasm/cw-storage-plus/pull/109
+[#110]: https://github.com/CosmWasm/cw-storage-plus/pull/110
+[#111]: https://github.com/CosmWasm/cw-storage-plus/pull/111
+[#112]: https://github.com/CosmWasm/cw-storage-plus/pull/112
+[#113]: https://github.com/CosmWasm/cw-storage-plus/pull/113
+[#114]: https://github.com/CosmWasm/cw-storage-plus/pull/114
+[#115]: https://github.com/CosmWasm/cw-storage-plus/pull/115
+[#118]: https://github.com/CosmWasm/cw-storage-plus/pull/118
+[#119]: https://github.com/CosmWasm/cw-storage-plus/pull/119
 
 ## [3.0.0] - 2025-06-25
 
 ### Changed
 
-- Upgrade to cosmwasm-std 3.0.0 ([#104])
+- Upgrade to `cosmwasm-std` 3.0.0 ([#104])
 
 [#104]: https://github.com/CosmWasm/cw-storage-plus/pull/104
 
@@ -28,6 +64,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 [#98]: https://github.com/CosmWasm/cw-storage-plus/pull/98
 
 ## [2.1.0] - 2024-09-25
+
 - Add derive macro for `NewTypeKey`
 
 ## [2.0.0] - 2024-03-14
@@ -78,10 +115,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 [#63]: https://github.com/CosmWasm/cw-storage-plus/pull/63
 
 ---
-
-[unreleased]: https://github.com/CosmWasm/cw-storage-plus/compare/v2.0.0-rc.0...HEAD
-[2.0.0-rc.0]: https://github.com/CosmWasm/cw-storage-plus/compare/v1.2.0...v2.0.0-rc.0
-[1.2.0]: https://github.com/CosmWasm/cw-storage-plus/compare/v1.1.0...v1.2.0
 
 ## [v1.1.0](https://github.com/CosmWasm/cw-storage-plus/tree/v1.1.0) (2023-06-12)
 
@@ -151,7 +184,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Some multitest bindings for staking are missing such as `BondedDenom` [\#753](https://github.com/CosmWasm/cw-plus/issues/753)
 - Allow burn to have a callback just like Send [\#717](https://github.com/CosmWasm/cw-plus/issues/717)
 - Unable to upload cw20_base wasm file on terra-station [\#716](https://github.com/CosmWasm/cw-plus/issues/716)
-- Cannot upload to localterra with cw-storage-plus 0.12.1 [\#666](https://github.com/CosmWasm/cw-plus/issues/666)
+- Cannot upload to local terra with cw-storage-plus 0.12.1 [\#666](https://github.com/CosmWasm/cw-plus/issues/666)
 - Is `MAX_LIMIT` a bug? [\#625](https://github.com/CosmWasm/cw-plus/issues/625)
 - Add support for admin migrations to cw-multitest [\#744](https://github.com/CosmWasm/cw-plus/issues/744)
 
@@ -243,7 +276,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 
 - cw20-ics20 incorrectly encodes `ack_success`. [\#759](https://github.com/CosmWasm/cw-plus/issues/759)
 - Allow querying all granted allowances to a spender [\#756](https://github.com/CosmWasm/cw-plus/issues/756)
-- Store compiled wasms on repo [\#747](https://github.com/CosmWasm/cw-plus/issues/747)
+- Store compiled WASMs on repo [\#747](https://github.com/CosmWasm/cw-plus/issues/747)
 - Add optional executor restriction to cw3-flex [\#739](https://github.com/CosmWasm/cw-plus/issues/739)
 - Provide proc macro package for automatic `IndexList<T>` implementation on any index struct [\#736](https://github.com/CosmWasm/cw-plus/issues/736)
 - MultiIndex `prefix` and `sub_prefix` working incorrectly when using a triple element tuple as IK [\#730](https://github.com/CosmWasm/cw-plus/issues/730)
@@ -395,7 +428,7 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 **Merged pull requests:**
 
 - Prepare release v0.12.0 [\#654](https://github.com/CosmWasm/cw-plus/pull/654) ([uint](https://github.com/uint))
-- Ics20 same ack handling as ibctransfer [\#653](https://github.com/CosmWasm/cw-plus/pull/653) ([ethanfrey](https://github.com/ethanfrey))
+- Ics20 same ack handling as IbcTransfer [\#653](https://github.com/CosmWasm/cw-plus/pull/653) ([ethanfrey](https://github.com/ethanfrey))
 - packages: support custom queries [\#652](https://github.com/CosmWasm/cw-plus/pull/652) ([uint](https://github.com/uint))
 - CW20 - Fix Docs URL [\#649](https://github.com/CosmWasm/cw-plus/pull/649) ([entrancedjames](https://github.com/entrancedjames))
 - CW3: Add proposal_id field to VoteInfo structure [\#648](https://github.com/CosmWasm/cw-plus/pull/648) ([ueco-jb](https://github.com/ueco-jb))
@@ -1337,4 +1370,13 @@ changelog will be noisy - not everything is relevant to `cw-storage-plus` there.
 - Define all Message and Query types [\#11](https://github.com/CosmWasm/cw-plus/pull/11) ([ethanfrey](https://github.com/ethanfrey))
 - Set up basic CI script [\#10](https://github.com/CosmWasm/cw-plus/pull/10) ([ethanfrey](https://github.com/ethanfrey))
 
-\* _This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)_
+[Unreleased]: https://github.com/CosmWasm/cw-storage-plus/compare/v3.0.1...HEAD
+[3.0.1]: https://github.com/CosmWasm/cosmwasm/compare/v3.0.0...v3.0.1
+[3.0.0]: https://github.com/CosmWasm/cosmwasm/compare/v3.0.0-rc.0...v3.0.0
+[3.0.0-rc.0]: https://github.com/CosmWasm/cosmwasm/compare/v3.0.0-ibc2.0...v3.0.0-rc.0
+[3.0.0-ibc2.0]: https://github.com/CosmWasm/cosmwasm/compare/v2.1.0...v3.0.0-ibc2.0
+[2.1.0]: https://github.com/CosmWasm/cosmwasm/compare/v2.0.0...v2.1.0
+[2.0.0]: https://github.com/CosmWasm/cosmwasm/compare/v2.0.0-rc.0...v2.0.0
+[2.0.0-rc.0]: https://github.com/CosmWasm/cosmwasm/compare/v1.2.0...v2.0.0-rc.0
+[1.2.0]: https://github.com/CosmWasm/cw-storage-plus/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/CosmWasm/cw-storage-plus/tree/v1.1.0
