@@ -350,7 +350,9 @@ mod test {
     use std::ops::Deref;
 
     use cosmwasm_std::testing::MockStorage;
+    #[cfg(feature = "iterator")]
     use cosmwasm_std::to_json_binary;
+    #[cfg(feature = "iterator")]
     use cosmwasm_std::StdError::InvalidUtf8;
     #[cfg(feature = "iterator")]
     use cosmwasm_std::{Order, StdResult};
