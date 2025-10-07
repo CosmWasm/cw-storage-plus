@@ -63,7 +63,7 @@ pub trait PrimaryKey<'a>: Clone {
     type SuperSuffix: KeyDeserialize;
 
     /// returns a slice of key steps, which can be optionally combined
-    fn key(&self) -> Vec<Key>;
+    fn key(&self) -> Vec<Key<'_>>;
 
     fn joined_key(&self) -> Vec<u8> {
         let keys = self.key();
@@ -87,7 +87,7 @@ impl<'a> PrimaryKey<'a> for () {
     type Suffix = Self;
     type SuperSuffix = Self;
 
-    fn key(&self) -> Vec<Key> {
+    fn key(&self) -> Vec<Key<'_>> {
         vec![]
     }
 }
@@ -98,7 +98,7 @@ impl<'a> PrimaryKey<'a> for &'a [u8] {
     type Suffix = Self;
     type SuperSuffix = Self;
 
-    fn key(&self) -> Vec<Key> {
+    fn key(&self) -> Vec<Key<'_>> {
         // this is simple, we don't add more prefixes
         vec![Key::Ref(self)]
     }
@@ -110,7 +110,7 @@ impl<'a, const N: usize> PrimaryKey<'a> for [u8; N] {
     type Suffix = Self;
     type SuperSuffix = Self;
 
-    fn key(&self) -> Vec<Key> {
+    fn key(&self) -> Vec<Key<'_>> {
         // this is simple, we don't add more prefixes
         vec![Key::Ref(self.as_slice())]
     }
@@ -123,7 +123,7 @@ impl<'a> PrimaryKey<'a> for &'a str {
     type Suffix = Self;
     type SuperSuffix = Self;
 
-    fn key(&self) -> Vec<Key> {
+    fn key(&self) -> Vec<Key<'_>> {
         // this is simple, we don't add more prefixes
         vec![Key::Ref(self.as_bytes())]
     }
@@ -138,7 +138,7 @@ impl<'a, T: PrimaryKey<'a> + Prefixer<'a> + KeyDeserialize, U: PrimaryKey<'a> + 
     type Suffix = U;
     type SuperSuffix = Self;
 
-    fn key(&self) -> Vec<Key> {
+    fn key(&self) -> Vec<Key<'_>> {
         let mut keys = self.0.key();
         keys.extend(self.1.key());
         keys
@@ -155,7 +155,7 @@ where
     type Suffix = T::Suffix;
     type SuperSuffix = T::SuperSuffix;
 
-    fn key(&self) -> Vec<Key> {
+    fn key(&self) -> Vec<Key<'_>> {
         <T as PrimaryKey<'a>>::key(self)
     }
 }
@@ -173,7 +173,7 @@ impl<
     type Suffix = V;
     type SuperSuffix = (U, V);
 
-    fn key(&self) -> Vec<Key> {
+    fn key(&self) -> Vec<Key<'_>> {
         let mut keys = self.0.key();
         keys.extend(self.1.key());
         keys.extend(self.2.key());
@@ -183,7 +183,7 @@ impl<
 
 pub trait Prefixer<'a> {
     /// returns 0 or more namespaces that should be length-prefixed and concatenated for range searches
-    fn prefix(&self) -> Vec<Key>;
+    fn prefix(&self) -> Vec<Key<'_>>;
 
     fn joined_prefix(&self) -> Vec<u8> {
         let prefixes = self.prefix();
@@ -192,19 +192,19 @@ pub trait Prefixer<'a> {
 }
 
 impl<'a> Prefixer<'a> for () {
-    fn prefix(&self) -> Vec<Key> {
+    fn prefix(&self) -> Vec<Key<'_>> {
         vec![]
     }
 }
 
 impl<'a> Prefixer<'a> for &'a [u8] {
-    fn prefix(&self) -> Vec<Key> {
+    fn prefix(&self) -> Vec<Key<'_>> {
         vec![Key::Ref(self)]
     }
 }
 
 impl<'a, T: Prefixer<'a>, U: Prefixer<'a>> Prefixer<'a> for (T, U) {
-    fn prefix(&self) -> Vec<Key> {
+    fn prefix(&self) -> Vec<Key<'_>> {
         let mut res = self.0.prefix();
         res.extend(self.1.prefix());
         res
@@ -212,7 +212,7 @@ impl<'a, T: Prefixer<'a>, U: Prefixer<'a>> Prefixer<'a> for (T, U) {
 }
 
 impl<'a, T: Prefixer<'a>, U: Prefixer<'a>, V: Prefixer<'a>> Prefixer<'a> for (T, U, V) {
-    fn prefix(&self) -> Vec<Key> {
+    fn prefix(&self) -> Vec<Key<'_>> {
         let mut res = self.0.prefix();
         res.extend(self.1.prefix());
         res.extend(self.2.prefix());
@@ -224,14 +224,14 @@ impl<'a, T> Prefixer<'a> for &'a T
 where
     T: Prefixer<'a>,
 {
-    fn prefix(&self) -> Vec<Key> {
+    fn prefix(&self) -> Vec<Key<'_>> {
         <T as Prefixer<'a>>::prefix(self)
     }
 }
 
 // Provide a string version of this to raw encode strings
 impl<'a> Prefixer<'a> for &'a str {
-    fn prefix(&self) -> Vec<Key> {
+    fn prefix(&self) -> Vec<Key<'_>> {
         vec![Key::Ref(self.as_bytes())]
     }
 }
@@ -242,13 +242,13 @@ impl<'a> PrimaryKey<'a> for Vec<u8> {
     type Suffix = Self;
     type SuperSuffix = Self;
 
-    fn key(&self) -> Vec<Key> {
+    fn key(&self) -> Vec<Key<'_>> {
         vec![Key::Ref(self)]
     }
 }
 
 impl<'a> Prefixer<'a> for Vec<u8> {
-    fn prefix(&self) -> Vec<Key> {
+    fn prefix(&self) -> Vec<Key<'_>> {
         vec![Key::Ref(self.as_ref())]
     }
 }
@@ -259,13 +259,13 @@ impl<'a> PrimaryKey<'a> for String {
     type Suffix = Self;
     type SuperSuffix = Self;
 
-    fn key(&self) -> Vec<Key> {
+    fn key(&self) -> Vec<Key<'_>> {
         vec![Key::Ref(self.as_bytes())]
     }
 }
 
 impl<'a> Prefixer<'a> for String {
-    fn prefix(&self) -> Vec<Key> {
+    fn prefix(&self) -> Vec<Key<'_>> {
         vec![Key::Ref(self.as_bytes())]
     }
 }
@@ -277,14 +277,14 @@ impl<'a> PrimaryKey<'a> for Addr {
     type Suffix = Self;
     type SuperSuffix = Self;
 
-    fn key(&self) -> Vec<Key> {
+    fn key(&self) -> Vec<Key<'_>> {
         // this is simple, we don't add more prefixes
         vec![Key::Ref(self.as_bytes())]
     }
 }
 
 impl<'a> Prefixer<'a> for Addr {
-    fn prefix(&self) -> Vec<Key> {
+    fn prefix(&self) -> Vec<Key<'_>> {
         vec![Key::Ref(self.as_bytes())]
     }
 }
@@ -297,7 +297,7 @@ macro_rules! integer_key {
             type Suffix = Self;
             type SuperSuffix = Self;
 
-            fn key(&self) -> Vec<Key> {
+            fn key(&self) -> Vec<Key<'_>> {
                 vec![Key::$v(self.to_cw_bytes())]
             }
         })*
@@ -309,7 +309,7 @@ integer_key!(for i8, Val8, u8, Val8, i16, Val16, u16, Val16, i32, Val32, u32, Va
 macro_rules! integer_prefix {
     (for $($t:ty, $v:tt),+) => {
         $(impl<'a> Prefixer<'a> for $t {
-            fn prefix(&self) -> Vec<Key> {
+            fn prefix(&self) -> Vec<Key<'_>> {
                 vec![Key::$v(self.to_cw_bytes())]
             }
         })*
