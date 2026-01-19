@@ -1,9 +1,10 @@
 # StoragePlus
 
-![component][component-badge]
+[![component][component-badge]][component-url]
 [![license][apache-badge]][apache-url]
 
 [component-badge]: https://img.shields.io/badge/CosmWasm-6343ae.svg
+[component-url]: https://cosmwasm.com
 [crates-badge-cw-storage-plus]: https://img.shields.io/crates/v/cw-storage-plus.svg
 [crates-url-cw-storage-plus]: https://crates.io/crates/cw-storage-plus
 [docs-badge-cw-storage-plus]: https://docs.rs/cw-storage-plus/badge.svg
