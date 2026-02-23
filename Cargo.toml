@@ -26,7 +26,7 @@ macro = ["dep:cw-storage-macro"]
 bench = false
 
 [dependencies]
-cosmwasm-std = { version = "3.0.1", default-features = false, features = ["std"] }
+cosmwasm-std = { version = "3.0.4", default-features = false, features = ["std"] }
 schemars = "0.8.22"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 cw-storage-macro = { path = "macros", version = "3.0.1", optional = true }
