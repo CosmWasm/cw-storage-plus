@@ -315,7 +315,8 @@ fn calc_prefix_end_bound<'a, K: Prefixer<'a>>(
 }
 
 pub(crate) fn extend_one_byte(limit: &[u8]) -> Vec<u8> {
-    let mut v = limit.to_vec();
+    let mut v = Vec::with_capacity(limit.len() + 1);
+    v.extend_from_slice(limit);
     v.push(0);
     v
 }
