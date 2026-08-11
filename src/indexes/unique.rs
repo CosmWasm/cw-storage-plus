@@ -11,7 +11,6 @@ use cosmwasm_std::{from_json, Binary, Order, Record, StdError, StdResult, Storag
 use crate::bound::PrefixBound;
 use crate::de::KeyDeserialize;
 use crate::indexes::IndexPrefix;
-use crate::iter_helpers::deserialize_kv;
 use crate::map::Map;
 use crate::prefix::namespaced_prefix_range;
 use crate::{Bound, Index, Prefixer, PrimaryKey};
@@ -193,7 +192,7 @@ where
         PK::Output: 'static,
     {
         let mapped = namespaced_prefix_range(store, self.idx_namespace, min, max, order)
-            .map(deserialize_kv::<PK, T>);
+            .map(deserialize_unique_kv::<PK, T>);
         Box::new(mapped)
     }
 

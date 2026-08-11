@@ -10,7 +10,6 @@ use cosmwasm_std::{from_json, Order, Record, StdError, StdResult, Storage};
 use crate::bound::PrefixBound;
 use crate::de::KeyDeserialize;
 use crate::indexes::IndexPrefix;
-use crate::iter_helpers::deserialize_kv;
 use crate::map::Map;
 use crate::prefix::namespaced_prefix_range;
 use crate::{Bound, Index, Prefixer, PrimaryKey};
@@ -292,7 +291,7 @@ where
     /// There are some issues that distinguish these two, and blindly casting to `Vec<u8>` doesn't
     /// solve them.
     pub fn prefix_range<'c>(
-        &self,
+        &'c self,
         store: &'c dyn Storage,
         min: Option<PrefixBound<'a, IK>>,
         max: Option<PrefixBound<'a, IK>>,
@@ -306,7 +305,7 @@ where
         PK::Output: 'static,
     {
         let mapped = namespaced_prefix_range(store, self.idx_namespace, min, max, order)
-            .map(deserialize_kv::<PK, T>);
+            .map(move |kv| deserialize_multi_kv::<PK, T>(store, self.pk_namespace, kv));
         Box::new(mapped)
     }
 

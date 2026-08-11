@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 [Unreleased] changes
 
+### Fixed
+
+- `MultiIndex::prefix_range` and `UniqueIndex::prefix_range` now return the stored
+  values instead of the primary-key length (or a deserialization error), matching
+  their `range` and `prefix_range_raw` siblings ([#125])
+
+[#125]: https://github.com/CosmWasm/cw-storage-plus/pull/125
+
 ---
 
 ## [3.0.1] - 2025-08-28
